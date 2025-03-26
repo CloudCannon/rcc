@@ -1,5 +1,32 @@
 # Rosey CloudCannon Connector
 
+Rosey is used to generate a multilingual site, complete with browser settings detection with a redirect to the site visitor's default language. 
+
+To generate the multilingual site:
+
+  1. Html elements are tagged for translation.
+
+  2. Rosey creates a JSON file from these tags by scanning your built static site.
+
+  3. Rosey takes a different `locales/xx-XX.json` file, which contains the original phrase with a user entered translation and generates the finished translated site.
+
+**What the RCC connector** does is create a way for non-technical editors to create these `locales/xx-XX.json` files needed to generate the site. YAML files are generated with the correct CloudCannon input configuration to enable translations via an interface in CloudCannon's CMS, rather than writing JSON by hand. All of this happens in your site's postbuild, meaning it automatically happens each build. The file generation happens on your staging site, while the multilingual site generation takes place on your production (main) site.
+
+## YouTube overview and setup instructions
+
+[![Easily manage your multilingual Astro site in CloudCannon](https://img.youtube.com/vi/u5WittUT3Ts/0.jpg)](https://www.youtube.com/watch?v=u5WittUT3Ts)
+
+## Requirements
+
+- A CloudCannon organisation with access to [publishing workflows](https://cloudcannon.com)
+- A static site
+
+## Why is this useful?
+
+A traditional easier-to-understand approach would be to maintain separate copies of each page for each language. This would mean creating a directory for each language, with content pages for each. This is sometimes referred to as split-by-directory. While it is easy to understand, and debug, it can become tedious to have to replicate any non-text changes across all the separate copies of your languages.
+
+This approach has you maintain one copy of a page. Inputs are generated for all the text content that is tagged for translation, meaning editors can focus on providing just the translations instead of replicating all changes made to a page. It basically separates your content and your layouts - a concept well established in the SSG (and CMS) world. You can change the layout and styling in one place, and have those changes reflected across all the languages you translate to.
+
 ## Getting started
 
 1. Create two sites using a staging -> production publishing workflow on CloudCannon, if you don't already have one.
@@ -116,8 +143,16 @@
     
     In the case of an SSG like Jekyll, where a `markdownify` filter is built in, extending the markdown processing will also affect templating with that filter on it. In the case of an SSG like Astro, we use a component (`rosey-connector/ssgs/astroMarkdownComponent.astro`) with markdown rendering on the content it receives to parse any markdown content we need processed through our templating. This basically accomplishes the same thing as extending the `markdownify` filter in Jekyll - we don't need to tag the whole markdown content, because it's automatically being tagged on all block level elements.
 
+10. To add automatic AI-powered translations - which your editors can then QA - enable Smartling in your `rosey/config.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Ensure you have added you secret API key to your environment variables in CloudCannon, as `DEV_USER_SECRET`. You can set this locally in a `.env` file if you want to test it in your development environment. 
+
+    > [!IMPORTANT]
+    > Make sure to not push any secret API keys to your source control. The `.env` file should already be in your .gitignore.
+
+    > [!IMPORTANT]
+    > **Be aware these translations have some cost involved**, so make sure you understand the pricing around Smartling machine-translations before enabling this. 
 
 ## Jekyll
+See a demonstration of this workflow [here](https://github.com/CloudCannon/rosey-jekyll-starter).
 
 ### Generating ids
 
@@ -180,6 +215,7 @@ fi
 ```
 
 ## Astro
+See a demonstration of this workflow [here](https://github.com/CloudCannon/rosey-astro-starter).
 
 ### Extra dependencies
 
