@@ -1,6 +1,6 @@
 # Rosey CloudCannon Connector
 
-Rosey is used to generate a multilingual site, complete with browser settings detection with a redirect to the site visitor's default language. 
+[Rosey](https://rosey.app/) is used to generate a multilingual site, complete with browser settings detection with a redirect to the site visitor's default language. 
 
 To generate the multilingual site:
 
@@ -10,7 +10,7 @@ To generate the multilingual site:
 
   3. Rosey takes a different `locales/xx-XX.json` file, which contains the original phrase with a user entered translation and generates the finished translated site.
 
-**What the RCC connector** does is create a way for non-technical editors to create these `locales/xx-XX.json` files needed to generate the site. YAML files are generated with the correct CloudCannon input configuration to enable translations via an interface in CloudCannon's CMS, rather than writing JSON by hand. All of this happens in your site's postbuild, meaning it automatically happens each build. The file generation happens on your staging site, while the multilingual site generation takes place on your production (main) site.
+**What the RCC connector does** is create a way for non-technical editors to create these `locales/xx-XX.json` files needed to generate the site. YAML files are generated with the correct CloudCannon input configuration to enable translations via an interface in CloudCannon's CMS, rather than writing JSON by hand. All of this happens in your site's postbuild, meaning it automatically happens each build. The file generation happens on your staging site, while the multilingual site generation takes place on your production (main) site.
 
 ## YouTube overview and setup instructions
 
