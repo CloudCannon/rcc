@@ -61,6 +61,7 @@ async function generateLocale(locale, configData) {
   const localeDataEntries = {};
   await Promise.all(
     translationsFiles.map(async (filename) => {
+      // Exit early instead of trying to read a directory as a file
       if (
         await isDirectory(
           getTranslationPath(locale, translationsDirPath, filename)
