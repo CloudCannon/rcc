@@ -1,16 +1,18 @@
 # Rosey CloudCannon Connector
 
-[Rosey](https://rosey.app/) is used to generate a multilingual site, complete with browser settings detection with a redirect to the site visitor's default language. 
+[Rosey](https://rosey.app/) is used to generate a multilingual site from a set of JSON files, complete with a redirect to the site visitor's language set in their browser settings. 
 
 To generate the multilingual site:
 
-  1. Html elements are tagged for translation.
+  1. Html elements are tagged by a developer for translation using `data-rosey` tags.
 
-  2. Rosey creates a JSON file from these tags by scanning your built static site.
+  2. Rosey creates a JSON file called `base.json` from these tags by scanning your built static site.
 
   3. Rosey takes a different `locales/xx-XX.json` file, which contains the original phrase with a user entered translation and generates the finished translated site.
 
-**What the RCC connector does** is create a way for non-technical editors to create these `locales/xx-XX.json` files needed to generate the site. YAML files are generated with the correct CloudCannon input configuration to enable translations via an interface in CloudCannon's CMS, rather than writing JSON by hand. All of this happens in your site's postbuild, meaning it automatically happens each build. The file generation happens on your staging site, while the multilingual site generation takes place on your production (main) site.
+**What the RCC connector does** is create a way for non-technical editors to create the `locales/xx-XX.json` files needed to generate the site. Using the base.json file, YAML files are generated with the correct CloudCannon input configuration to enable translations via an interface in CloudCannon's CMS. These editor-friendly YAML files are then turned into the JSON files needed by Rosey to generate your final multilingual site.
+
+All of this happens in your site's postbuild, meaning it automatically happens each build. The file generation and entry of translations happens on your staging site, while the multilingual site generation takes place on your production (main) site.
 
 ## YouTube overview and setup instructions
 
@@ -18,26 +20,26 @@ To generate the multilingual site:
 
 ## Requirements
 
-- A CloudCannon organisation with access to [publishing workflows](https://cloudcannon.com)
+- A CloudCannon organisation with access to [publishing workflows](https://cloudcannon.com/documentation/articles/what-is-a-publish-branch/)
 - A static site
 
 ## Why is this useful?
 
 A traditional easier-to-understand approach would be to maintain separate copies of each page for each language. This would mean creating a directory for each language, with content pages for each. This is sometimes referred to as split-by-directory. While it is easy to understand, and debug, it can become tedious to have to replicate any non-text changes across all the separate copies of your languages.
 
-This approach has you maintain one copy of a page. Inputs are generated for all the text content that is tagged for translation, meaning editors can focus on providing just the translations instead of replicating all changes made to a page. It basically separates your content and your layouts - a concept well established in the SSG (and CMS) world. You can change the layout and styling in one place, and have those changes reflected across all the languages you translate to.
+This approach has you maintain one copy of a page. Inputs are generated for all the text content that is tagged for translation, meaning editors can focus on providing just the translations instead of replicating all changes made to a page. You can think of it as separating your content and your layouts - a concept well established in the SSG (and CMS) world. You can change the layout and styling in one place, and have those changes reflected across all the languages you translate to.
 
 ## Getting started
 
 1. Create two sites using a staging -> production publishing workflow on CloudCannon, if you don't already have one.
 
-2. To your staging site:
+2. On your staging site:
 
     a. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
 
     b. If you have a Smartling account set up for automatic translations, add the env variable `DEV_USER_SECRET`. Add your Smartling API key as the value of `DEV_USER_SECRET`.
 
-3. To your production site, add the env variable `ROSEYPROD` with a value of `true`.
+3. On your production site, add the env variable `ROSEYPROD`, with a value of `true`.
 
 4. Copy the `rosey` and `rosey-connector` directories to your project. In your `rosey/config.yml` add at least one language code to the `locales` array, and add your staging cloudvent url to the `base_url` key.
 
@@ -72,7 +74,7 @@ This approach has you maintain one copy of a page. Inputs are generated for all 
 
     ```
 
-6. Install the following packages in your project:
+6. Install the following packages to your project:
 
     `package.json`:
 
@@ -137,19 +139,19 @@ This approach has you maintain one copy of a page. Inputs are generated for all 
     <h1 class="heading" data-rosey="{{ heading.heading_text | slugify }}">{{ heading.heading_text }}</h1>
     ```
 
-    11ty has the slugify universal filter, which means we can slugify the content and use that as the translation key. If you are using an SSG that doesn't have the slugify filter built in, you can roll your own. An example has been provided in  `rosey-connector/helpers/component-helper.js`.
+    11ty has the slugify universal filter, which means you can slugify the content and use that as the translation key. If you are using an SSG that doesn't have the slugify filter built in, you can roll your own. One has been provided in  `rosey-connector/helpers/component-helper.js`.
 
-    For markdown body content, we need to extend the SSG's built in markdown processing. Plugins are used to tag markdown that is turned into block level html elements, with an html attribute `data-rosey="an-example-phrase-for-translation"`. Content that is processed through the SSGs native markdown processing in templating (eg. Jekylls `markdownify`) will also need the same treatment, where we break the larger (perhaps many paragraph) phrase into individual block level elements. 
+    For markdown body content, you need to extend the SSG's built in markdown processing. Plugins are used to tag markdown that is turned into block level html elements, with an html attribute `data-rosey="an-example-phrase-for-translation"`. Content that is processed through the SSGs native markdown processing in templating (eg. Jekylls `markdownify`) will also need the same treatment, where the larger (perhaps many paragraph) phrase is broken into individual block level elements. 
     
-    In the case of an SSG like Jekyll, where a `markdownify` filter is built in, extending the markdown processing will also affect templating with that filter on it. In the case of an SSG like Astro, we use a component (`rosey-connector/ssgs/astroMarkdownComponent.astro`) with markdown rendering on the content it receives to parse any markdown content we need processed through our templating. This basically accomplishes the same thing as extending the `markdownify` filter in Jekyll - we don't need to tag the whole markdown content, because it's automatically being tagged on all block level elements.
+    In the case of an SSG like Jekyll, where a `markdownify` filter is built in, extending the markdown processing will also affect templating with that filter on it. In the case of an SSG like Astro, a component (`rosey-connector/ssgs/astroMarkdownComponent.astro`) with markdown rendering on the content it receives is used to parse any markdown content that needs processed through your templating. This basically accomplishes the same thing as extending the `markdownify` filter in Jekyll - it removes the need to tag the whole piece of markdown content as one phrase, because it's automatically being tagged on all block level elements.
 
 10. To add automatic AI-powered translations - which your editors can then QA - enable Smartling in your `rosey/config.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Ensure you have added you secret API key to your environment variables in CloudCannon, as `DEV_USER_SECRET`. You can set this locally in a `.env` file if you want to test it in your development environment. 
 
-    > [!IMPORTANT]
-    > Make sure to not push any secret API keys to your source control. The `.env` file should already be in your .gitignore.
+> [!IMPORTANT]
+> Make sure to not push any secret API keys to your source control. The `.env` file should already be in your .gitignore.
 
-    > [!IMPORTANT]
-    > **Be aware these translations have some cost involved**, so make sure you understand the pricing around Smartling machine-translations before enabling this. 
+> [!IMPORTANT]
+> **Be aware these translations have some cost involved**, so make sure you understand the pricing around Smartling machine-translations before enabling this. 
 
 ## Jekyll
 See a demonstration of this workflow [here](https://github.com/CloudCannon/rosey-jekyll-starter).
@@ -257,7 +259,8 @@ export default defineConfig({
   },
 });
 ```
-MDX allows you to use components throughout your markdown content, to allow for more complex things than traditional markdown syntax can represent. Bookshop handles the import of all Bookshop components into each file, to allow for any configured [snippets](https://cloudcannon.com/documentation/articles/snippets-using-mdx-components/) to be added to the page. 
+
+MDX allows you to use components throughout your markdown content, to allow for more complex things than traditional markdown syntax could represent. Bookshop handles the import of any Bookshop components into each file, to allow for any [snippets](https://cloudcannon.com/documentation/articles/snippets-using-mdx-components/) to be added to the page. CloudCannon configuration then defines which snippets an editor can see and their editing experience for editing, or adding them to the page.
 
 A rehype plugin has been provided to automatically tag block level markdown elements for translation. A handler has been added so that our plugin's AST parser knows what to do with any JSX elements it comes across in our mdx content.
 
@@ -310,13 +313,15 @@ Add it to your html templating like:
   </h1>
   ```
 
-## Adding the rosey-connector to downstream repositories
+## Maintenance
+
+### Adding the rosey-connector directory to downstream repositories
 
 To add a single folder as an upstream dependency, we can use a git subtree.
 
 [Using this as a guide:](https://gist.github.com/tswaters/542ba147a07904b1f3f5)
 
-### Initial setup
+#### Initial setup
 
 Initial setup of fetching the `rosey-connector` directory from https://github.com/CloudCannon/rcc, for use in a downstream repository. This allows us to maintain the RCC logic in one place.
 
@@ -334,7 +339,7 @@ git checkout staging
 git subtree add --prefix=rosey-connector --squash merging/rcc
 ```
 
-### Pulling from upstream
+#### Pulling from upstream
 
 Pulling changes to the `rosey-connector` directory from https://github.com/CloudCannon/rcc.
 
