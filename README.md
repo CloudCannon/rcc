@@ -23,6 +23,16 @@ All of this happens in your site's postbuild, meaning it automatically happens e
 - A CloudCannon organisation with access to [publishing workflows](https://cloudcannon.com/documentation/articles/what-is-a-publish-branch/)
 - A static site
 
+## Supported SSGs
+
+While the Rosey CloudCannon Connector is mostly agnostic to which SSG you use, the markdown processing for each SSG is slightly different. We need to extend this markdown processing so that we automatically tag our block-level html body content with `data-rosey` tags, usually using some kind of custom plugin. 
+
+We have provided plugins for, and currently support:
+
+- Astro
+- Jekyll
+- Eleventy (coming soon)
+
 ## Why is this useful?
 
 A traditional easier-to-understand approach would be to maintain separate copies of each page for each language. This would mean creating a directory for each language, with content pages for each. This is sometimes referred to as split-by-directory. While it is easy to understand, and debug, it can become tedious to have to replicate any non-text changes across all the separate copies of your languages.
