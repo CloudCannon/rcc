@@ -18,6 +18,12 @@ All of this happens in your site's postbuild, meaning it automatically happens e
 
 [![Easily manage your multilingual Astro site in CloudCannon](https://img.youtube.com/vi/u5WittUT3Ts/0.jpg)](https://www.youtube.com/watch?v=u5WittUT3Ts)
 
+## Why is this useful?
+
+A traditional easier-to-understand approach would be to maintain separate copies of each page for each language. This would mean creating a directory for each language, with content pages for each. This is sometimes referred to as split-by-directory. While it is easy to understand, and debug, it can become tedious to have to replicate any non-text changes across all the separate copies of your languages.
+
+This approach has you maintain one copy of a page. Inputs are generated for all the text content that is tagged for translation, meaning editors can focus on providing just the translations instead of replicating all changes made to a page. You can think of it as separating your content and your layouts - a concept well established in the SSG (and CMS) world. You can change the layout and styling in one place, and have those changes reflected across all the languages you translate to.
+
 ## Requirements
 
 - A CloudCannon organisation with access to [publishing workflows](https://cloudcannon.com/documentation/articles/what-is-a-publish-branch/)
@@ -32,12 +38,6 @@ We have provided plugins for, and currently support:
 - Astro
 - Jekyll
 - Eleventy (coming soon)
-
-## Why is this useful?
-
-A traditional easier-to-understand approach would be to maintain separate copies of each page for each language. This would mean creating a directory for each language, with content pages for each. This is sometimes referred to as split-by-directory. While it is easy to understand, and debug, it can become tedious to have to replicate any non-text changes across all the separate copies of your languages.
-
-This approach has you maintain one copy of a page. Inputs are generated for all the text content that is tagged for translation, meaning editors can focus on providing just the translations instead of replicating all changes made to a page. You can think of it as separating your content and your layouts - a concept well established in the SSG (and CMS) world. You can change the layout and styling in one place, and have those changes reflected across all the languages you translate to.
 
 ## Getting started
 
