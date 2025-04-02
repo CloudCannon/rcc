@@ -2,7 +2,12 @@ import fs from "fs";
 import YAML from "yaml";
 import markdownit from "markdown-it";
 import path from "path";
-import { isDirectory, readFileWithFallback } from "./helpers/file-helper.js";
+import {
+  isDirectory,
+  readFileWithFallback,
+  getTranslationHTMLFilename,
+  getTranslationHTMLFilenameExtensionless,
+} from "./helpers/file-helper.js";
 import dotenv from "dotenv";
 const md = markdownit();
 dotenv.config();
@@ -180,21 +185,10 @@ function getTranslationPath(locale, translationsDirPath, translationFilename) {
   return path.join(translationsDirPath, locale, translationFilename);
 }
 
-function getTranslationHTMLFilename(translationFilename) {
-  if (translationFilename === "404.yaml") {
-    return "404.html";
-  }
-
-  if (translationFilename === "home.yaml") {
-    return "index.html";
-  }
-
-  return translationFilename.replace(".yaml", "/index.html");
-}
-
 function processUrlTranslationKey(
   translationEntry,
   translationHTMLFilename,
+  translationHTMLFilenameExtensionless,
   baseUrlFileData,
   oldUrlsLocaleData
 ) {
@@ -202,7 +196,11 @@ function processUrlTranslationKey(
     return;
   }
 
-  if (translationEntry !== oldUrlsLocaleData[translationHTMLFilename]?.value) {
+  if (
+    translationEntry !== oldUrlsLocaleData[translationHTMLFilename]?.value &&
+    translationEntry !==
+      oldUrlsLocaleData[translationHTMLFilenameExtensionless]?.value
+  ) {
     console.log(`Detected a new URL translation: ${translationEntry}`);
     return {
       original: translationHTMLFilename,
@@ -276,6 +274,9 @@ async function processTranslation(
 
   const translationHTMLFilename =
     getTranslationHTMLFilename(translationFilename);
+  const translationHTMLFilenameExtensionless =
+    getTranslationHTMLFilenameExtensionless(translationFilename);
+
   // Check if theres a translation and
   // Add each obj to our locales data, excluding '_inputs' object.
   Object.entries(data).forEach(([keyName, translatedString]) => {
@@ -289,6 +290,7 @@ async function processTranslation(
       const newEntry = processUrlTranslationKey(
         translatedString,
         translationHTMLFilename,
+        translationHTMLFilenameExtensionless,
         baseUrlFileData,
         oldUrlsLocaleData
       );
