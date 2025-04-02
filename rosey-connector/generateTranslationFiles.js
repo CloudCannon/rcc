@@ -24,14 +24,13 @@ export async function generateTranslationFiles(configData) {
   for (let i = 0; i < locales.length; i++) {
     const locale = locales[i];
 
-    generateTranslationFilesForLocale(locale, configData).catch((err) => {
+    await generateTranslationFilesForLocale(locale, configData).catch((err) => {
       console.error(`❌❌ Encountered an error translating ${locale}:`, err);
     });
   }
 }
 
 async function generateTranslationFilesForLocale(locale, configData) {
-  // Get the Rosey generated data
   const baseURL = configData.base_url;
   const inputFilePath = configData.rosey_paths.rosey_base_file_path;
   const inputURLFilePath = configData.rosey_paths.rosey_base_urls_file_path;
@@ -52,8 +51,6 @@ async function generateTranslationFilesForLocale(locale, configData) {
   const pages = Object.keys(inputURLFileData.keys);
 
   const translationsLocalePath = path.join(translationFilesDirPath, locale);
-
-  console.log(`📂📂 ${translationsLocalePath} ensuring folder exists`);
   await fs.promises.mkdir(translationsLocalePath, { recursive: true });
 
   const translationsFiles = await fs.promises.readdir(translationsLocalePath, {
@@ -187,7 +184,9 @@ async function generateTranslationFilesForLocale(locale, configData) {
         translationFilePath,
         YAML.stringify(cleanedOutputFileData)
       );
-      console.log("✅✅ " + translationFilePath + " updated succesfully");
+      console.log(
+        "Translation file: " + translationFilePath + " updated succesfully"
+      );
     })
   );
 }

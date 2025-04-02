@@ -21,7 +21,7 @@ export async function generateLocales(configData) {
     try {
       await generateLocale(locale, configData);
     } catch (err) {
-      console.error(`❌❌ Encountered an error translating ${locale}:`, err);
+      console.error(`❌ Encountered an error translating ${locale}:`, err);
     }
   }
 }
@@ -43,10 +43,7 @@ async function generateLocale(locale, configData) {
   const translationsLocalePath = path.join(translationsDirPath, locale);
 
   // Ensure directories exist
-  console.log(`📂📂 ${translationsLocalePath} ensuring directory exists`);
   await fs.promises.mkdir(translationsLocalePath, { recursive: true });
-
-  console.log(`📂📂 ${localesDirPath} ensuring directory exists`);
   await fs.promises.mkdir(localesDirPath, { recursive: true });
 
   // Get last round's translations
@@ -171,14 +168,14 @@ async function generateLocale(locale, configData) {
     localePath,
     JSON.stringify(orderedLocaleData, null, "\t")
   );
-  console.log(`✅✅ ${localePath} updated succesfully`);
+  console.log(`Locale file: ${localePath} updated succesfully`);
 
   // Write locales URL data
   await fs.promises.writeFile(
     localeURLsPath,
     JSON.stringify(orderedLocaleUrlData, null, "\t")
   );
-  console.log(`✅✅ ${localeURLsPath} updated succesfully`);
+  console.log(`Locale url file: ${localeURLsPath} updated succesfully`);
 }
 
 function getTranslationPath(locale, translationsDirPath, translationFilename) {
