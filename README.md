@@ -126,7 +126,7 @@ We have provided plugins for, and currently support:
           _inputs:
             urlTranslation:
               type: text
-              comment: Provide a translation for the URL that Rosey will build this page at.
+              comment: Provide a translation for the Url that Rosey will build this page at.
     ```
 
 8. This project is written in ESM syntax. If your project is in CJS, you may need to update your project, or the    `rosey-connector` files. 
@@ -271,7 +271,7 @@ MDX allows you to use components throughout your markdown content, to allow for 
 A rehype plugin has been provided to automatically tag block level markdown elements for translation. A handler has been added so that our plugin's AST parser knows what to do with any JSX elements it comes across in our mdx content.
 
 ### Markdown processing
-The `./rosey-connector/ssgs/astroMarkdownTaggerPlugin.ts` plugin is used to extend Astro's parsing of markdown content into HTML. As the name suggests, it tags block level content in your markdown. This means you don't need to manually tag any content that will be processed as part of your page's body content - it should happen as part of the build. 
+The `./rosey-connector/ssgs/astroMarkdownTaggerPlugin.ts` plugin is used to extend Astro's parsing of markdown content into Html. As the name suggests, it tags block level content in your markdown. This means you don't need to manually tag any content that will be processed as part of your page's body content - it should happen as part of the build. 
 
 ### Markdown Component
 Sometimes a component needs to contain markdown content. A `type: markdown` input in CloudCannon will allow an editor to add markdown as a component's content. 

@@ -15,6 +15,7 @@ const formatInnerText = (text: string) => {
   return removedSub;
 };
 
+// This checks three levels deep of nesting in an AST for text
 function getElementInnerText(node) {
   let elementInnerText = "";
   for (const child of node.children) {

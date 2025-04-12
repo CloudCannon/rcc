@@ -15,8 +15,8 @@ const md = markdownIt();
 const textElementTagNames = ["p", "li", "h1", "h2", "h3", "h4", "h5", "h6"];
 
 const { content } = Astro.props;
-const HTMLTextContent = content ? md.render(content) : "";
-const hastTree = fromHtmlIsomorphic(HTMLTextContent, { fragment: true });
+const HtmlTextContent = content ? md.render(content) : "";
+const hastTree = fromHtmlIsomorphic(HtmlTextContent, { fragment: true });
 visit(hastTree, (node, index, parent) => {
   if (node.type !== "element") {
     return;
@@ -31,7 +31,7 @@ visit(hastTree, (node, index, parent) => {
   // Skip any children that might accidentally get a nested tag
   return SKIP;
 });
-const taggedHTML = toHtml(hastTree);
+const taggedHtml = toHtml(hastTree);
 ---
 
-<div class="markdown-text" set:html={taggedHTML} />
+<div class="markdown-text" set:html={taggedHtml} />
