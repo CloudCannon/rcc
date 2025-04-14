@@ -131,13 +131,25 @@ async function removeOldTranslationFiles(
   translationsFiles,
   translationsLocalePath,
   baseUrlFileDataKeys,
-  pages
+  pages,
+  namespaceArray
 ) {
   await Promise.all(
     translationsFiles.map(async (fileName) => {
       const filePath = path.join(translationsLocalePath, fileName);
 
       if (await isDirectory(filePath)) {
+        return;
+      }
+
+      let isFilePathNamespace = false;
+      for (const namespace of namespaceArray) {
+        if (filePath.endsWith(`${namespace}.yaml`)) {
+          isFilePathNamespace = true;
+          break;
+        }
+      }
+      if (isFilePathNamespace) {
         return;
       }
 
@@ -148,7 +160,7 @@ async function removeOldTranslationFiles(
 
       if (!pages.includes(fileNameHtmlFormatted)) {
         console.log(
-          `🧹 The page ${fileNameHtmlFormatted} doesn't exist in the pages in our base.json - deleting!`
+          `🧹 The page ${filePath} doesn't exist in the pages in our base.json - deleting!`
         );
 
         await fs.promises.unlink(filePath);
