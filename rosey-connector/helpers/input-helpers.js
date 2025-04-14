@@ -1,4 +1,4 @@
-import { getPageString } from "./file-helpers.js";
+import { getPageString, getYamlFileName } from "./file-helpers.js";
 import { formatMarkdownText } from "./markdown-formatters.js";
 import { NodeHtmlMarkdown } from "node-html-markdown";
 const nhm = new NodeHtmlMarkdown(
@@ -7,10 +7,15 @@ const nhm = new NodeHtmlMarkdown(
   /* customCodeBlockTranslators (optional) */ undefined
 );
 
-// TODO: Make these fn more DRY
 // Input set up
-
-function initDefaultInputs(data, page, locale, baseUrl) {
+function initDefaultInputs(
+  data,
+  translationFilesDirPath,
+  page,
+  locale,
+  seeOnPageCommentSettings,
+  githubCommentSettings
+) {
   // Create the inputs obj if there is none
   if (!data._inputs) {
     data._inputs = {};
@@ -19,20 +24,38 @@ function initDefaultInputs(data, page, locale, baseUrl) {
   // Create the page input object
   if (!data._inputs.$) {
     const pageString = getPageString(page);
+    const pageFilePath = getYamlFileName(page);
+    const seeOnPageCommentEnabled = seeOnPageCommentSettings.enabled;
+    const baseUrl = seeOnPageCommentSettings.base_url;
+    const githubCommentEnabled = githubCommentSettings.enabled;
+    const githubRepo = githubCommentSettings.repo_url;
+    const githubBranchName = githubCommentSettings.branch_name;
+    const githubCommentText = githubCommentSettings.comment_text;
+
+    let inputComment = "";
+    if (seeOnPageCommentEnabled) {
+      inputComment += `[${pageString}](${baseUrl}${pageString})`;
+    }
+    if (githubCommentEnabled) {
+      inputComment += `${
+        inputComment.length > 1 ? "  //  " : ""
+      }[${githubCommentText}](${githubRepo}/commits/${githubBranchName}/${translationFilesDirPath}/${locale}/${pageFilePath})`;
+    }
+
     data._inputs.$ = {
       type: "object",
-      comment: `[See ${pageString}](${baseUrl}${pageString})`,
+      comment: inputComment,
       options: {
         place_groups_below: false,
         groups: [
           {
             heading: `Still to translate (${locale})`,
-            comment: `Text to translate on [${pageString}](${baseUrl}${pageString})`,
+            comment: inputComment,
             inputs: [],
           },
           {
             heading: `Already translated (${locale})`,
-            comment: `Text already translated on [${pageString}](${baseUrl}${pageString})`,
+            comment: inputComment,
             inputs: [],
           },
         ],
@@ -41,7 +64,16 @@ function initDefaultInputs(data, page, locale, baseUrl) {
   }
 }
 
-function getInputConfig(inputKey, page, baseTranslationObj, baseUrl) {
+function getInputConfig(
+  inputKey,
+  page,
+  baseTranslationObj,
+  seeOnPageCommentSettings,
+  inputLengths
+) {
+  const seeOnPageCommentEnabled = seeOnPageCommentSettings.enabled;
+  const baseUrl = seeOnPageCommentSettings.base_url;
+  const seeOnPageCommentText = seeOnPageCommentSettings.comment_text;
   const untranslatedPhrase = baseTranslationObj.original.trim();
   const untranslatedPhraseMarkdown = nhm.translate(untranslatedPhrase);
   const originalPhraseTidiedForComment = formatMarkdownText(
@@ -49,7 +81,11 @@ function getInputConfig(inputKey, page, baseTranslationObj, baseUrl) {
   );
 
   const isKeyMarkdown = inputKey.slice(0, 10).includes("markdown:");
-  const isInputShortText = untranslatedPhrase.length < 20;
+  const labelCutoffLength = inputLengths.label;
+  const textareaCutoffLength = inputLengths.textarea;
+  const isInputShortText = untranslatedPhrase.length < textareaCutoffLength;
+  const isLabelConcat =
+    originalPhraseTidiedForComment.length > labelCutoffLength;
 
   const inputType = isKeyMarkdown
     ? "markdown"
@@ -71,16 +107,17 @@ function getInputConfig(inputKey, page, baseTranslationObj, baseUrl) {
       }
     : {};
 
-  const locationString = generateLocationString(
-    originalPhraseTidiedForComment,
-    page,
-    baseUrl
-  );
-
-  const isLabelConcat = originalPhraseTidiedForComment.length > 42;
+  const locationString = seeOnPageCommentEnabled
+    ? generateLocationString(
+        originalPhraseTidiedForComment,
+        page,
+        baseUrl,
+        seeOnPageCommentText
+      )
+    : false;
 
   const formattedLabel = isLabelConcat
-    ? `${originalPhraseTidiedForComment.substring(0, 42)}...`
+    ? `${originalPhraseTidiedForComment.substring(0, labelCutoffLength)}...`
     : originalPhraseTidiedForComment;
 
   const inputConfig = isLabelConcat
@@ -108,98 +145,12 @@ function getInputConfig(inputKey, page, baseTranslationObj, baseUrl) {
   return inputConfig;
 }
 
-// Namespace input set up
-
-function initNamespacePageInputs(data, locale) {
-  // Create the inputs obj if there is none
-  if (!data._inputs) {
-    data._inputs = {};
-  }
-
-  // Create the page input object
-  if (!data._inputs.$) {
-    data._inputs.$ = {
-      type: "object",
-      comment: "Translations that appear on many pages",
-      options: {
-        place_groups_below: false,
-        groups: [
-          {
-            heading: `Still to translate (${locale})`,
-            comment: "Text to translate",
-            inputs: [],
-          },
-          {
-            heading: `Already translated (${locale})`,
-            comment: "Text already translated",
-            inputs: [],
-          },
-        ],
-      },
-    };
-  }
-}
-
-function getNamespaceInputConfig(inputKey, baseTranslationObj) {
-  const untranslatedPhrase = baseTranslationObj.original.trim();
-  const untranslatedPhraseMarkdown = nhm.translate(untranslatedPhrase);
-  const originalPhraseTidiedForComment = formatMarkdownText(
-    untranslatedPhraseMarkdown
-  );
-
-  const isKeyMarkdown = inputKey.slice(0, 10).includes("markdown:");
-  const isInputShortText = untranslatedPhrase.length < 20;
-
-  const inputType = isKeyMarkdown
-    ? "markdown"
-    : isInputShortText
-    ? "text"
-    : "textarea";
-
-  const options = isKeyMarkdown
-    ? {
-        bold: true,
-        format: "p h1 h2 h3 h4",
-        italic: true,
-        link: true,
-        undo: true,
-        redo: true,
-        removeformat: true,
-        copyformatting: true,
-        blockquote: true,
-      }
-    : {};
-
-  const isLabelConcat = originalPhraseTidiedForComment.length > 42;
-
-  const formattedLabel = isLabelConcat
-    ? `${originalPhraseTidiedForComment.substring(0, 42)}...`
-    : originalPhraseTidiedForComment;
-
-  const inputConfig = isLabelConcat
-    ? {
-        label: formattedLabel,
-        hidden: untranslatedPhrase === "",
-        type: inputType,
-        options: options,
-        context: {
-          open: false,
-          title: "Untranslated Text",
-          icon: "translate",
-          content: untranslatedPhraseMarkdown,
-        },
-      }
-    : {
-        label: formattedLabel,
-        hidden: untranslatedPhrase === "",
-        type: inputType,
-        options: options,
-      };
-
-  return inputConfig;
-}
-
-function generateLocationString(originalPhrase, page, baseUrl) {
+function generateLocationString(
+  originalPhrase,
+  page,
+  baseUrl,
+  seeOnPageCommentText
+) {
   // Limit each phrase to 3 words
   const urlHighlighterWordLength = 3;
   const originalPhraseArray = originalPhrase.split(/[\n]+/);
@@ -263,8 +214,101 @@ function generateLocationString(originalPhrase, page, baseUrl) {
   // Look to see if original phrase is 5 words or shorter
   // if it is fallback to the encoded original phrase for the highlight link
   return originalPhraseArrayByWord.length > urlHighlighterWordLength * 2
-    ? `[See on page](${baseUrl}${pageString}#:~:text=${encodedStartHighlight},${encodedEndHighlight})`
-    : `[See on page](${baseUrl}${pageString}#:~:text=${encodedOriginalPhrase})`;
+    ? `[${seeOnPageCommentText}](${baseUrl}${pageString}#:~:text=${encodedStartHighlight},${encodedEndHighlight})`
+    : `[${seeOnPageCommentText}](${baseUrl}${pageString}#:~:text=${encodedOriginalPhrase})`;
+}
+
+// Common input set up
+
+function initNamespacePageInputs(data, locale) {
+  // Create the inputs obj if there is none
+  if (!data._inputs) {
+    data._inputs = {};
+  }
+
+  // Create the page input object
+  if (!data._inputs.$) {
+    data._inputs.$ = {
+      type: "object",
+      comment: "Translations that appear on many pages",
+      options: {
+        place_groups_below: false,
+        groups: [
+          {
+            heading: `Still to translate (${locale})`,
+            comment: "Text to translate",
+            inputs: [],
+          },
+          {
+            heading: `Already translated (${locale})`,
+            comment: "Text already translated",
+            inputs: [],
+          },
+        ],
+      },
+    };
+  }
+}
+
+function getNamespaceInputConfig(inputKey, baseTranslationObj, inputLengths) {
+  const untranslatedPhrase = baseTranslationObj.original.trim();
+  const untranslatedPhraseMarkdown = nhm.translate(untranslatedPhrase);
+  const originalPhraseTidiedForComment = formatMarkdownText(
+    untranslatedPhraseMarkdown
+  );
+
+  const isKeyMarkdown = inputKey.slice(0, 10).includes("markdown:");
+  const labelCutoffLength = inputLengths.label;
+  const textareaCutoffLength = inputLengths.textarea;
+  const isInputShortText = untranslatedPhrase.length < textareaCutoffLength;
+  const isLabelConcat =
+    originalPhraseTidiedForComment.length > labelCutoffLength;
+
+  const inputType = isKeyMarkdown
+    ? "markdown"
+    : isInputShortText
+    ? "text"
+    : "textarea";
+
+  const options = isKeyMarkdown
+    ? {
+        bold: true,
+        format: "p h1 h2 h3 h4",
+        italic: true,
+        link: true,
+        undo: true,
+        redo: true,
+        removeformat: true,
+        copyformatting: true,
+        blockquote: true,
+      }
+    : {};
+
+  const formattedLabel = isLabelConcat
+    ? `${originalPhraseTidiedForComment.substring(0, labelCutoffLength)}...`
+    : originalPhraseTidiedForComment;
+
+  const inputConfig = isLabelConcat
+    ? {
+        label: formattedLabel,
+        hidden: untranslatedPhrase === "",
+        type: inputType,
+        options: options,
+        context: {
+          open: false,
+          title: "Untranslated Text",
+          icon: "translate",
+          content: untranslatedPhraseMarkdown,
+        },
+      }
+    : {
+        label: formattedLabel,
+        hidden: untranslatedPhrase === "",
+        type: inputType,
+        options: options,
+      };
+
+  return inputConfig;
 }
 
 function sortTranslationIntoInputGroup(translationDataToWrite, inputKey) {

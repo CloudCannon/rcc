@@ -26,7 +26,9 @@ const nhm = new NodeHtmlMarkdown(
 export async function generateTranslationFiles(configData) {
   // Get all the config data
   const locales = configData.locales;
-  const baseUrl = configData.base_url;
+  const seeOnPageCommentSettings = configData.see_on_page_comment;
+  const githubCommentSettings = configData.github_history;
+  const inputLengths = configData.input_lengths;
   const baseFilePath = configData.rosey_paths.rosey_base_file_path;
   const baseUrlFilePath = configData.rosey_paths.rosey_base_urls_file_path;
   const translationFilesDirPath = configData.rosey_paths.translations_dir_path;
@@ -44,7 +46,9 @@ export async function generateTranslationFiles(configData) {
 
     await generateTranslationFilesForLocale(
       locale,
-      baseUrl,
+      seeOnPageCommentSettings,
+      githubCommentSettings,
+      inputLengths,
       baseFileData,
       baseUrlFileData,
       translationFilesDirPath,
@@ -58,7 +62,9 @@ export async function generateTranslationFiles(configData) {
 
 async function generateTranslationFilesForLocale(
   locale,
-  baseUrl,
+  seeOnPageCommentSettings,
+  githubCommentSettings,
+  inputLengths,
   baseFileData,
   baseUrlFileData,
   translationFilesDirPath,
@@ -107,19 +113,22 @@ async function generateTranslationFilesForLocale(
       const translationFilePath = path.join(
         translationFilesDirPath,
         locale,
-        `${yamlPageName}.yaml`
+        yamlPageName
       );
       // Ensure nested translation pages have parent directory
-      await createParentDirIfExists(
-        yamlPageName,
-        translationFilesDirPath,
-        locale
-      );
+      await createParentDirIfExists(page, translationFilesDirPath, locale);
 
       // Get existing translation page data, returns a fallback if none exists
       const translationFileData = await readYamlFromFile(translationFilePath);
       // Set up inputs for the page if none exist already
-      initDefaultInputs(translationDataToWrite, page, locale, baseUrl);
+      initDefaultInputs(
+        translationDataToWrite,
+        translationFilesDirPath,
+        page,
+        locale,
+        seeOnPageCommentSettings,
+        githubCommentSettings
+      );
       // Process the url translation
       processUrlTranslation(translationFileData, translationDataToWrite, page);
       // Process the rest of the translations
@@ -131,9 +140,10 @@ async function generateTranslationFilesForLocale(
         translationFileData,
         translationDataToWrite,
         smartlingTranslationData,
-        baseUrl,
         page,
-        namespaceArray
+        namespaceArray,
+        seeOnPageCommentSettings,
+        inputLengths
       );
 
       // Write the file back once we've processed the translations
@@ -147,8 +157,8 @@ async function generateTranslationFilesForLocale(
     })
   );
 
-  // After the normal pages are done looping and writing
-  // loop over the namespaced pages and write a file for each
+  // Loop over that array replacing common with the namespace name
+  // After the normal pages are done looping and writing, loop over the namespaced pages, and write a file for each
 
   await Promise.all(
     namespaceArray.map(async (namespace) => {
@@ -185,7 +195,7 @@ async function generateTranslationFilesForLocale(
 
           // Set up inputs for each key
           namespaceTranslationDataToWrite._inputs[inputKey] =
-            getNamespaceInputConfig(inputKey, baseTranslationObj);
+            getNamespaceInputConfig(inputKey, baseTranslationObj, inputLengths);
 
           // Add each entry to page object group depending on whether they are already translated or not
           sortTranslationIntoInputGroup(
@@ -223,9 +233,10 @@ function processTranslations(
   translationFileData,
   translationDataToWrite,
   smartlingTranslationData,
-  baseUrl,
   page,
-  namespaceArray
+  namespaceArray,
+  seeOnPageCommentSettings,
+  inputLengths
 ) {
   // Loop through all the translations in the base.json
   Object.keys(baseFileData.keys).map((inputKey) => {
@@ -270,7 +281,8 @@ function processTranslations(
       inputKey,
       page,
       baseTranslationObj,
-      baseUrl
+      seeOnPageCommentSettings,
+      inputLengths
     );
 
     // Add each entry to page object group depending on whether they are already translated or not

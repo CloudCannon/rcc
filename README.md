@@ -182,6 +182,7 @@ Create a prebuild in your `.cloudcannon` folder.
 #!/usr/bin/env bash
 
 echo "Moving jekyllMarkdownTaggerPlugin.rb to _plugins"
+mkdir -p site/_plugins
 mv rosey-connector/ssgs/jekyllMarkdownTaggerPlugin.rb site/_plugins/jekyllMarkdownTaggerPlugin.rb
 echo "Moved jekyllMarkdownTaggerPlugin.rb to _plugins!"
 echo "Moving jekyllImageUnwrapPlugin.rb to _plugins"
