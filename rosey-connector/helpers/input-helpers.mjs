@@ -1,11 +1,9 @@
-import { getPageString, getYamlFileName } from "./file-helpers.js";
-import { formatMarkdownText } from "./markdown-formatters.js";
-import { NodeHtmlMarkdown } from "node-html-markdown";
-const nhm = new NodeHtmlMarkdown(
-  /* options (optional) */ {},
-  /* customTransformers (optional) */ undefined,
-  /* customCodeBlockTranslators (optional) */ undefined
-);
+import { getPageString, getYamlFileName } from "./file-helpers.mjs";
+import {
+  formatTextForInputComments,
+  removeSuperAndSubFromText,
+} from "./text-formatters.mjs";
+import { htmlToMarkdown } from "./html-to-markdown.mjs";
 
 // Input set up
 function initDefaultInputs(
@@ -64,7 +62,7 @@ function initDefaultInputs(
   }
 }
 
-function getInputConfig(
+async function getInputConfig(
   inputKey,
   page,
   baseTranslationObj,
@@ -75,8 +73,9 @@ function getInputConfig(
   const baseUrl = seeOnPageCommentSettings.base_url;
   const seeOnPageCommentText = seeOnPageCommentSettings.comment_text;
   const untranslatedPhrase = baseTranslationObj.original.trim();
-  const untranslatedPhraseMarkdown = nhm.translate(untranslatedPhrase);
-  const originalPhraseTidiedForComment = formatMarkdownText(
+
+  const untranslatedPhraseMarkdown = await htmlToMarkdown(untranslatedPhrase);
+  const originalPhraseTidiedForComment = formatTextForInputComments(
     untranslatedPhraseMarkdown
   );
 
@@ -96,14 +95,16 @@ function getInputConfig(
   const options = isKeyMarkdown
     ? {
         bold: true,
-        format: "p h1 h2 h3 h4",
         italic: true,
+        strike: true,
         link: true,
+        subscript: true,
+        superscript: true,
+        underline: true,
         undo: true,
         redo: true,
         removeformat: true,
         copyformatting: true,
-        blockquote: true,
       }
     : {};
 
@@ -155,8 +156,10 @@ function generateLocationString(
   const urlHighlighterWordLength = 3;
   const originalPhraseArray = originalPhrase.split(/[\n]+/);
   // Get the first and last line of the markdown so we only have complete lines in the highlight url
-  const firstPhrase = originalPhraseArray[0];
-  const lastPhrase = originalPhraseArray[originalPhraseArray.length - 1];
+  const firstPhrase = removeSuperAndSubFromText(originalPhraseArray[0]);
+  const lastPhrase = removeSuperAndSubFromText(
+    originalPhraseArray[originalPhraseArray.length - 1]
+  );
   const endHighlightArrayAll = lastPhrase.split(" ");
 
   const startHighlightArrayWithPunctuation = firstPhrase
@@ -218,7 +221,7 @@ function generateLocationString(
     : `[${seeOnPageCommentText}](${baseUrl}${pageString}#:~:text=${encodedOriginalPhrase})`;
 }
 
-// Common input set up
+// Namespace pages input set up
 
 function initNamespacePageInputs(data, locale) {
   // Create the inputs obj if there is none
@@ -250,10 +253,14 @@ function initNamespacePageInputs(data, locale) {
   }
 }
 
-function getNamespaceInputConfig(inputKey, baseTranslationObj, inputLengths) {
+async function getNamespaceInputConfig(
+  inputKey,
+  baseTranslationObj,
+  inputLengths
+) {
   const untranslatedPhrase = baseTranslationObj.original.trim();
-  const untranslatedPhraseMarkdown = nhm.translate(untranslatedPhrase);
-  const originalPhraseTidiedForComment = formatMarkdownText(
+  const untranslatedPhraseMarkdown = await htmlToMarkdown(untranslatedPhrase);
+  const originalPhraseTidiedForComment = formatTextForInputComments(
     untranslatedPhraseMarkdown
   );
 

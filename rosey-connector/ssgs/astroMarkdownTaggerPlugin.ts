@@ -4,8 +4,8 @@ import type { Element } from "hast";
 import {
   isTextElement,
   getElementInnerText,
-} from "rosey-connector/helpers/text-formatters.ts";
-import { generateRoseyMarkdownID } from "rosey-connector/helpers/component-helpers.js";
+} from "../helpers/ast-helpers.mts";
+import { generateRoseyMarkdownId } from "../helpers/component-helpers.mjs";
 
 // Block level elements to add tags to - inline elements should not have tag added
 const textElementTagNames = ["p", "li", "h1", "h2", "h3", "h4", "h5", "h6"];
@@ -30,7 +30,7 @@ export const autoAddRoseyTags: RehypePlugin = () => {
         return;
       }
       element.properties["data-rosey"] =
-        generateRoseyMarkdownID(elementInnerText);
+        generateRoseyMarkdownId(elementInnerText);
       // Skip any children that might accidentally get a nested tag
       return SKIP;
     });

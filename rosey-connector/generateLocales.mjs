@@ -6,9 +6,9 @@ import {
   isDirectory,
   readFileWithFallback,
   getTranslationHtmlFilename,
-} from "./helpers/file-helpers.js";
+} from "./helpers/file-helpers.mjs";
 import dotenv from "dotenv";
-const md = markdownit();
+const md = markdownit({ html: true });
 dotenv.config();
 
 export async function generateLocales(configData) {
@@ -26,6 +26,15 @@ export async function generateLocales(configData) {
 }
 
 async function generateLocale(locale, configData) {
+  console.log(`\n🌍 Processing locale: ${locale}`);
+  const logStatistics = {
+    numberOfKeysInBaseJson: 0,
+    completedTranslations: 0,
+    missingTranslations: 0,
+    numberOfKeysInUrlBaseJson: 0,
+    numberOfUntranslatedUrls: 0,
+    numberOfTranslatedUrls: 0,
+  };
   const translationsDirPath = configData.rosey_paths.translations_dir_path;
   const localesDirPath = configData.rosey_paths.locales_dir_path;
   const baseFile = await fs.promises.readFile(
@@ -36,6 +45,13 @@ async function generateLocale(locale, configData) {
     configData.rosey_paths.rosey_base_urls_file_path
   );
   const baseUrlFileData = JSON.parse(baseUrlsFile.toString("utf-8")).keys;
+  const namespaceArray = configData.namespace_pages;
+
+  // Update logs
+  const baseFileDataKeys = Object.keys(baseFileData);
+  const baseUrlFileDataKeys = Object.keys(baseUrlFileData);
+  logStatistics.numberOfKeysInBaseJson = baseFileDataKeys.length;
+  logStatistics.numberOfKeysInUrlBaseJson = baseUrlFileDataKeys.length;
 
   const localePath = path.join(localesDirPath, `${locale}.json`);
   const localeUrlsPath = path.join(localesDirPath, `${locale}.urls.json`);
@@ -61,6 +77,7 @@ async function generateLocale(locale, configData) {
   // Loop through each file in the translations directory
   const localeDataEntries = {};
   await Promise.all(
+    // Exit early if its a dir
     translationsFiles.map(async (filename) => {
       if (
         await isDirectory(
@@ -70,6 +87,7 @@ async function generateLocale(locale, configData) {
         return;
       }
 
+      // Process the translation (it may be a url or a normal translation)
       const response = await processTranslation(
         locale,
         filename,
@@ -77,7 +95,8 @@ async function generateLocale(locale, configData) {
         oldLocaleData,
         oldUrlsLocaleData,
         baseFileData,
-        baseUrlFileData
+        baseUrlFileData,
+        namespaceArray
       );
 
       localeDataEntries[filename] = response;
@@ -88,15 +107,42 @@ async function generateLocale(locale, configData) {
   const localeUrlsData = {};
   const keysToUpdate = {};
 
+  // Loop through all the translations,
+  // including old ones and untranslated ones falling back to original
   await Promise.all(
     Object.keys(localeDataEntries).map(async (filename) => {
       const { data, urlData } = localeDataEntries[filename];
 
+      // Sort out the url translations from the normal translations
       for (const key of Object.keys(urlData)) {
         localeUrlsData[key] = urlData[key];
+
+        // Update stats for url translations here
+        if (urlData[key].original === urlData[key].value) {
+          logStatistics.numberOfUntranslatedUrls += 1;
+        }
+        // If the value and original aren't the same, and theres something for the value, we have a translated url
+        if (
+          urlData[key].original !== urlData[key].value &&
+          urlData[key].value
+        ) {
+          logStatistics.numberOfTranslatedUrls += 1;
+        }
       }
 
+      // Find first time translations, or new translations and add them to locale data to write
       for (const key of Object.keys(data)) {
+        // Extract translation statistics for the logger
+        if (data[key].untranslated) {
+          logStatistics.missingTranslations += 1;
+        }
+        if (data[key].isTranslated) {
+          logStatistics.completedTranslations += 1;
+        }
+        if (data[key].isNewTranslation) {
+          logStatistics.completedTranslations += 1;
+        }
+
         if (!localeData[key] || data[key].isNewTranslation) {
           const isKeyMarkdown = key.slice(0, 10).includes("markdown:");
 
@@ -104,11 +150,12 @@ async function generateLocale(locale, configData) {
             original: data[key].original,
             value:
               isKeyMarkdown && data[key].isNewTranslation
-                ? md.render(data[key].value)
+                ? md.renderInline(data[key].value)
                 : data[key].value,
           };
         }
 
+        // If new translations - prep to sync duplicate inputs on other translation pages
         if (data[key].isNewTranslation) {
           keysToUpdate[key] = data[key].value;
         }
@@ -116,7 +163,7 @@ async function generateLocale(locale, configData) {
     })
   );
 
-  // For any new translations, search for duplicate keys on each translation page
+  // Search for duplicate keys on each translation page for new translations
   await Promise.all(
     Object.keys(localeDataEntries).map(async (filename) => {
       const translationFilePath = getTranslationPath(
@@ -135,6 +182,7 @@ async function generateLocale(locale, configData) {
         }
       }
 
+      // If we've found any duplicate keys to update write the file
       if (updatedKeys.length > 0) {
         const yamlString = YAML.stringify(data);
         await fs.promises.writeFile(translationFilePath, yamlString);
@@ -163,79 +211,36 @@ async function generateLocale(locale, configData) {
     localePath,
     JSON.stringify(orderedLocaleData, null, "\t")
   );
-  console.log(`Locale file: ${localePath} updated succesfully`);
 
   // Write locales Url data
   await fs.promises.writeFile(
     localeUrlsPath,
     JSON.stringify(orderedLocaleUrlData, null, "\t")
   );
-  console.log(`Locale url file: ${localeUrlsPath} updated succesfully`);
+
+  // Log translation statistics
+  console.log(`Translation statistics:`);
+  console.log(`- Total Keys: ${logStatistics.numberOfKeysInBaseJson}`);
+  console.log(
+    `- Completed Translations: ${logStatistics.completedTranslations}`
+  );
+  console.log(`- Missing Translations: ${logStatistics.missingTranslations}`);
+
+  // Only display url translation statistics if there is at least on url translation
+  if (logStatistics.numberOfTranslatedUrls > 0) {
+    console.log(
+      `- Completed Url Translations: ${logStatistics.numberOfTranslatedUrls}`
+    );
+    console.log(
+      `- Untranslated Urls: ${logStatistics.numberOfUntranslatedUrls}`
+    );
+  } else {
+    console.log(`- Total Urls: ${logStatistics.numberOfKeysInUrlBaseJson}`);
+  }
 }
 
 function getTranslationPath(locale, translationsDirPath, translationFilename) {
   return path.join(translationsDirPath, locale, translationFilename);
-}
-
-function processUrlTranslationKey(
-  translationEntry,
-  translationHtmlFilename,
-  baseUrlFileData,
-  oldUrlsLocaleData
-) {
-  if (!translationEntry) {
-    return;
-  }
-
-  const lastTranslationUrlValue =
-    oldUrlsLocaleData[translationHtmlFilename]?.value;
-  const baseUrlFileOriginal =
-    baseUrlFileData[translationHtmlFilename]?.original;
-
-  if (translationEntry !== lastTranslationUrlValue) {
-    console.log(`Detected a new Url translation: ${translationEntry}`);
-    return {
-      original: translationHtmlFilename,
-      value: translationEntry,
-    };
-  }
-
-  return {
-    original: baseUrlFileOriginal,
-    value: lastTranslationUrlValue || baseUrlFileOriginal,
-  };
-}
-
-function processContentTranslationKey(
-  keyName,
-  translatedString,
-  localeData,
-  baseFileData,
-  oldLocaleData
-) {
-  // Exit early if it's not a new translation, and use old locales data instead
-  const oldLocaleDataValue = oldLocaleData[keyName]?.value;
-  const baseFileDataOriginal = baseFileData[keyName]?.original;
-
-  if (
-    !translatedString ||
-    translatedString === oldLocaleDataValue ||
-    md.render(translatedString) === oldLocaleDataValue
-  ) {
-    return !localeData[keyName]
-      ? {
-          original: baseFileDataOriginal,
-          value: oldLocaleDataValue || baseFileDataOriginal,
-        }
-      : localeData[keyName];
-  }
-  // If its not an old translation, write the value to the locales file
-  console.log(`Detected a new translation: ${translatedString}`);
-  return {
-    original: baseFileDataOriginal,
-    value: translatedString,
-    isNewTranslation: true,
-  };
 }
 
 async function processTranslation(
@@ -245,7 +250,8 @@ async function processTranslation(
   oldLocaleData,
   oldUrlsLocaleData,
   baseFileData,
-  baseUrlFileData
+  baseUrlFileData,
+  namespaceArray
 ) {
   const localeData = {};
   const localeUrlsData = {};
@@ -267,7 +273,8 @@ async function processTranslation(
 
   const translationHtmlFilename = getTranslationHtmlFilename(
     translationFilename,
-    baseUrlFileData
+    baseUrlFileData,
+    namespaceArray
   );
 
   // Check if theres a translation and
@@ -316,4 +323,72 @@ async function processTranslation(
   });
 
   return { data: localeData, urlData: localeUrlsData };
+}
+
+function processUrlTranslationKey(
+  translationEntry,
+  translationHtmlFilename,
+  baseUrlFileData,
+  oldUrlsLocaleData
+) {
+  if (!translationEntry) {
+    return;
+  }
+
+  const lastTranslationUrlValue =
+    oldUrlsLocaleData[translationHtmlFilename]?.value;
+  const baseUrlFileOriginal =
+    baseUrlFileData[translationHtmlFilename]?.original;
+
+  if (translationEntry !== lastTranslationUrlValue) {
+    return {
+      original: translationHtmlFilename,
+      value: translationEntry,
+    };
+  }
+
+  return {
+    original: baseUrlFileOriginal,
+    value: lastTranslationUrlValue || baseUrlFileOriginal,
+  };
+}
+
+function processContentTranslationKey(
+  keyName,
+  translatedString,
+  localeData,
+  baseFileData,
+  oldLocaleData
+) {
+  // Exit early if it's not a new translation, and use old locales data instead
+  const oldLocaleDataValue = oldLocaleData[keyName]?.value.trim();
+  const baseFileDataOriginal = baseFileData[keyName]?.original.trim();
+
+  // No translated string use the original
+  if (!translatedString) {
+    return {
+      original: baseFileDataOriginal,
+      value: baseFileDataOriginal,
+      untranslated: true,
+    };
+  }
+
+  if (
+    translatedString === oldLocaleDataValue ||
+    md.renderInline(translatedString) === oldLocaleDataValue
+  ) {
+    return !localeData[keyName]
+      ? {
+          original: baseFileDataOriginal,
+          value: oldLocaleDataValue,
+          isTranslated: true,
+        }
+      : localeData[keyName];
+  }
+  // If its not an old translation, write the value to the locales file
+  return {
+    original: baseFileDataOriginal,
+    value: translatedString,
+    isNewTranslation: true,
+  };
 }
