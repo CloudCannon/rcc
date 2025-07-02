@@ -41,58 +41,88 @@ We have provided plugins for, and currently support:
 
 ## Getting started
 
+
+### CloudCannon setup
+Option 1: Staging -> Production workflow
+
+This option is for you if you want to use the default redirect that comes with Rosey, and don't mind your original version being prefixed with a locale code. For example if your original untranslated content is in English, it would be served at `/en/`, like all the other translated locales.
+
 1. Create two sites using a staging -> production publishing workflow on CloudCannon, if you don't already have one.
 
 2. On your staging site:
 
-    a. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
+  a. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
 
-    b. If you have a Smartling account set up for automatic translations, add the env variable `DEV_USER_SECRET`. Add your Smartling API key as the value of `DEV_USER_SECRET`.
+  b. If you have a Smartling account set up for automatic translations, add the env variable `DEV_USER_SECRET`. Add your Smartling API key as the value of `DEV_USER_SECRET`.
 
 3. On your production site, add the env variable `ROSEYPROD`, with a value of `true`.
 
-4. Copy the `rosey` and `rosey-connector` directories to your project. In your `rosey/config.yml` add at least one language code to the `locales` array, and add your staging cloudvent url to the `base_url` key.
+4. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one.
 
-5. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the output directory of your project. Taking a default 11ty build as an example; you would replace `dist` with `_site`. If you already have a CloudCannon postbuild file, add this logic to your current one.
+  `.cloudcannon/postbuild`
 
-    `.cloudcannon/postbuild`
+  ```bash
+    #!/usr/bin/env bash
 
-    ```bash
-      #!/usr/bin/env bash
+    if [[ $ROSEYPROD != "true" ]];
+    then
+      npx rosey generate --source dist
+      node rosey-connector/main.mjs
+    fi
 
-      if [[ $ROSEYPROD != "true" ]];
-      then
-        npx rosey generate --source dist
-        node rosey-connector/roseyCloudCannonConnector.js
-      fi
+    if [[ $ROSEYPROD == "true" ]];
+    then
+      echo "Translating site with Rosey"
+      mv ./dist ./untranslated_site                  
+      npx rosey build --source untranslated_site --dest dist 
+    fi
+  ```
 
-      if [[ $ROSEYPROD == "true" ]];
-      then
-        echo "Translating site with Rosey"
-        # By default, Rosey will place the default language under a language code, e.g. /en/index.html, and will generate a redirect file at /index.html.
-        # By setting the flag --default-language-at-root, Rosey will output the default language at the root path, e.g. /index.html.
-        # By setting the flag --default-language-at-root, Rosey will not generate any redirect pages.
+Option 2: Everything happens on one site.
 
-        # We only want this to run on our production site, as it can interfere with CloudCannon CMS's visual editor
-        # There's a little bit of shuffling around here to ensure the translated site ends up where CloudCannon picks up your site
-        mv ./dist ./untranslated_site                  
-        npx rosey build --source untranslated_site --dest dist 
-      fi
-    ```
+You can use this option if you don't want to use the default redirect that comes with Rosey. Your original content will be served at the root of your url, without a prefix.
 
-6. Install the following packages to your project:
+1. Create a site on CloudCannon.
+
+2. On your site:
+
+  a. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
+
+  b. If you have a Smartling account set up for automatic translations, add the env variable `DEV_USER_SECRET`. Add your Smartling API key as the value of `DEV_USER_SECRET`.
+
+3. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one.
+
+  `.cloudcannon/postbuild`
+
+  ```bash
+    #!/usr/bin/env bash
+
+    npx rosey generate --source dist
+    node rosey-connector/main.mjs
+
+    echo "Translating site with Rosey"
+    mv ./dist ./untranslated_site                  
+    npx rosey build --source untranslated_site --dest dist --default-language-at-root
+  ```
+
+### Rosey setup
+
+1. Install the following packages to your project and run `npm i`.
 
     `package.json`:
 
     ``` json
     "dependencies": {
       "markdown-it": "^13.0.1",
-      "node-html-markdown": "^1.3.0",
       "rosey": "^2.3.3",
+      "dotenv": "^16.4.5",
       "slugify": "^1.6.6",
       "yaml": "^2.4.2",
+      "unified": "^11.0.5",
+      "rehype-remark": "^10.0.1",
+      "rehype-parse": "^9.0.1",
+      "remark-stringify": "^11.0.0",
       "smartling-api-sdk-nodejs": "^2.11.0",
-      "dotenv": "^16.4.5",
     }
     ```
 
@@ -105,7 +135,19 @@ We have provided plugins for, and currently support:
       }
     ```
 
-7. Add a `translations` collection to your `cloudcannon.config.yml`. If you have the key `collection_groups:` defined, remember to add `translations` to a collection group, so that it is visible in your sidebar. 
+2. Copy the `rosey-connector` directory to your project.
+
+    Commit your changes, and wait for the CloudCannon build to finish. Then pull your changes down to your local. 
+    
+    
+    Alternatively skip waiting for the build by runing the postbuild locally. Run a local build (`npm run build` probably depending on your project). then run the postbuild locally - run `./.cloudcannon/postbuild/` in your terminal at the root of your project. You may need to modify the permissions for this file to allow you to run it locally, as it's not an executable file by default. You can do this by running `chmod +x ./.cloudcannon/postbuild` in your terminal. You will also may need to add `untranslated_site` to your .gitignore, depending on previous steps.
+
+
+    Either of these options will generate all the files you need to get going. In your generated `rosey/rcc.yml` add at least one language code to the `locales` array,  add your cloudvent url (staging if using the publish workflow) as the value of the `see_on_page_comment.base_url` key, and add your github repo as the value of the `github_history.repo_url` key.
+
+
+3. Add a `translations` collection to your `cloudcannon.config.yml`. If you have the key `collection_groups:` defined, remember to add `translations` to a collection group, so that it is visible in your sidebar. 
+
 
     If your site is nested in a subdirectory you'll need to remove your `source` key, and manually add the subdirectory to each path that needs it. The translations collection's path `rosey` does not need the prefix of the subdirectory since it lives in the root of our project. Schema paths in CloudCannon are not affected by the `source` key, so do not need updating.
 
@@ -129,13 +171,7 @@ We have provided plugins for, and currently support:
               comment: Provide a translation for the Url that Rosey will build this page at.
     ```
 
-8. This project is written in ESM syntax. If your project is in CJS, you may need to update your project, or the    `rosey-connector` files. 
-
-    To change your project to ESM, make sure your package.json is `"type": "module"`, and either change any CJS files to `.cjs` extension, or refactor to ESM syntax. 
-
-    Alternatively it may be easier to change the `.js` files in `rosey-connector` to `.mjs`, and update any `.js` imports in those files.
-
-9. After your next build in CC, you should see nearly empty translations files. A url input will be generated for you to translate the page's url if need be, without anything in your site needing to be tagged. To add text content to translate, start   tagging your layouts and components with data-rosey tags.
+4. After your next build in CC, you should see nearly empty translations files. A url input will be generated for you to translate the page's url if need be, without anything in your site needing to be tagged. To add text content to translate, start tagging your layouts and components with data-rosey tags.
 
     An example tag in 11ty may look like: `data-rosey="{{ heading.heading_text | slugify }}"`
 
@@ -151,214 +187,10 @@ We have provided plugins for, and currently support:
     
     In the case of an SSG like Jekyll, where a `markdownify` filter is built in, extending the markdown processing will also affect templating with that filter on it. In the case of an SSG like Astro a component (`rosey-connector/ssgs/astroMarkdownComponent.astro`), with markdown rendering on the content it receives, is used to parse any markdown content that needs processed through your templating. This accomplishes the same thing as extending the `markdownify` filter in Jekyll - it removes the need to tag the whole piece of markdown content as one phrase, because it's automatically being tagged on all block level elements.
 
-10. To add automatic AI-powered translations - which your editors can then QA in the app - enable Smartling in your `rosey/config.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Ensure you have added you secret API key to your environment variables in CloudCannon, as `DEV_USER_SECRET`. You can set this locally in a `.env` file if you want to test it in your development environment. 
+5. To add automatic AI-powered translations - which your editors can then QA in the app - enable Smartling in your `rosey/config.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Ensure you have added you secret API key to your environment variables in CloudCannon, as `DEV_USER_SECRET`. You can set this locally in a `.env` file if you want to test it in your development environment. 
 
 > [!IMPORTANT]
 > Make sure to not push any secret API keys to your source control. The `.env` file should already be in your .gitignore.
 
 > [!IMPORTANT]
 > **Be aware these translations have some cost involved**, so make sure you understand the pricing around Smartling machine-translations before enabling this. 
-
-## Jekyll
-See a demonstration of this workflow [here](https://github.com/CloudCannon/rosey-jekyll-starter).
-
-### Generating ids
-
-When tagging content for translation, the slugified contents of that translation should be used as the `data-rosey` id.
-
-An example in Jekyll:
-
-```liquid
-<h1 class="{{c}}__title" data-rosey="{{ include.title | slugify }}">{{ include.title }}</h1>
-```
-
-The built in `slugify` filter makes it easy to slugify the text contents for use as the `data-rosey` tag. Templating with the `markdownify` filter does not need tagged like this, as it will automatically be tagged with plugins.
-
-### Markdown processing
-
-Create a prebuild in your `.cloudcannon` folder.
-
-``` bash
-#!/usr/bin/env bash
-
-echo "Moving jekyllMarkdownTaggerPlugin.rb to _plugins"
-mkdir -p site/_plugins
-mv rosey-connector/ssgs/jekyllMarkdownTaggerPlugin.rb site/_plugins/jekyllMarkdownTaggerPlugin.rb
-echo "Moved jekyllMarkdownTaggerPlugin.rb to _plugins!"
-echo "Moving jekyllImageUnwrapPlugin.rb to _plugins"
-mv rosey-connector/ssgs/jekyllImageUnwrapPlugin.rb site/_plugins/jekyllImageUnwrapPlugin.rb
-echo "Moved jekyllImageUnwrapPlugin.rb to _plugins!"
-```
-
-This prebuild moves two plugins two our sites `_plugins` folder. Both plugins customise the markdown processing of Jekyll; by extending how Jekyll uses Kramdown to parse the markdown. This affects page body content, and templating with the `markdownify` filter. This means neither body content, nor templating with the `markdownify` filter need to be tagged manually.
-
-`jekyllMarkdownPlugin.rb` tags all block level elements with `data-rosey` tags. It uses the slugified text contents of the element for the value.
-
-`jekyllImagePlugin.rb` removes the wrapping paragraph element from an image. This is important so that we don't have image links mistakenly appear in our translations.
-
-### Build directory
-Change your postbuild to use `_site` instead of `dist`.
-
-```bash
-#!/usr/bin/env bash
-npx @bookshop/generate
-
-if [[ $ROSEYPROD != "true" ]];
-then
-  npx rosey generate --source _site
-  node rosey-connector/roseyCloudCannonConnector.js
-fi
-
-if [[ $ROSEYPROD == "true" ]];
-then
-  echo "Translating site with Rosey"
-  # By default, Rosey will place the default language under a language code, e.g. /en/index.html, and will generate a redirect file at /index.html.
-  # By setting the flag --default-language-at-root, Rosey will output the default language at the root path, e.g. /index.html.
-  # By setting the flag --default-language-at-root, Rosey will not generate any redirect pages.
-
-  # We only want this to run on our production site, as it can interfere with CloudCannon CMS's visual editor
-  # There's a little bit of shuffling around here to ensure the translated site ends up where CloudCannon picks up your site
-  mv ./_site ./untranslated_site                  
-  npx rosey build --source untranslated_site --dest _site 
-fi
-```
-
-## Astro
-See a demonstration of this workflow [here](https://github.com/CloudCannon/rosey-astro-starter).
-
-### Extra dependencies
-
-To use the provided markdown plugin, and markdown component for Astro, these extra dependencies need to be installed:
-
-```json
-  "dependencies": {
-    "unist-util-visit": "^5.0.0",
-    "hast-util-from-html-isomorphic": "^2.0.0",
-  }
-```
-
-### Config file
-Your `astro.config.mjs` should have the following configuration, or add this to yours.
-
-```javascript
-import mdx from "@astrojs/mdx";
-import { autoAddRoseyTags } from "./rosey-connector/ssgs/astroMarkdownTaggerPlugin.ts";
-
-// https://astro.build/config
-export default defineConfig({
-  site: "https://adjective-noun.cloudvent.net/", // Replace this with your own
-  integrations: [bookshop(), mdx()],
-  markdown: {
-    rehypePlugins: [autoAddRoseyTags],
-    remarkRehype: {
-      // https://github.com/syntax-tree/mdast-util-to-hast?tab=readme-ov-file#options
-      handlers: {
-        mdxJsxTextElement(state, node) {
-          return {
-            type: "element",
-            tagName: node.name,
-            properties: {},
-            children: state.all(node),
-          };
-        },
-      },
-    },
-  },
-});
-```
-
-MDX allows you to use components throughout your markdown content, to allow for more complex things than traditional markdown syntax could represent. Bookshop handles the import of any Bookshop components into each file, to allow for any [snippets](https://cloudcannon.com/documentation/articles/snippets-using-mdx-components/) to be added to the page. CloudCannon configuration then defines which snippets an editor can see and their editing experience for editing, or adding them to the page.
-
-A rehype plugin has been provided to automatically tag block level markdown elements for translation. A handler has been added so that our plugin's AST parser knows what to do with any JSX elements it comes across in our mdx content.
-
-### Markdown processing
-The `./rosey-connector/ssgs/astroMarkdownTaggerPlugin.ts` plugin is used to extend Astro's parsing of markdown content into Html. As the name suggests, it tags block level content in your markdown. This means you don't need to manually tag any content that will be processed as part of your page's body content - it should happen as part of the build. 
-
-### Markdown Component
-Sometimes a component needs to contain markdown content. A `type: markdown` input in CloudCannon will allow an editor to add markdown as a component's content. 
-
-Some SSGs come with a `markdownify` filter out of the box that processes content from markdown to html. In such an SSG we would simply add this filter to the templating our component. In Astro, we need to roll our own with one of the many markdown processing libraries out there. A component has been provided `rosey-connector/ssgs/astroMarkdownComponent.astro` to add wherever you need to parse markdown that isn't going to be automatically parsed by Astro. 
-
-Drag it into your project's components folder, and update the import `import { generateRoseyMarkdownID } from "../helpers/component-helper";` to reflect it's new relative address. It can then be used throughout your components and layouts like:
-  
-  ```jsx
-  <div class="mb-4" style={`color: ${block.text.color};`}>
-    <Markdown content={block.text.markdown_content} />
-  </div>
-  ```
-
-You can style the content like:
-
-  ```css
-  .markdown-text h1 {
-    font-size: 3rem;
-    line-height: 3rem;
-  }
-  .markdown-text h2 {
-    font-size: 2.5rem;
-    line-height: 2.5rem;
-  }
-  ```
-
-### Generating ids
-
-When tagging content for translation, the slugified contents of that translation should be used as the `data-rosey` id.
-
-A helper function has been provided. Add this to the top of your component, or layout, adjusting the import address as needed.
-
-  ```js
-  import { generateRoseyId } from "../../../rosey-connector/helpers/component-helper.js";
-  ```
-
-Add it to your html templating like:
-
-  ```jsx
-  <h1
-    class="heading"
-    data-rosey={generateRoseyId(block.heading.heading_text)}>
-    {block.heading.heading_text}
-  </h1>
-  ```
-
-## Maintenance
-
-### Adding the rosey-connector directory to downstream repositories
-
-To add a single folder as an upstream dependency, we can use a git subtree.
-
-[Using this as a guide:](https://gist.github.com/tswaters/542ba147a07904b1f3f5)
-
-#### Initial setup
-
-Initial setup of fetching the `rosey-connector` directory from https://github.com/CloudCannon/rcc, for use in a downstream repository. This allows us to maintain the RCC logic in one place.
-
-```bash
-# Add remote to upstream repo, create new tracking branch, fetch immediately 
-# An alias may need to be set if using multiple SSH keys
-git remote add -f rcc-upstream git@github.com:CloudCannon/rcc.git
-git checkout -b upstream/rcc rcc-upstream/main
-
-# Split off subdir of tracking branch into separate branch
-git subtree split -q --squash --prefix=rosey-connector --annotate="[rcc] " --rejoin -b merging/rcc
-
-# Add the split subdir on separate branch as a subdirectory on staging
-git checkout staging
-git subtree add --prefix=rosey-connector --squash merging/rcc
-```
-
-#### Pulling from upstream
-
-Pulling changes to the `rosey-connector` directory from https://github.com/CloudCannon/rcc.
-
-```bash
-# switch back to tracking branch, fetch & rebase.
-git checkout upstream/rcc 
-git pull rcc-upstream/main
-
-# update the separate branch with changes from upstream
-git subtree split -q --prefix=rosey-connector --annotate="[rcc] " --rejoin -b merging/rcc
-
-# switch back to staging and use subtree merge to update the subdirectory
-git checkout staging
-git subtree merge -q --prefix=rosey-connector --squash merging/rcc
-```
