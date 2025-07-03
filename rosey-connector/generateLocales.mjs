@@ -393,6 +393,8 @@ function processContentTranslationKey(
   oldLocaleData
 ) {
   // Exit early if it's not a new translation, and use old locales data instead
+  // Warning to future self: If you want to add .trim() to these, it will trim new lines off things it shouldnt
+  // And throw off the check for if it's a newly cleared translation
   const oldLocaleDataValue = oldLocaleData[keyName]?.value;
   const baseFileDataOriginal = baseFileData[keyName]?.original;
 
