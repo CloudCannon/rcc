@@ -121,7 +121,7 @@ const blockLevelElements = [
     console.log(`No data-rosey tags added.`);
   }
 
-  console.log("🖍️ Finished tagging of html files...");
+  console.log("🖍️ Finished tagging of html files...\n\n");
 })();
 
 // Walk dirs to find .html files, and if it finds a dir recursively calls itself on that dir
@@ -173,12 +173,13 @@ async function readTagAndWriteHtmlFile(filePath, verboseLogs) {
 
   if (verboseLogs) {
     // Log out the stats from the tagging
-    console.log(`\n---Tagging Statistics---`);
 
     const tagsAddedForThisPage = logStatistics[filePath].tagsAdded;
     if (Object.keys(tagsAddedForThisPage).length === 0) {
       console.log(`\nNo tags added.`);
     } else {
+      console.log(`\n---Tagging Statistics---`);
+
       console.log("\nBlock level elements:");
       for (const blockElement of Object.keys(tagsAddedForThisPage)) {
         console.log(`- ${blockElement}: ${tagsAddedForThisPage[blockElement]}`);
