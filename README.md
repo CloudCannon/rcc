@@ -177,6 +177,16 @@ This is especially useful to wrap your markdown body content, wherever that goes
 
 If you don't have one of these `data-rosey-tagger="true"` tags on any of your pages it won't do anything, so can be ignored or removed. If no translation is provided for an element, the original will be used. This means even if you tag everything but don't want to provide a translation for it the original will be shown in your translated version, rather than a blank space.
 
+## Namespaced pages
+
+Sometimes you don't want a piece of content that appears many times on different pages to be represented on each translation page. Duplicate translation keys (translations with the same ID) across pages *will* be kept in sync with each other, but it can clutter up your translation files. The most common example would be text used in your header and footer content.
+
+
+For this you can add a `data-rosey-ns` tag similar to the `markdown` example given in [Automatic tagging](#automatic-tagging) (although markdown is a reserved namespace when using the RCC), and add the value of the tag to the `namespace_page` field in the `rcc.yaml` configuration file. This will cause any translations that are nested under this namespace to appear on a separately generated page, and be ommited from the normal translations for that page. 
+
+
+By default a `common` namespace page comes with this workflow, although you can configure it to be whatever you wish by adding/editing the values in the `namespace_pages` array in the `rcc.yaml` configuration file. 
+
 ## Smartling integration
 
 To add automatic AI-powered translations - which your editors can then QA in the app - enable Smartling in your `rosey/config.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Add your secret API key to your environment variables with the key of `DEV_USER_SECRET` in CloudCannon on your staging site (or your only site if you're not using a publishing workflow). You can set this locally in a `.env` file if you want to test it in your development environment. 
@@ -185,4 +195,4 @@ To add automatic AI-powered translations - which your editors can then QA in the
 > Make sure to not push any secret API keys to your source control. The `.env` file should already be in your .gitignore.
 
 > [!IMPORTANT]
-> **Be aware these translations have some cost involved**, so make sure you understand the pricing around Smartling machine-translations before enabling this. 
+> **Be aware these translations have some cost involved**, so make sure you understand the pricing around Smartling machine-translations before enabling this.
