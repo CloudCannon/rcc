@@ -145,7 +145,21 @@ An example tag in 11ty may look like:
   <h1 class="heading" data-rosey="{{ heading.heading_text | slugify }}">{{ heading.heading_text }}</h1>
 ```
 
-11ty has the slugify global filter, which means you can slugify the content and use that as the translation key. If you are using an SSG that doesn't have a slugify filter built in -like Astro - you can import a helper function which has been provided in  `rosey-connector/helpers/component-helper.js`.
+Eleventy comes with the slugify global filter, which you can use to slugify the tagged elements content and use that as the translation key. If you are using an SSG that doesn't have a slugify filter built in - like Astro - you can import a helper function which has been provided in  `rosey-connector/helpers/component-helper.js`.
+
+An example tag in Astro may look like:
+
+```jsx
+  ...
+  import { generateRoseyId } from "rosey-connector/helpers/component-helpers.mjs";
+
+  const { heading } = Astro.props;
+  ---
+
+  <h1 class="heading" data-rosey={generateRoseyId(heading.heading_text)}>
+    {heading.heading_text}
+  </h1>
+```
 
 ### Automatic tagging
 
@@ -155,7 +169,11 @@ Most sites using an SSG will have at least some content that comes from markdown
 For this the `rosey-tagger` directory has been provided. In the Getting Started steps above, we've added it to the postbuild so that it runs after every build, but before the rest of the Rosey ecosystem. Tag a parent element with the attribute `data-rosey-tagger="true"` and block elements inside of the parent element will be tagged for translation automatically. The most nested block element will be the one to receive the tag, so that there isn't a `data-rosey` tag inside of a `data-rosey` tag.
 
 
-This is especially useful to wrap wherever your markdown body content goes in your layouts or components, but can be used on element. For example you could add it to the <body> tag of a page for every block level element in that page to be tagged automatically. 
+This is especially useful to wrap wherever your markdown body content goes in your layouts or components, but can be used on any element. For example you could add it to the <body> tag of a page for every block level element in that page to be tagged automatically. You shouldn't nest one `data-rosey-tagger="true"` inside of another, however it should respect existing tags, and not overwrite them. 
+
+
+> [!IMPORTANT]
+> When using it with markdown, add a Rosey namespace of `data-rosey-ns="markdown"`, so that generated inputs for that content are `type: markdown` in CloudCannon, and allow editors the same options in the translation input as is allowed for the original content.
 
 
 If you don't have one of these `data-rosey-tagger="true"` tags on a page it won't do anything, so can be ignored or removed. If no translation is provided for an element, the original will be used. This means even if you tag everything but don't want to provide a translation for it - nothing bad should happen to the element in your translated version.
