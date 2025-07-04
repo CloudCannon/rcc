@@ -3,17 +3,17 @@
 Read [this blog post](https://cloudcannon.com/blog/managing-multilingual-content-in-cloudcannon/) before getting starting with the RCC.
 
 
-[Rosey](https://rosey.app/) is used to generate a multilingual site from a set of JSON files. As part of this, Rosey creates a redirect so that the site visitor is redirected to the language set in their browser settings. 
+[Rosey](https://rosey.app/) is used to generate a multilingual site from a set of JSON files.
 
 How Rosey works at a high level:
 
-  1. Html elements are tagged by a developer for translation using `data-rosey` tags.
+  1. HTML elements are tagged by a developer for translation using `data-rosey` tags.
 
-  2. Rosey creates a JSON file called `base.json` from these tags by scanning your built static site.
+  2. Rosey scannin your built static site for these `data-rosey` tags and generates a JSON file named `base.json`, containing information about your tagged content.
 
-  3. Rosey takes a different `locales/xx-XX.json` file, which contains the original phrase with a user entered translation and generates the finished translated site.
+  3. Rosey ingests `locales/*.json` files, which contain original phrases paired with user entered. From this data and your tagged content Rosey generates a complete multilingual site.
 
-**What the RCC does** is create a way for non-technical editors to create the `locales/xx-XX.json` files needed to generate the site. Using the `base.json` file, YAML files are generated with the correct CloudCannon input configuration to enable translations via an interface in CloudCannon's CMS. These editor-friendly YAML files are then turned into the JSON files needed by Rosey to generate your final multilingual site.
+**What the RCC does** is create a way for non-technical editors to create the `locales/*.json` files needed to generate the site. Using the `base.json` file, YAML files are generated with the correct CloudCannon input configuration to enable translations via an interface in CloudCannon's CMS. These editor-friendly YAML files are then turned into the JSON files needed by Rosey to generate your final multilingual site.
 
 All of this happens in your site's postbuild, meaning it automatically happens each build. The file generation and entry of translations happens on your staging site, while the multilingual site generation takes place on your production (main) site.
 
