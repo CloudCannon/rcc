@@ -29,9 +29,9 @@ This option is for you if you want to use the default redirect that comes with R
 
 2. On your staging site:
 
-  a. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
+    a. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
 
-  b. If you have a Smartling account set up for automatic translations, add the env variable `DEV_USER_SECRET`. Add your Smartling API key as the value of `DEV_USER_SECRET`.
+    b. If you have a Smartling account set up for automatic translations, add the env variable `DEV_USER_SECRET`. Add your Smartling API key as the value of `DEV_USER_SECRET`.
 
 3. On your production site, add the env variable `ROSEYPROD`, with a value of `true`.
 
@@ -66,9 +66,9 @@ You can use this option if you don't want to use the default redirect that comes
 
 2. On your site:
 
-  a. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
+    a. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
 
-  b. If you have a Smartling account set up for automatic translations, add the env variable `DEV_USER_SECRET`. Add your Smartling API key as the value of `DEV_USER_SECRET`.
+    b. If you have a Smartling account set up for automatic translations, add the env variable `DEV_USER_SECRET`. Add your Smartling API key as the value of `DEV_USER_SECRET`.
 
 3. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one.
 
@@ -86,7 +86,7 @@ You can use this option if you don't want to use the default redirect that comes
     npx rosey build --source untranslated_site --dest dist --default-language-at-root
   ```
 
-#### Rosey setup
+### Rosey setup
 
 1. Install the following packages to your project and run `npm i`.
 
