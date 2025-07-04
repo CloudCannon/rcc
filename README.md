@@ -61,11 +61,7 @@ You can use this option if you don't want to use the default redirect that comes
 
 1. Create a site on CloudCannon.
 
-2. On your site:
-
-    a. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
-
-    b. If you have a Smartling account set up for automatic translations, add the env variable `DEV_USER_SECRET`. Add your Smartling API key as the value of `DEV_USER_SECRET`.
+2. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
 
 3. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one.
 
