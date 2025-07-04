@@ -13,9 +13,7 @@ How Rosey works at a high level:
 
   3. Rosey ingests `locales/*.json` files, which contain original phrases paired with user entered. From this data and your tagged content Rosey generates a complete multilingual site.
 
-**What the RCC does** is create a way for non-technical editors to create the `locales/*.json` files needed to generate the site. Using the `base.json` file, YAML files are generated with the correct CloudCannon input configuration to enable translations via an interface in CloudCannon's CMS. These editor-friendly YAML files are then turned into the JSON files needed by Rosey to generate your final multilingual site.
-
-All of this happens in your site's postbuild, meaning it automatically happens each build. The file generation and entry of translations happens on your staging site, while the multilingual site generation takes place on your production (main) site.
+**What the RCC does** is create a way for non-technical editors to create the `locales/*.json` files needed to generate the site. Using the `base.json` file, editor-friendly YAML files are generated with the correct CloudCannon input configuration to enable translations via an interface in CloudCannon's CMS. These YAML files are then turned into the JSON files needed by Rosey to generate your final multilingual site. All of this happens in your site's postbuild, meaning it automatically happens each build.
 
 ## Getting started
 
