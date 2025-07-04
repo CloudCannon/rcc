@@ -27,13 +27,10 @@ This option is for you if you want to use the default redirect that comes with R
 
 1. Create two sites using a staging -> production [publishing workflow](https://cloudcannon.com/documentation/articles/what-is-a-publish-branch/) on CloudCannon, if you don't already have one.
 
-2. On your staging site:
+2. On your staging site add the env variable `SYNC_PATHS`, with the value `/rosey/`.
 
-    a. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
 
-    b. If you have a Smartling account set up for automatic translations, add the env variable `DEV_USER_SECRET`. Add your Smartling API key as the value of `DEV_USER_SECRET`.
-
-3. On your production site, add the env variable `ROSEYPROD`, with a value of `true`.
+3. On your production site add the env variable `ROSEYPROD`, with a value of `true`.
 
 4. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one.
 
@@ -171,7 +168,7 @@ If you don't have one of these `data-rosey-tagger="true"` tags on a page it won'
 
 ## Smartling integration
 
-To add automatic AI-powered translations - which your editors can then QA in the app - enable Smartling in your `rosey/config.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Ensure you have added you secret API key to your environment variables in CloudCannon, as `DEV_USER_SECRET`. You can set this locally in a `.env` file if you want to test it in your development environment. 
+To add automatic AI-powered translations - which your editors can then QA in the app - enable Smartling in your `rosey/config.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Add you secret API key to your environment variables as `DEV_USER_SECRET` in CloudCannon on your staging site (or your only site if you're not using a publishing workflow). You can set this locally in a `.env` file if you want to test it in your development environment. 
 
 > [!IMPORTANT]
 > Make sure to not push any secret API keys to your source control. The `.env` file should already be in your .gitignore.
