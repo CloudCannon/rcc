@@ -3,7 +3,7 @@
 Read [this blog post](https://cloudcannon.com/blog/managing-multilingual-content-in-cloudcannon/) before getting starting with the RCC.
 
 
-[Rosey](https://rosey.app/) is used to generate a multilingual site from a set of JSON files.
+[Rosey](https://rosey.app/) is used to generate a multilingual site from tagged html and a set of JSON files.
 
 How Rosey works at a high level:
 
