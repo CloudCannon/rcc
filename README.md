@@ -3,17 +3,17 @@
 Read [this blog post](https://cloudcannon.com/blog/managing-multilingual-content-in-cloudcannon/) before getting starting with the RCC.
 
 
-[Rosey](https://rosey.app/) is used to generate a multilingual site from tagged html and a set of JSON files.
+[Rosey](https://rosey.app/) is used to generate a multilingual site from tagged HTML and a set of JSON files.
 
 How Rosey works at a high level:
 
-  1. HTML elements are tagged by a developer for translation using `data-rosey` tags.
+  1. A developer tags HTML elements on your site for translation using `data-rosey` tags.
 
-  2. Rosey scannin your built static site for these `data-rosey` tags and generates a JSON file named `base.json`, containing information about your tagged content.
+  2. Rosey scans your built static site for `data-rosey` tags and generates a JSON file named `base.json`, containing information about your tagged content.
 
-  3. Rosey ingests `locales/*.json` files, which contain original phrases paired with user entered. From this data and your tagged content Rosey generates a complete multilingual site.
+  3. Rosey ingests `locales/*.json` files, which contain original phrases paired with user entered translations. From this data, and your tagged content, Rosey generates a complete multilingual site.
 
-**What the RCC does** is create a way for non-technical editors to create the `locales/*.json` files needed to generate the site. Using the `base.json` file, editor-friendly YAML files are generated with the correct CloudCannon input configuration to enable translations via an interface in CloudCannon's CMS. These YAML files are then turned into the JSON files needed by Rosey to generate your final multilingual site. All of this happens in your site's postbuild, meaning it automatically happens each build.
+**What the RCC does** is create a way for non-technical editors to create the `locales/*.json` files that Rosey needs to generate the site. Using the `base.json` file, editor-friendly YAML files are generated with the correct CloudCannon input configuration to enable translations to be entered via CloudCannon's CMS. The YAML files are then turned into the `locales/*.json` files JSON files needed by Rosey. All of this happens in your site's postbuild, meaning it happens automatically each build.
 
 ## Getting started
 
@@ -23,12 +23,11 @@ How Rosey works at a high level:
 
 This option is for you if you want to use the default redirect that comes with Rosey, and don't mind your original version being prefixed with a locale code. For example if your original untranslated content is in English, it would be served at `/en/`, like all the other translated locales.
 
-1. Create two sites using a staging -> production [publishing workflow](https://cloudcannon.com/documentation/articles/what-is-a-publish-branch/) on CloudCannon, if you don't already have one.
+1. Create two sites using a `staging` -> `production` [publishing workflow](https://cloudcannon.com/documentation/articles/what-is-a-publish-branch/) on CloudCannon, if you don't already have one.
 
-2. On your staging site add the env variable `SYNC_PATHS`, with the value `/rosey/`.
+2. On your `staging` site add the [environment variable](https://cloudcannon.com/documentation/articles/configure-your-environment-variables/) `SYNC_PATHS`, with the value `/rosey/`.
 
-
-3. On your production site add the env variable `ROSEYPROD`, with a value of `true`.
+3. On your `production` site add the environment variable `ROSEYPROD`, with a value of `true`.
 
 4. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one.
 
@@ -46,7 +45,7 @@ This option is for you if you want to use the default redirect that comes with R
 
     if [[ $ROSEYPROD == "true" ]];
     then
-      node rosey-tagger/main.mjs --source dist # Add the flag --verbose for more logs
+      node rosey-tagger/main.mjs --source dist
       echo "Translating site with Rosey"
       mv ./dist ./untranslated_site                  
       npx rosey build --source untranslated_site --dest dist 
@@ -55,11 +54,11 @@ This option is for you if you want to use the default redirect that comes with R
 
 #### Option 2: Everything happens on one site
 
-You can use this option if you don't want to use the default redirect that comes with Rosey. Your original content will be served at the root of your url, without a prefix.
+You can use this option if you don't need the default redirect that comes with Rosey. Your original content will be served at the root of your URL, without a prefix.
 
 1. Create a site on CloudCannon.
 
-2. Add the env variable `SYNC_PATHS`, with the value `/rosey/`.
+2. Add the environment variable `SYNC_PATHS`, with the value `/rosey/`.
 
 3. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one.
 
@@ -79,7 +78,7 @@ You can use this option if you don't want to use the default redirect that comes
 
 ### Rosey setup
 
-1. Install the following packages to your project and run `npm i`.
+1. Copy the following dependencies to your project's `package.json` and run `npm i`.
 
     `package.json`:
 
@@ -103,15 +102,15 @@ You can use this option if you don't want to use the default redirect that comes
 2. Copy the `rosey-connector`, and `rosey-tagger` directories to your project. Commit your changes, and wait for the CloudCannon build to finish. Then pull your changes down to your local. 
 
 
-    All the files you need will be generated  to get going. In your generated `rosey/rcc.yml` **add at least one language code to the `locales` array**,  add your cloudvent url (staging if using the publish workflow) as the value of the `see_on_page_comment.base_url` key, and add your github repo as the value of the `github_history.repo_url` key.
+    All the files you need will be generated  to get going. In your generated `rosey/rcc.yml` **add at least one language code to the `locales` array**,  add your cloudvent URL (the staging one if using the publishing workflow) as the value of the `see_on_page_comment.base_url` key, and add your Git repo as the value of the `git_history_link.repo_url` key.
 
 
     Once again wait for the CloudCannon build to finish. Then pull your changes down to your local.
 
-3. Add a `translations` collection to your `cloudcannon.config.yml`. If you have the key `collection_groups:` defined, remember to add `translations` to a collection group, so that it is visible in your sidebar. 
+3. Add a `translations` collection to your `cloudcannon.config.yml`. If you have the [collection_groups](https://cloudcannon.com/documentation/articles/configure-your-site-navigation/#options) configuration key defined, remember to add `translations` to a collection group, so that it is visible in your sidebar in CloudCannon. 
 
 
-    If your site is nested in a subdirectory you'll need to remove your `source` key, and manually add the subdirectory to each path that needs it (probably just your collections). The translations collection's path `rosey` does not need the prefix of the subdirectory since it lives in the root of our project. Schema paths in CloudCannon are not affected by the `source` key, so do not need updating.
+    If your site is nested in a subdirectory and you're using the [source](https://cloudcannon.com/documentation/articles/configuration-file-reference/#source) key you'll need to remove it, and manually add the subdirectory to each path that needs it (probably just your collections). The translations collection's path `rosey` does not need the prefix of the subdirectory since it lives in the root of our project. Schema paths in CloudCannon are not affected by the `source` key, so do not need updating.
 
     `cloudcannon.config.yml`
 
@@ -125,29 +124,29 @@ You can use this option if you don't want to use the default redirect that comes
           disable_add_folder: true
           disable_file_actions: false
           glob:
-            - config.yaml
+            - rcc.yaml
             - 'translations/**'
           _inputs:
             urlTranslation:
               type: text
-              comment: Provide a translation for the Url that Rosey will build this page at.
+              comment: Provide a translated URL, and Rosey will build this page at that address.
     ```
 
 ## Tagging content for translation
 
 ### Manual tagging
 
-After your next build in CC, you should see nearly empty translations files. A url input will be generated for you to translate the page's url if need be, without anything in your site needing to be tagged. To add text content to translate, start tagging your layouts and components with data-rosey tags.
+After your next build in CC, you should see empty translations files. A URL input will be generated for you to translate the page's URL if need be, without anything in your site needing to be tagged. To add text content to translate, start tagging your layouts and components with `data-rosey` tags.
 
-An example tag in 11ty may look like:
+An example tag in [Eleventy](https://www.11ty.dev/) may look like:
 
 ```liquid
   <h1 class="heading" data-rosey="{{ heading.heading_text | slugify }}">{{ heading.heading_text }}</h1>
 ```
 
-Eleventy comes with the slugify global filter, which you can use to slugify the tagged elements content and use that as the translation key. If you are using an SSG that doesn't have a slugify filter built in - like Astro - you can import a helper function which has been provided in  `rosey-connector/helpers/component-helper.js`.
+Eleventy comes with the `slugify` global filter, which you can use to turn the tagged elements content into an ID friendly slug, and use that as the translation key. If you are using an SSG that doesn't have a `slugify` filter built in - like Astro - you can import a helper function which has been provided in  `rosey-connector/helpers/component-helper.js`.
 
-An example tag in Astro may look like:
+An example tag in [Astro](https://astro.build/) may look like:
 
 ```jsx
   ...
@@ -163,24 +162,24 @@ An example tag in Astro may look like:
 
 ### Automatic tagging
 
-Most sites using an SSG will have at least some content that comes from markdown, and gets run through a `markdownify` filter, or somehow turned from markdown to html. Any body content in a markdown file will go through this process. This makes it hard to tag manually.
+Most sites using an SSG will have at least some content that comes from markdown, and gets run through a `markdownify` filter, or somehow turned from markdown to HTML. For example, any body content in a markdown file will go through this process as part of the SSG's build. This markdown content is hard to tag manually.
 
 
-For this the `rosey-tagger` directory has been provided. In the Getting Started steps above, we've added it to the postbuild so that it runs after every build, but before the rest of the Rosey ecosystem. Tag a parent element with the attribute `data-rosey-tagger="true"` and block elements inside of the parent element will be tagged for translation automatically. The most nested block element will be the one to receive the tag, so that there isn't a `data-rosey` tag inside of a `data-rosey` tag.
+For this the `rosey-tagger` directory has been provided. In the [Getting Started](#getting-started) steps above, we've added it to the CloudCannon `postbuild` so that it runs after every build, and before the rest of the Rosey workflow. Tag a parent element with the attribute `data-rosey-tagger="true"` and block elements inside of the parent element will be tagged for translation automatically. The most nested block element will be the one to receive the tag, so that there isn't a `data-rosey` tag inside of a `data-rosey` tag.
 
 
-This is especially useful to wrap wherever your markdown body content goes in your layouts or components, but can be used on any element. For example you could add it to the <body> tag of a page for every block level element in that page to be tagged automatically. You shouldn't nest one `data-rosey-tagger="true"` inside of another, however it should respect existing tags, and not overwrite them. 
+This is especially useful to wrap your markdown body content, wherever that goes in your layouts or components, but can be used on any element. For example you could add it to the `<body>` tag of a page for every block level element in that page to be tagged automatically. You shouldn't nest one `data-rosey-tagger="true"` inside of another, however it should respect existing tags you've added manually, and not overwrite them. 
 
 
 > [!IMPORTANT]
-> When using it with markdown, add a Rosey namespace of `data-rosey-ns="markdown"`, so that generated inputs for that content are `type: markdown` in CloudCannon, and allow editors the same options in the translation input as is allowed for the original content.
+> When using the `rosey-tagger` with markdown, add a Rosey namespace of `data-rosey-ns="markdown"` on the element containing markdown, so that generated inputs for that content are `type: markdown` in CloudCannon, which will allow editors the same options in the translation input as are allowed for the original content.
 
 
-If you don't have one of these `data-rosey-tagger="true"` tags on a page it won't do anything, so can be ignored or removed. If no translation is provided for an element, the original will be used. This means even if you tag everything but don't want to provide a translation for it - nothing bad should happen to the element in your translated version.
+If you don't have one of these `data-rosey-tagger="true"` tags on any of your pages it won't do anything, so can be ignored or removed. If no translation is provided for an element, the original will be used. This means even if you tag everything but don't want to provide a translation for it the original will be shown in your translated version, rather than a blank space.
 
 ## Smartling integration
 
-To add automatic AI-powered translations - which your editors can then QA in the app - enable Smartling in your `rosey/config.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Add you secret API key to your environment variables as `DEV_USER_SECRET` in CloudCannon on your staging site (or your only site if you're not using a publishing workflow). You can set this locally in a `.env` file if you want to test it in your development environment. 
+To add automatic AI-powered translations - which your editors can then QA in the app - enable Smartling in your `rosey/config.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Add your secret API key to your environment variables with the key of `DEV_USER_SECRET` in CloudCannon on your staging site (or your only site if you're not using a publishing workflow). You can set this locally in a `.env` file if you want to test it in your development environment. 
 
 > [!IMPORTANT]
 > Make sure to not push any secret API keys to your source control. The `.env` file should already be in your .gitignore.
