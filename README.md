@@ -25,7 +25,7 @@ All of this happens in your site's postbuild, meaning it automatically happens e
 
 This option is for you if you want to use the default redirect that comes with Rosey, and don't mind your original version being prefixed with a locale code. For example if your original untranslated content is in English, it would be served at `/en/`, like all the other translated locales.
 
-1. Create two sites using a staging -> production publishing workflow on CloudCannon, if you don't already have one.
+1. Create two sites using a staging -> production [publishing workflow](https://cloudcannon.com/documentation/articles/what-is-a-publish-branch/) on CloudCannon, if you don't already have one.
 
 2. On your staging site:
 
