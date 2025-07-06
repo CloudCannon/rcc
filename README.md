@@ -84,11 +84,11 @@ You can use this option if you don't need the default redirect that comes with R
 
     ``` json
     "dependencies": {
-      "markdown-it": "^13.0.1",
       "rosey": "^2.3.3",
       "dotenv": "^16.4.5",
       "slugify": "^1.6.6",
       "yaml": "^2.4.2",
+      "markdown-it": "^13.0.1",
       "unified": "^11.0.5",
       "rehype-remark": "^10.0.1",
       "rehype-parse": "^9.0.1",
@@ -136,7 +136,7 @@ You can use this option if you don't need the default redirect that comes with R
 
 ### Manual tagging
 
-After your next build in CC, you should see empty translations files. A URL input will be generated for you to translate the page's URL if need be, without anything in your site needing to be tagged. To add text content to translate, start tagging your layouts and components with `data-rosey` tags.
+After your next build in CloudCannon, you should see empty translations files. A URL input will be generated for you to translate the page's URL if need be, without anything in your site needing to be tagged. To add text content to translate, start tagging your layouts and components with `data-rosey` tags.
 
 An example tag in [Eleventy](https://www.11ty.dev/) may look like:
 
@@ -150,7 +150,7 @@ An example tag in [Astro](https://astro.build/) may look like:
 
 ```jsx
   ...
-  import { generateRoseyId } from "rosey-connector/helpers/component-helpers.mjs";
+  import { generateRoseyId } from "rosey-connector/helpers/text-formatters.mjs";
 
   const { heading } = Astro.props;
   ---
@@ -162,20 +162,20 @@ An example tag in [Astro](https://astro.build/) may look like:
 
 ### Automatic tagging
 
-Most sites using an SSG will have at least some content that comes from markdown, and gets run through a `markdownify` filter, or somehow turned from markdown to HTML. For example, any body content in a markdown file will go through this process as part of the SSG's build. This markdown content is hard to tag manually.
+Most sites using an SSG will have at least some content that comes from markdown, which gets run through a `markdownify` filter, or somehow turned from markdown to HTML. For example, any body content in a markdown file will go through this process as part of the SSG's build. This markdown content is hard to tag manually.
 
 
 For this the `rosey-tagger` directory has been provided. In the [Getting Started](#getting-started) steps above, we've added it to the CloudCannon `postbuild` so that it runs after every build, and before the rest of the Rosey workflow. Tag a parent element with the attribute `data-rosey-tagger` and block elements inside of the parent element will be tagged for translation automatically. The most nested block element will be the one to receive the tag, so that there isn't a `data-rosey` tag inside of a `data-rosey` tag.
 
 
-This is especially useful to wrap your markdown body content, wherever that goes in your layouts or components, but can be used on any element. For example you could add it to the `<body>` tag of a page for every block level element in that page to be tagged automatically. You shouldn't nest one `data-rosey-tagger` inside of another, however it should respect existing tags you've added manually, and not overwrite them. 
+This is especially useful to use to tag your markdown body content, wherever that lives in your layouts or components, but can be used on any element. For example you could add it to the `<body>` tag of a page for every block level element in that page to be tagged automatically. You shouldn't nest one `data-rosey-tagger` inside of another, however it should respect existing tags you've added manually, and not overwrite them. 
 
 
 > [!IMPORTANT]
 > When using the `rosey-tagger` with markdown, add a Rosey namespace of `data-rosey-ns="rcc-markdown"` on the element containing markdown, so that generated inputs for that content are `type: markdown` in CloudCannon, which will allow editors the same options in the translation input as are allowed for the original content.
 
 
-If you don't have one of these `data-rosey-tagger` tags on any of your pages it won't do anything, so can be ignored or removed. If no translation is provided for an element, the original will be used. This means even if you tag everything but don't want to provide a translation for it the original will be shown in your translated version, rather than a blank space.
+If you don't have one of these `data-rosey-tagger` tags on any of your pages it won't do anything, so can be ignored or removed. If no translation is provided for an element, the original will be used. This means even if you tag everything, but don't want to provide a translation for it, the original will be shown in your translated version, rather than a blank space.
 
 ## Namespaced pages
 
@@ -187,9 +187,39 @@ For this you can add a `data-rosey-ns` tag similar to the `rcc-markdown` example
 
 By default a `common` namespace page comes with this workflow, although you can configure it to be whatever you wish by adding/editing the values in the `namespace_pages` array in the `rcc.yaml` configuration file. Add a translation to the `common` page by adding `data-rosey-ns="common"` to the element you're adding the tag to.
 
+
+An example for a header component in Astro might look like:
+
+```jsx
+---
+import { generateRoseyId } from "rosey-connector/helpers/text-formatters.mjs";
+
+const { links } = Astro.props;
+---
+
+<header
+  data-rosey-ns="common">
+  <ul>
+    {
+      links.map((link) => {
+        return (
+          <li>
+            <a
+              href={link.link}
+              data-rosey={generateRoseyId(link.text)}>
+              {link.text}
+            </a>
+          </li>
+        );
+      })
+    }
+  </ul>
+</header>
+```
+
 ## Smartling integration
 
-To add automatic AI-powered translations - which your editors can then QA in the app - enable Smartling in your `rosey/rcc.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Add your secret API key to your environment variables with the key of `DEV_USER_SECRET` in CloudCannon on your staging site (or your only site if you're not using a publishing workflow). You can set this locally in a `.env` file if you want to test it in your development environment. 
+To add automatic AI-powered translations - which your editors can then QA in CloudCannon - enable Smartling in your `rosey/rcc.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Add your secret API key to your environment variables with the key of `DEV_USER_SECRET` in CloudCannon on your staging site (or your only site if you're not using a publishing workflow). You can set this locally in a `.env` file if you want to test it in your development environment. 
 
 > [!IMPORTANT]
 > Make sure to not push any secret API keys to your source control. The `.env` file should already be in your .gitignore.
