@@ -165,27 +165,27 @@ An example tag in [Astro](https://astro.build/) may look like:
 Most sites using an SSG will have at least some content that comes from markdown, and gets run through a `markdownify` filter, or somehow turned from markdown to HTML. For example, any body content in a markdown file will go through this process as part of the SSG's build. This markdown content is hard to tag manually.
 
 
-For this the `rosey-tagger` directory has been provided. In the [Getting Started](#getting-started) steps above, we've added it to the CloudCannon `postbuild` so that it runs after every build, and before the rest of the Rosey workflow. Tag a parent element with the attribute `data-rosey-tagger="true"` and block elements inside of the parent element will be tagged for translation automatically. The most nested block element will be the one to receive the tag, so that there isn't a `data-rosey` tag inside of a `data-rosey` tag.
+For this the `rosey-tagger` directory has been provided. In the [Getting Started](#getting-started) steps above, we've added it to the CloudCannon `postbuild` so that it runs after every build, and before the rest of the Rosey workflow. Tag a parent element with the attribute `data-rosey-tagger` and block elements inside of the parent element will be tagged for translation automatically. The most nested block element will be the one to receive the tag, so that there isn't a `data-rosey` tag inside of a `data-rosey` tag.
 
 
-This is especially useful to wrap your markdown body content, wherever that goes in your layouts or components, but can be used on any element. For example you could add it to the `<body>` tag of a page for every block level element in that page to be tagged automatically. You shouldn't nest one `data-rosey-tagger="true"` inside of another, however it should respect existing tags you've added manually, and not overwrite them. 
+This is especially useful to wrap your markdown body content, wherever that goes in your layouts or components, but can be used on any element. For example you could add it to the `<body>` tag of a page for every block level element in that page to be tagged automatically. You shouldn't nest one `data-rosey-tagger` inside of another, however it should respect existing tags you've added manually, and not overwrite them. 
 
 
 > [!IMPORTANT]
-> When using the `rosey-tagger` with markdown, add a Rosey namespace of `data-rosey-ns="markdown"` on the element containing markdown, so that generated inputs for that content are `type: markdown` in CloudCannon, which will allow editors the same options in the translation input as are allowed for the original content.
+> When using the `rosey-tagger` with markdown, add a Rosey namespace of `data-rosey-ns="rcc-markdown"` on the element containing markdown, so that generated inputs for that content are `type: markdown` in CloudCannon, which will allow editors the same options in the translation input as are allowed for the original content.
 
 
-If you don't have one of these `data-rosey-tagger="true"` tags on any of your pages it won't do anything, so can be ignored or removed. If no translation is provided for an element, the original will be used. This means even if you tag everything but don't want to provide a translation for it the original will be shown in your translated version, rather than a blank space.
+If you don't have one of these `data-rosey-tagger` tags on any of your pages it won't do anything, so can be ignored or removed. If no translation is provided for an element, the original will be used. This means even if you tag everything but don't want to provide a translation for it the original will be shown in your translated version, rather than a blank space.
 
 ## Namespaced pages
 
 Sometimes you don't want a piece of content that appears many times on different pages to be represented on each translation page. Duplicate translation keys (translations with the same ID) across pages *will* be kept in sync with each other, but it can clutter up your translation files. The most common example would be text used in your header and footer content.
 
 
-For this you can add a `data-rosey-ns` tag similar to the `markdown` example given in [Automatic tagging](#automatic-tagging) (although markdown is a reserved namespace when using the RCC), and add the value of the tag to the `namespace_page` field in the `rcc.yaml` configuration file. This will cause any translations that are nested under this namespace to appear on a separately generated page, and be ommited from the normal translations for that page. 
+For this you can add a `data-rosey-ns` tag similar to the `rcc-markdown` example given in [Automatic tagging](#automatic-tagging) (although `rcc-markdown` is a reserved namespace when using the RCC), and add the value of the tag to the `namespace_page` field in the `rcc.yaml` configuration file. This will cause any translations that are nested under this namespace to appear on a separately generated page, and be ommited from the normal translations for that page. 
 
 
-By default a `common` namespace page comes with this workflow, although you can configure it to be whatever you wish by adding/editing the values in the `namespace_pages` array in the `rcc.yaml` configuration file. 
+By default a `common` namespace page comes with this workflow, although you can configure it to be whatever you wish by adding/editing the values in the `namespace_pages` array in the `rcc.yaml` configuration file. Add a translation to the `common` page by adding `data-rosey-ns="common"` to the element you're adding the tag to.
 
 ## Smartling integration
 

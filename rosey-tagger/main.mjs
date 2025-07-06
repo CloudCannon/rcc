@@ -29,7 +29,7 @@ import { isDirectory } from "../rosey-connector/helpers/file-helpers.mjs";
 // Sanitise the html
 // Parse the AST back into html and write it back to where we found it
 
-// Looks for the tag data-rosey-tagger="true". Prop names are camelCased.
+// Looks for the tag data-rosey-tagger. Prop names are camelCased.
 const tagNameToLookFor = "dataRoseyTagger";
 const disallowedIdChars = /[*+~.()'",#%^!:@]/g;
 
