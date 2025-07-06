@@ -1,7 +1,7 @@
 import { getPageString, getYamlFileName } from "./file-helpers.mjs";
 import {
   formatTextForInputComments,
-  removeSuperAndSubFromText,
+  removeFormattingElementsForHiglightUrls,
 } from "./text-formatters.mjs";
 import { htmlToMarkdown } from "./html-to-markdown.mjs";
 
@@ -12,7 +12,7 @@ function initDefaultInputs(
   page,
   locale,
   seeOnPageCommentSettings,
-  githubCommentSettings
+  gitHistoryCommentSettings
 ) {
   // Create the inputs obj if there is none
   if (!data._inputs) {
@@ -25,19 +25,19 @@ function initDefaultInputs(
     const pageFilePath = getYamlFileName(page);
     const seeOnPageCommentEnabled = seeOnPageCommentSettings.enabled;
     const baseUrl = seeOnPageCommentSettings.base_url;
-    const githubCommentEnabled = githubCommentSettings.enabled;
-    const githubRepo = githubCommentSettings.repo_url;
-    const githubBranchName = githubCommentSettings.branch_name;
-    const githubCommentText = githubCommentSettings.comment_text;
+    const gitHistoryCommentEnabled = gitHistoryCommentSettings.enabled;
+    const githubRepo = gitHistoryCommentSettings.repo_url;
+    const githubBranchName = gitHistoryCommentSettings.branch_name;
+    const gitHistoryCommentText = gitHistoryCommentSettings.comment_text;
 
     let inputComment = "";
     if (seeOnPageCommentEnabled) {
       inputComment += `[${pageString}](${baseUrl}${pageString})`;
     }
-    if (githubCommentEnabled) {
+    if (gitHistoryCommentEnabled) {
       inputComment += `${
         inputComment.length > 1 ? "  //  " : ""
-      }[${githubCommentText}](${githubRepo}/commits/${githubBranchName}/${translationFilesDirPath}/${locale}/${pageFilePath})`;
+      }[${gitHistoryCommentText}](${githubRepo}/commits/${githubBranchName}/${translationFilesDirPath}/${locale}/${pageFilePath})`;
     }
 
     data._inputs.$ = {
@@ -62,167 +62,7 @@ function initDefaultInputs(
   }
 }
 
-async function getInputConfig(
-  inputKey,
-  page,
-  baseTranslationObj,
-  seeOnPageCommentSettings,
-  inputLengths
-) {
-  const seeOnPageCommentEnabled = seeOnPageCommentSettings.enabled;
-  const baseUrl = seeOnPageCommentSettings.base_url;
-  const seeOnPageCommentText = seeOnPageCommentSettings.comment_text;
-  const untranslatedPhrase = baseTranslationObj.original.trim();
-
-  const untranslatedPhraseMarkdown = await htmlToMarkdown(untranslatedPhrase);
-  const originalPhraseTidiedForComment = formatTextForInputComments(
-    untranslatedPhraseMarkdown
-  );
-
-  const isKeyMarkdown = inputKey.startsWith("rcc-markdown:");
-  const labelCutoffLength = inputLengths.label;
-  const textareaCutoffLength = inputLengths.textarea;
-  const isInputShortText = untranslatedPhrase.length < textareaCutoffLength;
-  const isLabelConcat =
-    originalPhraseTidiedForComment.length > labelCutoffLength;
-
-  const inputType = isKeyMarkdown
-    ? "markdown"
-    : isInputShortText
-    ? "text"
-    : "textarea";
-
-  const options = isKeyMarkdown
-    ? {
-        bold: true,
-        italic: true,
-        strike: true,
-        link: true,
-        subscript: true,
-        superscript: true,
-        underline: true,
-        undo: true,
-        redo: true,
-        removeformat: true,
-        copyformatting: true,
-      }
-    : {};
-
-  const locationString = seeOnPageCommentEnabled
-    ? generateLocationString(
-        originalPhraseTidiedForComment,
-        page,
-        baseUrl,
-        seeOnPageCommentText
-      )
-    : false;
-
-  const formattedLabel = isLabelConcat
-    ? `${originalPhraseTidiedForComment.substring(0, labelCutoffLength)}...`
-    : originalPhraseTidiedForComment;
-
-  const inputConfig = isLabelConcat
-    ? {
-        label: formattedLabel,
-        hidden: untranslatedPhrase === "",
-        type: inputType,
-        options: options,
-        comment: locationString,
-        context: {
-          open: false,
-          title: "Untranslated Text",
-          icon: "translate",
-          content: untranslatedPhraseMarkdown,
-        },
-      }
-    : {
-        label: formattedLabel,
-        hidden: untranslatedPhrase === "",
-        type: inputType,
-        options: options,
-        comment: locationString,
-      };
-
-  return inputConfig;
-}
-
-function generateLocationString(
-  originalPhrase,
-  page,
-  baseUrl,
-  seeOnPageCommentText
-) {
-  // Limit each phrase to 3 words
-  const urlHighlighterWordLength = 3;
-  const originalPhraseArray = originalPhrase.split(/[\n]+/);
-  // Get the first and last line of the markdown so we only have complete lines in the highlight url
-  const firstPhrase = removeSuperAndSubFromText(originalPhraseArray[0]);
-  const lastPhrase = removeSuperAndSubFromText(
-    originalPhraseArray[originalPhraseArray.length - 1]
-  );
-  const endHighlightArrayAll = lastPhrase.split(" ");
-
-  const startHighlightArrayWithPunctuation = firstPhrase
-    .split(" ")
-    .slice(0, urlHighlighterWordLength);
-
-  const endHighlightArrayWithPunctuation = endHighlightArrayAll.slice(
-    endHighlightArrayAll.length - urlHighlighterWordLength,
-    endHighlightArrayAll.length
-  );
-
-  // Look at these arrays for any words with a special character after
-  // That is our last word in the start or end highlight
-  // The phrase stops there in an attempt to still capture the block of text
-
-  const startHighlightArrayWithoutPunctuation = [];
-  const endHighlightArrayWithoutPunctuation = [];
-  const regexToMatch = /[&#,+()$~%.":*?<>{}_]/gm;
-
-  for (let i = 0; i < startHighlightArrayWithPunctuation.length; i++) {
-    const word = startHighlightArrayWithPunctuation[i];
-    const foundMatches = word.match(regexToMatch);
-    if (foundMatches && foundMatches.length > 0) {
-      startHighlightArrayWithoutPunctuation.push(
-        word.replaceAll(regexToMatch, "")
-      );
-      break;
-    }
-    startHighlightArrayWithoutPunctuation.push(word);
-  }
-
-  for (let j = 0; j < endHighlightArrayWithPunctuation.length; j++) {
-    const word = endHighlightArrayWithPunctuation[j];
-    const foundMatches = word.match(regexToMatch);
-    if (foundMatches && foundMatches.length > 0) {
-      endHighlightArrayWithoutPunctuation.push(
-        word.replaceAll(regexToMatch, "")
-      );
-      break;
-    }
-    endHighlightArrayWithoutPunctuation.push(word);
-  }
-
-  const originalPhraseArrayByWord = originalPhraseArray.join(" ").split(" ");
-
-  // Trim and encode the resulting phrase
-  const startHighlight = startHighlightArrayWithoutPunctuation.join(" ").trim();
-  const endHighlight = endHighlightArrayWithoutPunctuation.join(" ").trim();
-
-  const encodedStartHighlight = encodeURI(startHighlight);
-  const encodedEndHighlight = encodeURI(endHighlight);
-  const encodedOriginalPhrase = encodeURI(originalPhraseArray.join(" "));
-
-  const pageString = getPageString(page);
-  // Look to see if original phrase is 5 words or shorter
-  // if it is fallback to the encoded original phrase for the highlight link
-  return originalPhraseArrayByWord.length > urlHighlighterWordLength * 2
-    ? `[${seeOnPageCommentText}](${baseUrl}${pageString}#:~:text=${encodedStartHighlight},${encodedEndHighlight})`
-    : `[${seeOnPageCommentText}](${baseUrl}${pageString}#:~:text=${encodedOriginalPhrase})`;
-}
-
 // Namespace pages input set up
-
 function initNamespacePageInputs(data, locale) {
   // Create the inputs obj if there is none
   if (!data._inputs) {
@@ -253,6 +93,43 @@ function initNamespacePageInputs(data, locale) {
   }
 }
 
+async function getInputConfig(
+  inputKey,
+  page,
+  baseTranslationObj,
+  seeOnPageCommentSettings,
+  inputLengths
+) {
+  const seeOnPageCommentEnabled = seeOnPageCommentSettings.enabled;
+  const baseUrl = seeOnPageCommentSettings.base_url;
+  const seeOnPageCommentText = seeOnPageCommentSettings.comment_text;
+
+  const untranslatedPhrase = baseTranslationObj.original.trim();
+  const untranslatedPhraseMarkdown = await htmlToMarkdown(untranslatedPhrase);
+  const originalPhraseTidiedForComment = formatTextForInputComments(
+    untranslatedPhraseMarkdown
+  );
+
+  const locationString = seeOnPageCommentEnabled
+    ? generateHighlightLinkComment(
+        originalPhraseTidiedForComment,
+        page,
+        baseUrl,
+        seeOnPageCommentText
+      )
+    : false;
+
+  const inputConfig = setupInputConfig(
+    inputKey,
+    inputLengths,
+    originalPhraseTidiedForComment,
+    untranslatedPhraseMarkdown,
+    locationString
+  );
+
+  return inputConfig;
+}
+
 async function getNamespaceInputConfig(
   inputKey,
   baseTranslationObj,
@@ -264,12 +141,33 @@ async function getNamespaceInputConfig(
     untranslatedPhraseMarkdown
   );
 
+  const inputConfig = setupInputConfig(
+    inputKey,
+    inputLengths,
+    originalPhraseTidiedForComment,
+    untranslatedPhraseMarkdown
+  );
+
+  return inputConfig;
+}
+
+async function setupInputConfig(
+  inputKey,
+  inputLengths,
+  originalPhraseTidiedForComment,
+  untranslatedPhraseMarkdown,
+  locationString
+) {
   const isKeyMarkdown = inputKey.startsWith("rcc-markdown:");
   const labelCutoffLength = inputLengths.label;
   const textareaCutoffLength = inputLengths.textarea;
-  const isInputShortText = untranslatedPhrase.length < textareaCutoffLength;
+  const isInputShortText =
+    untranslatedPhraseMarkdown.length < textareaCutoffLength;
   const isLabelConcat =
     originalPhraseTidiedForComment.length > labelCutoffLength;
+  const formattedLabel = isLabelConcat
+    ? `${originalPhraseTidiedForComment.substring(0, labelCutoffLength)}...`
+    : originalPhraseTidiedForComment;
 
   const inputType = isKeyMarkdown
     ? "markdown"
@@ -280,42 +178,113 @@ async function getNamespaceInputConfig(
   const options = isKeyMarkdown
     ? {
         bold: true,
-        format: "p h1 h2 h3 h4",
         italic: true,
+        strike: true,
         link: true,
+        subscript: true,
+        superscript: true,
+        underline: true,
+        code: true,
         undo: true,
         redo: true,
         removeformat: true,
         copyformatting: true,
-        blockquote: true,
       }
     : {};
 
-  const formattedLabel = isLabelConcat
-    ? `${originalPhraseTidiedForComment.substring(0, labelCutoffLength)}...`
-    : originalPhraseTidiedForComment;
-
-  const inputConfig = isLabelConcat
-    ? {
-        label: formattedLabel,
-        hidden: untranslatedPhrase === "",
-        type: inputType,
-        options: options,
-        context: {
+  const inputConfig = {
+    label: formattedLabel,
+    hidden: untranslatedPhraseMarkdown === "",
+    type: inputType,
+    options: options,
+    comment: locationString || "", // Only on normal pages
+    context: isLabelConcat
+      ? {
           open: false,
           title: "Untranslated Text",
           icon: "translate",
           content: untranslatedPhraseMarkdown,
-        },
-      }
-    : {
-        label: formattedLabel,
-        hidden: untranslatedPhrase === "",
-        type: inputType,
-        options: options,
-      };
+        }
+      : {},
+  };
 
   return inputConfig;
+}
+
+function generateHighlightLinkComment(
+  originalPhrase,
+  page,
+  baseUrl,
+  seeOnPageCommentText
+) {
+  let highlightStringToUse = "";
+  // Limit to 𝑥 words at each end separated by a comma
+  const urlHighlighterWordLength = 4;
+  const pageString = getPageString(page);
+  const startOfHighlightUrl = `[${seeOnPageCommentText}](${baseUrl}${pageString}#:~:text=`;
+
+  // Remove things that will ruin the highlight string like formatting elements, asterisks, and backticks
+  const originalPhraseNoFormattingElements =
+    removeFormattingElementsForHiglightUrls(originalPhrase);
+  const originalPhraseNoEscapedAsterisks =
+    originalPhraseNoFormattingElements.replaceAll("\\*", "*");
+  const originalPhraseNoBackTicks = originalPhraseNoEscapedAsterisks.replaceAll(
+    "`",
+    ""
+  );
+  // If original phrase is less than 𝑥*2 words we don't use the comma syntax
+  // Get the first and last line of the markdown so we only have complete lines in the highlight url
+  const originalPhraseArray = originalPhraseNoBackTicks.split(/[\n]+/);
+  // Join the original (which may be separate lines) into one string and split to check how many words
+  const originalPhraseOneLineArray = originalPhraseArray.join(" ").split(" ");
+
+  // Return early here if length of the phrase is less than urlHighlighterWordLength * 2
+  if (originalPhraseOneLineArray.length < urlHighlighterWordLength * 2) {
+    const encodedOriginalPhrase = customEncode(
+      originalPhraseOneLineArray.join(" ")
+    );
+
+    highlightStringToUse = `${startOfHighlightUrl}${encodedOriginalPhrase})`;
+    return highlightStringToUse;
+  }
+
+  // Otherwise we'll use the first 𝑥 and last 𝑥 words from the phrase
+  // up to 𝑥 at the start and end and separate them by a comma
+  const firstPhrase = originalPhraseArray[0];
+  const lastPhrase = originalPhraseArray[originalPhraseArray.length - 1];
+
+  // Add the first 𝑥 words of the translation to an array
+  const startArrayInclPunctuation = firstPhrase
+    .split(" ")
+    .slice(0, urlHighlighterWordLength);
+  const endHighlightArrayUnlimited = lastPhrase.split(" ");
+  const endHighlightArrayInclPunctuation = endHighlightArrayUnlimited.slice(
+    endHighlightArrayUnlimited.length - urlHighlighterWordLength,
+    endHighlightArrayUnlimited.length
+  );
+
+  // Join, trim and encode the resulting phrases
+  const startHighlightString = startArrayInclPunctuation.join(" ").trim();
+  const endHighlightString = endHighlightArrayInclPunctuation.join(" ").trim();
+  const encodedStartHighlightString = customEncode(startHighlightString);
+  const encodedEndHighlightString = customEncode(endHighlightString);
+
+  // Don't include the comma if the end or start phrase is empty
+  // Also set the link warning to true to display a warning to users that the highlighting might be unreliable
+  highlightStringToUse = `${startOfHighlightUrl}${encodedStartHighlightString},${encodedEndHighlightString})`;
+
+  return highlightStringToUse;
+}
+
+function customEncode(text) {
+  if (!text) {
+    return "";
+  }
+
+  const encodeURIText = encodeURIComponent(text);
+  const escapedCharsEncoded = encodeURIText.replaceAll("-", "%2D");
+
+  return escapedCharsEncoded;
 }
 
 function sortTranslationIntoInputGroup(translationDataToWrite, inputKey) {
