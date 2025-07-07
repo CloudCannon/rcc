@@ -71,6 +71,8 @@ _inputs:
       Add and remove the locales you need for your site. Locales can be any
       format, usually either a two letter code (es), or a hyphenated four letter
       code (es-ES).
+  locales[*]:
+    type: text
   input_lengths:
     type: object
     options:
