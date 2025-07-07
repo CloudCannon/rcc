@@ -92,6 +92,7 @@ You can use this option if you don't need the default redirect that comes with R
       "unified": "^11.0.5",
       "rehype-remark": "^10.0.1",
       "rehype-parse": "^9.0.1",
+      "rehype-stringify": "^10.0.1",
       "remark-stringify": "^11.0.0",
       "rehype-format": "^5.0.1",
       "unist-util-visit": "^5.0.0",
