@@ -432,16 +432,26 @@ async function downloadSmartlingData(
       smartlingTranslationsData[key] = downloadedFileData[key];
     });
 
+    // Order Smartling data keys, so they're always in alphanumeric order
+    const orderedSmartlingTranslationsData = Object.keys(
+      smartlingTranslationsData
+    )
+      .sort() // Sort the keys alphabetically
+      .reduce((obj, key) => {
+        obj[key] = smartlingTranslationsData[key]; // Rebuild the object with sorted keys
+        return obj;
+      }, {});
+
     console.log(
       `Received ${
-        Object.keys(smartlingTranslationsData).length
+        Object.keys(orderedSmartlingTranslationsData).length
       } translated keys from Smartling.`
     );
 
     // Write the updated translations - existing and new
     await fs.promises.writeFile(
       smartlingTranslationsPath,
-      JSON.stringify(smartlingTranslationsData)
+      JSON.stringify(orderedSmartlingTranslationsData)
     );
     console.log(`🤖 Downloaded ${smartlingTranslationsPath}.`);
   }
@@ -471,7 +481,8 @@ async function writeReceivedTranslationsToTranslationFiles(
       locale
     );
     const translationFilePaths = await fs.promises.readdir(
-      translationFilesForLocaleDirPath
+      translationFilesForLocaleDirPath,
+      { recursive: true }
     );
 
     // Loop through all the files in the locale
@@ -491,7 +502,7 @@ async function writeReceivedTranslationsToTranslationFiles(
           if (
             incomingSmartlingDataKeys.includes(translationKey) &&
             // If they're blank (an empty string) in the translation file, overwrite with the Smartling data converted to md
-            translationFileContents[translationKey] === ""
+            translationFileContents[translationKey]?.trim() === ""
           ) {
             translationFileContents[translationKey] = await htmlToMarkdown(
               incomingSmartlingData[translationKey]
