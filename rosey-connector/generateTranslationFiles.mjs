@@ -7,6 +7,7 @@ import {
   archiveOldTranslationFiles,
   getYamlFileName,
   createParentDirIfExists,
+  handleConfigPaths,
 } from "./helpers/file-helpers.mjs";
 import {
   initDefaultInputs,

@@ -1,4 +1,4 @@
-import { readConfigFile } from "./helpers/file-helpers.mjs";
+import { readConfigFile, handleConfigPaths } from "./helpers/file-helpers.mjs";
 import { configWarnings } from "./configWarnings.mjs";
 import { checkAndCleanRemovedLocales } from "./cleanUnusedFiles.mjs";
 import { callSmartling } from "./callSmartling.mjs";
