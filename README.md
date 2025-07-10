@@ -172,7 +172,7 @@ For this the `rosey-tagger` directory has been provided. In the [Getting Started
 This is especially useful to use to tag your markdown body content, wherever that lives in your layouts or components, but can be used on any element. For example you could add it to the `<body>` tag of a page for every block level element in that page to be tagged automatically. You shouldn't nest one `data-rosey-tagger` inside of another, however it should respect existing tags you've added manually, and not overwrite them. 
 
 
-> [!NOTE]
+> [!IMPORTANT]
 > When using the `rosey-tagger` with markdown, add a Rosey namespace of `data-rosey-ns="rcc-markdown"` on the element containing markdown, so that generated inputs for that content are `type: markdown` in CloudCannon, which will allow editors the same options in the translation input as are allowed for the original content.
 
 
@@ -223,7 +223,7 @@ const { links } = Astro.props;
 To add automatic AI-powered translations - which your editors can then QA in CloudCannon - enable Smartling in your `rosey/rcc.yaml` file, by setting `smartling_enabled: true`. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Add your secret API key to your environment variables with the key of `DEV_USER_SECRET` in CloudCannon on your staging site (or your only site if you're not using a publishing workflow). You can set this locally in a `.env` file if you want to test it in your development environment. 
 
 > [!CAUTION]
-> Make sure to not push any secret API keys to your source control. Make sure the `.env` file is in your .gitignore if you are testing locally.
+> Make sure to not push any secret API keys to your source control. Make sure the `.env` file is in your `.gitignore` if you are testing locally.
 
 > [!CAUTION]
 > **Be aware these translations have some cost involved**, so make sure you understand the pricing around Smartling machine-translations before enabling this.
@@ -246,41 +246,49 @@ If you clear a translation, it will be overwritten when the next Smartling call 
 
 ## A note on JavaScript hydration
 
-The RCC supports any static site (likely an SSG) which Rosey would support. Anything that relies on JS hydration for text value will struggle or need workarounds. Rosey scans your static html for elements with `data-rosey` tags and the text those elements contain. If that text is overwritten by JS the translated text will get clobbered by the untranslated JS values. A couple of workaround ideas:
+The RCC supports any static site (likely an SSG) which Rosey would support. Anything that relies on JS hydration for text values will need workarounds outside of the default workflow. Rosey scans your static HTML for elements with `data-rosey` tags and the text those elements contain. If that text is overwritten by JS the translated text will get clobbered by the untranslated JS values. A couple of workaround ideas:
 
-- Enter the translated values alongside the original text wherever it is defined in your JS. Then detect whichever locale you are in via the page's url, and use the appropriate text to hydrate the element with the correct translated text.
+- Enter the translated values alongside the original text wherever it is defined in your JS. Then detect whichever locale you are in using the page's url, and use the appropriate values in your JS to hydrate the element with the correct translated text.
 
-- Ingest the text for your JS via a JSON file. Rosey supports translation of JSON files, so you could detect which locale you are in and ingest whichever JSON file corresponds to that locale. The RCC does not provide any support for the generation of these JSON files yet, but you can write them as you would using Rosey without the RCC. If you would like the RCC to support translation of JSON files, please leave an issue on the repository so we can gauge interest.
+- Ingest the text for your JS via a JSON file. Rosey supports translation of JSON files, so you could detect which locale you are in and ingest whichever JSON file corresponds to that locale. 
+
+> [!NOTE]
+> The RCC does not provide any support for the generation of these JSON files yet, but you can write them as you would using Rosey without the RCC. If you would like the RCC to support translation of JSON files, please leave an issue on the repository so we can gauge interest.
 
 ## Known issues & workarounds
 
 <details>
   <summary>Unsupported HTML in markdown</summary>
   
-  **Issue**: If HTML exists that cannot be represented markdown text, it won’t make it through to the translations files. **Solution**: Separate the text to translate from the unsupported HTML. Consider the following example:
+  **Issue**: If HTML exists that cannot be represented as markdown, it won’t make it through to the translations files. 
+  
+  
+  **Solution**: Separate the text to translate from the unsupported HTML. Consider the following example:
     
-    ```html
-    <li>
-      <span data-rosey="{{ item.title | slugify }}">
-    	  {{ item.title }}<i class="some-unrepresentable-html"></i>
-      </span>
-    </li>
-    ```
+  ```html
+  <li>
+    <span data-rosey="{{ item.title | slugify }}">
+      {{ item.title }}<i class="some-unrepresentable-html"></i>
+    </span>
+  </li>
+  ```
     
-    Could be refactored to something like:
+  Could be refactored to something like:
     
-    ```html
-    <li>
-      <span data-rosey="{{ item.title | slugify }}">{{ item.title }}</span>
-      <span><i class="some-unrepresentable-html"></i></span>
-    </li>
-    ```
+  ```html
+  <li>
+    <span data-rosey="{{ item.title | slugify }}">{{ item.title }}</span>
+    <span><i class="some-unrepresentable-html"></i></span>
+  </li>
+  ```
 </details>
 
 <details>
   <summary>Wrapping double quotes</summary>
   
   **Issue**: If an untranslated phrase has quotes wrapping the whole phrase (quotes in the middle are fine), the quotes won’t make it through the `rosey generate` step into the `base.json`. This means the phrase won’t have quotes in the translations file, and also won't have quotes present on the label for the translation.
-  **Solution**: If you want the translation to have wrapping quotes like the original, you can enter them in the translation file and they will make it through to the end site
+
+
+  **Solution**: If you want the translation to have wrapping quotes like the original, you can enter them in the translation file and they will make it through to the translated site.
 </details>
 
