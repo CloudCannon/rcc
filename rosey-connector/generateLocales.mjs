@@ -261,7 +261,7 @@ async function generateLocale(locale, configData) {
   );
 
   // Only display url translation statistics if there is at least on url translation
-  if (logStatistics.numberOfTranslatedUrls > 0) {
+  if (Object.keys(logStatistics.numberOfUntranslatedUrls).length > 0) {
     console.log(
       `- Completed Url Translations: ${
         Object.keys(logStatistics.numberOfTranslatedUrls).length
@@ -399,7 +399,7 @@ function processContentTranslationKey(
   const baseFileDataOriginal = baseFileData[keyName]?.original;
 
   // No translated string use the original
-  if (!translatedString) {
+  if (!translatedString.trim()) {
     // Check if there was a translation the round before and we've cleared it
     if (oldLocaleDataValue && oldLocaleDataValue !== baseFileDataOriginal) {
       return {
