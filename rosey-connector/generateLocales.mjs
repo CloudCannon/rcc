@@ -6,6 +6,7 @@ import {
   isDirectory,
   readFileWithFallback,
   getTranslationHtmlFilename,
+  getTranslationFilePath,
 } from "./helpers/file-helpers.mjs";
 import dotenv from "dotenv";
 const md = markdownit({ html: true });
@@ -35,14 +36,18 @@ async function generateLocale(locale, configData) {
     numberOfUntranslatedUrls: {},
     numberOfTranslatedUrls: {},
   };
-  const translationsDirPath = configData.rosey_paths.translations_dir_path;
-  const localesDirPath = configData.rosey_paths.locales_dir_path;
+  const translationsDirPath = handleConfigPaths(
+    configData.rosey_paths.translations_dir_path
+  );
+  const localesDirPath = handleConfigPaths(
+    configData.rosey_paths.locales_dir_path
+  );
   const baseFile = await fs.promises.readFile(
-    configData.rosey_paths.rosey_base_file_path
+    handleConfigPaths(configData.rosey_paths.rosey_base_file_path)
   );
   const baseFileData = JSON.parse(baseFile.toString("utf-8")).keys;
   const baseUrlsFile = await fs.promises.readFile(
-    configData.rosey_paths.rosey_base_urls_file_path
+    handleConfigPaths(configData.rosey_paths.rosey_base_urls_file_path)
   );
   const baseUrlFileData = JSON.parse(baseUrlsFile.toString("utf-8")).keys;
   const namespaceArray = configData.namespace_pages;
@@ -81,7 +86,7 @@ async function generateLocale(locale, configData) {
     translationsFiles.map(async (filename) => {
       if (
         await isDirectory(
-          getTranslationPath(locale, translationsDirPath, filename)
+          getTranslationFilePath(locale, translationsDirPath, filename)
         )
       ) {
         return;
@@ -187,7 +192,7 @@ async function generateLocale(locale, configData) {
   // Search for duplicate keys on each translation page for new translations
   await Promise.all(
     Object.keys(localeDataEntries).map(async (filename) => {
-      const translationFilePath = getTranslationPath(
+      const translationFilePath = getTranslationFilePath(
         locale,
         translationsDirPath,
         filename
@@ -271,10 +276,6 @@ async function generateLocale(locale, configData) {
   }
 }
 
-function getTranslationPath(locale, translationsDirPath, translationFilename) {
-  return path.join(translationsDirPath, locale, translationFilename);
-}
-
 async function processTranslation(
   locale,
   translationFilename,
@@ -287,7 +288,7 @@ async function processTranslation(
 ) {
   const localeData = {};
   const localeUrlsData = {};
-  const translationsPath = getTranslationPath(
+  const translationsPath = getTranslationFilePath(
     locale,
     translationsDirPath,
     translationFilename

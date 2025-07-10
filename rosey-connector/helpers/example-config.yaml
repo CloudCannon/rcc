@@ -20,12 +20,12 @@ see_on_page_comment:
   # Your staging site url used to generate the comments that link to the phrase seen in context on the page.
   base_url: https://adjective-noun.cloudvent.net/
   # The text used for the link.
-  comment_text: See in context
+  comment_text: See context
 
 # Shows a comment under each input that links to the GitHub history for the page.
 git_history_link:
   # Define whether these 'Git history' comments should be enabled at all.
-  enabled: true
+  enabled: false
   # Your site's GitHub url, used to generate the comments that link to the page's GitHub history.
   repo_url: https://github.com/org/repo
    # Your staging site's branch name, if different from the classic 'staging'.
@@ -49,7 +49,7 @@ rosey_paths:
 # https://help.smartling.com/hc/en-us/articles/4405992477979-Node-js-SDK
 smartling:
   # Enable/Disbale the integration.
-  smartling_enabled: false
+  enabled: false
   # The public facing credentials Smartling gives you.
   dev_project_id: 
   dev_user_identifier: 
@@ -71,8 +71,6 @@ _inputs:
       Add and remove the locales you need for your site. Locales can be any
       format, usually either a two letter code (es), or a hyphenated four letter
       code (es-ES).
-  locales[*]:
-    type: text
   input_lengths:
     type: object
     options:
@@ -137,7 +135,7 @@ _inputs:
         icon: smart_toy
         text:
           - template: "{'Enabled'|if=enabled|default='Disabled'}"
-  smartling_enabled:
+  enabled:
     type: switch
     comment: >-
       Enable automatic Smartling AI powered machine translations? Requires a
@@ -146,27 +144,27 @@ _inputs:
       before enabling this.
   dev_project_id:
     type: text
-    hidden: '!smartling_enabled'
+    hidden: '!enabled'
     comment: Enter your Smartling project id here
   dev_user_identifier:
     type: text
-    hidden: '!smartling_enabled'
+    hidden: '!enabled'
     comment: Enter your Smartling user id here
   ping_interval:
     type: number
-    hidden: '!smartling_enabled'
+    hidden: '!enabled'
     comment: >-
       The time between pings to Smartlings API when checking if translations are
       done yet. Measured in ms.
   ping_maximum:
     type: number
-    hidden: '!smartling_enabled'
+    hidden: '!enabled'
     comment: >-
       The number of pings to try Smartlings API for new translations before
       giving up.
   pings_to_wait_for_auth:
     type: number
-    hidden: '!smartling_enabled'
+    hidden: '!enabled'
     comment: >-
       The number of pings to try Smartlings API for authorization for new
       translations before timing out. If there are no new translations, but the
@@ -175,17 +173,17 @@ _inputs:
       trying the full set of pings.
   incoming_translations_dir:
     type: text
-    hidden: '!smartling_enabled'
+    hidden: '!enabled'
     comment: >-
       The location of the directory that the incoming translation files are
       downloaded to.
   outgoing_translations_file_path:
     type: text
-    hidden: '!smartling_enabled'
+    hidden: '!enabled'
     comment: The location of the outgoing translations JSON file.
   outgoing_translation_file_uri:
     type: text
-    hidden: '!smartling_enabled'
+    hidden: '!enabled'
     comment: >-
       The unique identifier that Smartling uses for this site. Can be anything
       as long as it's unique to this site in your Smartling project.
