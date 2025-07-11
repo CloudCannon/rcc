@@ -299,6 +299,7 @@ async function processTranslation(
   if (!fileContents) {
     console.log("No fileContents from filepath: ", translationsPath);
   }
+
   const data = YAML.parse(fileContents);
 
   if (!data) {
@@ -347,9 +348,12 @@ async function processTranslation(
       };
     }
 
+    // Unescape asterisks for the final write to locales where asterisks don't matter like in markdown
+    const translatedStringUnescaped = translatedString.replaceAll("\\*", "*");
+
     localeData[keyName] = processContentTranslationKey(
       keyName,
-      translatedString,
+      translatedStringUnescaped,
       localeData,
       baseFileData,
       oldLocaleData
