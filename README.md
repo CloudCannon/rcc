@@ -110,8 +110,7 @@ You can use this option if you don't need the default redirect that comes with R
     All the files you need to get going will have been generated as part of the CloudCannon build. 
 
     > [!NOTE]
-    > If you skipped generating a configuration file via the CLI **add at least one language code to the `locales` array** in the `rosey/rcc.yml` file.
-    Also - if you're using them - remember to add your cloudvent URL (the staging one if using the publishing workflow) as the value of the `see_on_page_comment.base_url` key, and add your Git repo as the value of the `git_history_link.repo_url` key.
+    > If you skipped generating a configuration file via the CLI **add at least one language code to the `locales` array** in the `rosey/rcc.yml` file. Also - if you're using them - remember to add your cloudvent URL (the staging one if using the publishing workflow) as the value of the `see_on_page_comment.base_url` key, and add your Git repo as the value of the `git_history_link.repo_url` key.
 
     Once again wait for the CloudCannon build to finish. Then pull your changes down to your local.
 
