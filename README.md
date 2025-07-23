@@ -90,6 +90,7 @@ You can use this option if you don't need the default redirect that comes with R
       "yaml": "^2.4.2",
       "markdown-it": "^13.0.1",
       "unified": "^11.0.5",
+      "@inquirer/prompts": "^7.6.0",
       "rehype-remark": "^10.0.1",
       "rehype-parse": "^9.0.1",
       "rehype-stringify": "^10.0.1",
