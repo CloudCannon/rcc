@@ -236,8 +236,8 @@ To add automatic AI-powered translations - which your editors can then QA in Clo
 
 ### What gets sent to Smartling
 
-A phrase will be sent away to Smartling for automatic translation if:
-- there is no translation in at least one language for the key, and
+A phrase will be sent away to Smartling for automatic translation if, in at least one language:
+- there is no translation for the key, and
 - we have not received a translation for the key in the past
 
 > [!NOTE]
