@@ -29,7 +29,7 @@ This option is for you if you want to use the default redirect that comes with R
 
 3. On your `production` site add the environment variable `ROSEYPROD`, with a value of `true`.
 
-4. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one.
+4. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one. Add it on your staging branch, so that when you publish your changes to production the postbuild is included.
 
   `.cloudcannon/postbuild`
 
