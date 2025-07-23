@@ -190,7 +190,7 @@ Sometimes you don't want a piece of content that appears many times on different
 For this you can add a `data-rosey-ns` tag similar to the `rcc-markdown` example given in [Automatic tagging](#automatic-tagging) (although `rcc-markdown` is a reserved namespace when using the RCC), and add the value of the tag to the `namespace_page` field in the `rcc.yaml` configuration file. This will cause any translations that are nested under this namespace to appear on a separately generated page, and be ommited from the normal translations for that page. 
 
 
-By default a `common` namespace page comes with this workflow, although you can configure it to be whatever you wish by adding/editing the values in the `namespace_pages` array in the `rcc.yaml` configuration file. Add a translation to the `common` page by adding `data-rosey-ns="common"` to the element you're adding the tag to.
+By default a `common` namespace page comes with this workflow, although you can configure it to be whatever you wish by adding/editing the values in the `namespace_pages` array in the `rcc.yaml` configuration file. Add a translation to the `common` page by adding `data-rosey-ns="common"` to the element (or a parent of that element) you're adding the tag to.
 
 
 An example for a header component in Astro might look like:
