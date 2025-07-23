@@ -101,15 +101,21 @@ You can use this option if you don't need the default redirect that comes with R
     }
     ```
 
-2. Copy the `rosey-connector`, and `rosey-tagger` directories to your project. Commit your changes, and wait for the CloudCannon build to finish. Then pull your changes down to your local. 
+2. Copy the `rosey-connector`, and `rosey-tagger` directories to your project.
 
+3. Run `node rosey-connector/generate.mjs` in the terminal in the root of your directory to generate a config file. If you want you can just skip to the next step and one will be generated for you.
 
-    All the files you need will be generated  to get going. In your generated `rosey/rcc.yml` **add at least one language code to the `locales` array**,  add your cloudvent URL (the staging one if using the publishing workflow) as the value of the `see_on_page_comment.base_url` key, and add your Git repo as the value of the `git_history_link.repo_url` key.
+4. Commit and push your changes, and wait for the CloudCannon build to finish. Then pull your changes down to your local. 
 
+    All the files you need to get going will have been generated as part of the CloudCannon build. 
+
+    > [!NOTE]
+    > If you skipped generating a configuration file via the CLI **add at least one language code to the `locales` array** in the `rosey/rcc.yml` file.
+    Also - if you're using them - remember to add your cloudvent URL (the staging one if using the publishing workflow) as the value of the `see_on_page_comment.base_url` key, and add your Git repo as the value of the `git_history_link.repo_url` key.
 
     Once again wait for the CloudCannon build to finish. Then pull your changes down to your local.
 
-3. Add a `translations` collection to your `cloudcannon.config.yml`. If you have the [collection_groups](https://cloudcannon.com/documentation/articles/configure-your-site-navigation/#options) configuration key defined, remember to add `translations` to a collection group, so that it is visible in your sidebar in CloudCannon. 
+5. Add a `translations` collection to your `cloudcannon.config.yml`. If you have the [collection_groups](https://cloudcannon.com/documentation/articles/configure-your-site-navigation/#options) configuration key defined, remember to add `translations` to a collection group, so that it is visible in your sidebar in CloudCannon. 
 
 
     If your site is nested in a subdirectory and you're using the [source](https://cloudcannon.com/documentation/articles/configuration-file-reference/#source) key you'll need to remove it, and manually add the subdirectory to each path that needs it (probably just your collections). The translations collection's path `rosey` does not need the prefix of the subdirectory since it lives in the root of our project. Schema paths in CloudCannon are not affected by the `source` key, so do not need updating.
