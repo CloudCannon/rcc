@@ -61,6 +61,9 @@ export async function callSmartling(configData) {
   }
 
   // Create outgoing translations file
+  // Before adding a phrase to send away for translation, we check if it
+  // Already has a translation in the translation files, and in one of the received Smartling translation files (which should all be the same)
+
   // We only add things to this file that need to be translated, so if it's empty we can skip call
   await generateOutgoingTranslationFile(
     roseyBaseFilePath,
@@ -70,13 +73,12 @@ export async function callSmartling(configData) {
     incomingTranslationsDir
   );
 
-  // Get the outgoing translation file, and one of the last returned set of translations
+  // Get the outgoing translation file
+  // Check here if the outgoingTranslationFile is empty
+  // If that is the case, outgoingTranslationFile is empty - don't proceed with the call
   const outgoingTranslationsFileData = await readJsonFromFile(
     outgoingTranslationsFilePath
   );
-
-  // Check here if the outgoingTranslationFile is empty
-  // If that is the case, outgoingTranslationFile is empty - don't proceed with the call
   const outgoingTranslationFileDataKeys = Object.keys(
     outgoingTranslationsFileData
   );
@@ -86,7 +88,9 @@ export async function callSmartling(configData) {
       `🤖 Detected ${outgoingTranslationFileDataKeys.length} translation keys to send to Smartling - continuing with API call.`
     );
   } else {
-    console.log("🤖 Nothing to send to Smartling - skipping API call.");
+    console.log(
+      "🤖 Nothing detected to send to Smartling - skipping API call."
+    );
     return;
   }
 
@@ -129,7 +133,7 @@ export async function callSmartling(configData) {
     .setFile(outgoingTranslationsFilePath)
     .setFileUri(outgoingTranslationFileUri)
     .setFileType(FileType.JSON)
-    .setLocalesToApprove(locales);
+    .setLocalesToApprove(locales); // Determines which locales Smartling will translate for, needs to be configure on Smartlings end
 
   await batchesApi.uploadBatchFile(
     projectId,
@@ -279,38 +283,44 @@ async function generateOutgoingTranslationFile(
   outgoingFilePath,
   incomingTranslationsDir
 ) {
-  const inputFileData = await readJsonFromFile(baseFilePath);
   // Ensure the incoming smartling files directory exists and read from it
   await fs.promises.mkdir(incomingTranslationsDir, { recursive: true });
   const existingSmartlingTranslationsFiles = await fs.promises.readdir(
     incomingTranslationsDir
   );
 
+  // We need to check all locales in case a locale gets added after the first one
   // If a file exists in there it should have existing smartling translation keys which we can add to check
   // We're not sending away already translated keys
   // If we send away a key we get all the locales back, so we just need to read the first one
-  let existingSmartlingTranslationKeys;
+  const existingSmartlingTranslations = {};
+  // Checking if there are any files in the smartling-translations dir
   if (existingSmartlingTranslationsFiles.length) {
-    const firstExistingSmartlingTranslationsFilePath = path.join(
-      incomingTranslationsDir,
-      existingSmartlingTranslationsFiles[0]
+    // Go through each and get the existing data from them stored under each locale
+    await Promise.all(
+      existingSmartlingTranslationsFiles.map(async (translationFile) => {
+        const smartlingTranslationsFilePath = path.join(
+          incomingTranslationsDir,
+          translationFile
+        );
+        const smartlingTranslations = await readJsonFromFile(
+          smartlingTranslationsFilePath
+        );
+        const fileLocaleName = translationFile.replace(".json", "");
+        existingSmartlingTranslations[fileLocaleName] = Object.keys(
+          smartlingTranslations
+        );
+      })
     );
-    const existingSmartlingTranslations = await readJsonFromFile(
-      firstExistingSmartlingTranslationsFilePath
-    );
-    existingSmartlingTranslationKeys = Object.keys(
-      existingSmartlingTranslations
-    );
-    // Otherwise just make it an empty array so all the input keys get added to it
+    // Otherwise just make it an empty obj so we see there is no existing Smartling translations
   } else {
-    existingSmartlingTranslationKeys = [];
+    existingSmartlingTranslations = {};
   }
 
   // Check if the translation key is a blank string in any of the translation files
   // Which means there's no translation and only then send away for a translation for the key
-  // This will prevent manually translated keys (if Smartling has been disabled, and enabled again)
+  // This will prevent manually translated keys (or if Smartling has been disabled, and enabled again)
   // Being sent away for translation
-
   // For each locale check all translation files to see if a key is missing a translation
   const untranslatedKeysInTranslationFiles = [];
   await Promise.all(
@@ -326,7 +336,7 @@ async function generateOutgoingTranslationFile(
       );
       // Loop through the translation files in each locale and look for untranslated keys in their translation files
       // If we find any locale has an untranslated key we'll add it to the keys allowed to be sent to Smartling
-      // And later check that they also don't reside in the translations we've already received from Smartling
+      // And later we check that they also don't reside in the translations we've already received from Smartling
       for (const translationFileName of translationFilesForLocale) {
         const translationFilePath = getTranslationFilePath(
           locale,
@@ -346,7 +356,7 @@ async function generateOutgoingTranslationFile(
             if (key !== "_inputs" && key !== "urlTranslation") {
               const keyContents = translationFileContents[key];
 
-              if (keyContents === "") {
+              if (keyContents.trim() === "") {
                 untranslatedKeysInTranslationFiles.push(key);
               }
             }
@@ -361,22 +371,26 @@ async function generateOutgoingTranslationFile(
   // - Which would mean if we didn't check existing Smartling translations it would send away again and err (awaitng_auth)
 
   // Get all the keys in the base.json and check whether we need to translate them
+  const inputFileData = await readJsonFromFile(baseFilePath);
   const inputFileKeyData = inputFileData.keys;
   const inputKeys = Object.keys(inputFileKeyData);
+
+  // If we don't already have the translation in any of the locales translations files or Smartling files
+  // Add it to the outgoing translations obj to be sent away
   const translationObject = {};
 
-  // If we don't already have the translation in any of the locales translations files
-  // Or in first file of the incoming Smartling translations
-  // Which should be representative of all locales configured in Smartling
-  // Since Smartling sends back the translated key in all locales
-  // Add it to the outgoing translations obj
   for (const key of inputKeys) {
-    if (
-      !existingSmartlingTranslationKeys.includes(key) &&
-      untranslatedKeysInTranslationFiles.includes(key)
-    ) {
-      const originalPhrase = inputFileData.keys[key].original;
-      translationObject[key] = originalPhrase;
+    // If key doesn't have a translation in the translation files, look through the Smartling translations for each locale
+    if (untranslatedKeysInTranslationFiles.includes(key)) {
+      // If there's also no translation been received before for any of the locales,
+      // we'll add it to the phrases to send to Smartling
+      for (const localeArr of Object.keys(existingSmartlingTranslations)) {
+        if (!localeArr.includes(key)) {
+          const originalPhrase = inputFileData.keys[key].original;
+          translationObject[key] = originalPhrase;
+          // TODO: If we break here to stop checking the rest of the locales, will it also break the inputKey loop (undesirable)
+        }
+      }
     }
   }
 
