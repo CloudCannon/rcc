@@ -256,12 +256,12 @@ The RCC supports any static site (likely an SSG) which Rosey would support. Anyt
 
 - Import the locales/*.json file data. Add some logic in your JavaScript to detect which locale you are in via the page's URL. Add more logic to use the translated value from the appropriate locale file if it exists, rather than the original text.
 
-- Enter the translated values alongside the original text wherever it is defined in your JS. Then detect whichever locale you are in using the page's url, and use the appropriate values in your JS to hydrate the element with the correct translated text.
+- Hardcode the translated values alongside the original text wherever it is defined in your JS. Then detect whichever locale you are in using the page's url, and use the appropriate values in your JS to hydrate the element with the correct translated text.
 
-- Ingest the text for your JS via a JSON file. Rosey supports translation of JSON files, so you could detect which locale you are in and ingest whichever JSON file corresponds to that locale. 
+- Source the text for your JS via a JSON file. Rosey supports translation of JSON files, so you could detect which locale you are in and ingest whichever JSON file corresponds to that locale. Translation of JSON files is not yet supported in the RCC (see below).
 
 > [!NOTE]
-> The RCC does not provide any support for the generation of these JSON files yet, but you can write them as you would using Rosey without the RCC. If you would like the RCC to support translation of JSON files, please leave an issue on the repository so we can gauge interest.
+> The RCC does not provide any support for the generation of these JSON files yet, but you can write them as you would using Rosey without the RCC - by hand or with your own middleware. If you would like the RCC to support translation of JSON files, please leave an issue on the repository so we can gauge interest.
 
 ## Known issues & workarounds
 
