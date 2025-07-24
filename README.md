@@ -254,6 +254,8 @@ If you clear a translation, it will be overwritten when the next Smartling call 
 
 The RCC supports any static site (likely an SSG) which Rosey would support. Anything that relies on JS hydration for text values will need workarounds outside of the default workflow. Rosey scans your static HTML for elements with `data-rosey` tags and the text those elements contain. If that text is overwritten by JS the translated text will get clobbered by the untranslated JS values. A couple of workaround ideas:
 
+- Import the locales/*.json file data. Add some logic in your JavaScript to detect which locale you are in via the page's URL. Add more logic to use the translated value from the appropriate locale file if it exists, rather than the original text.
+
 - Enter the translated values alongside the original text wherever it is defined in your JS. Then detect whichever locale you are in using the page's url, and use the appropriate values in your JS to hydrate the element with the correct translated text.
 
 - Ingest the text for your JS via a JSON file. Rosey supports translation of JSON files, so you could detect which locale you are in and ingest whichever JSON file corresponds to that locale. 
