@@ -56,7 +56,7 @@ smartling:
   # How long to wait between pings to check whether Smartling has finished translating your content.
   ping_interval: 20000
   # How many pings to wait before exiting the process because you're waiting for authorization (usually due to no new content).
-  ping_maximum: 6
+  ping_maximum: 12
   pings_to_wait_for_auth: 3
   # The paths to save outgoing and incoming Smartling data.
   incoming_translations_dir: ./rosey/smartling-translations/
