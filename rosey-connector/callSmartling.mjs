@@ -397,7 +397,7 @@ async function generateOutgoingTranslationFile(
           // We can break because the translation doesn't exist in at least one locale so it should be sent away
           break;
           // If the key doesn't exist in our Smartling translations already we can send away
-        } else if (existingSmartlingTranslations[locale].includes(key)) {
+        } else if (!existingSmartlingTranslations[locale].includes(key)) {
           const originalPhrase = inputFileData.keys[key].original;
           translationObject[key] = originalPhrase;
           break;
