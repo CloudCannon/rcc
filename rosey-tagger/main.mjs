@@ -72,16 +72,16 @@ const blockLevelElements = [
 const disallowedBlockElements = ["pre"];
 
 // Main function
-(async () => {
+export async function tag(cliArgs) {
   console.log("🖍️ Beginning tagging of html files...");
 
   // Checks for --source flag and if it has a value
-  const sourceIndex = process.argv.indexOf("--source");
+  const sourceIndex = cliArgs.indexOf("--source");
   let sourceDir;
 
   if (sourceIndex > -1) {
-    // Retrieve the value after --source
-    sourceDir = process.argv[sourceIndex + 1];
+    // Retrieve the value directly after --source
+    sourceDir = cliArgs[sourceIndex + 1];
   }
 
   if (!sourceDir) {
@@ -92,7 +92,7 @@ const disallowedBlockElements = ["pre"];
 
   let verboseLogs = false;
   // Check for --verbose flag and if it's there display logs
-  if (process.argv.includes("--verbose")) {
+  if (cliArgs.includes("--verbose")) {
     verboseLogs = true;
   }
 
@@ -125,7 +125,7 @@ const disallowedBlockElements = ["pre"];
   }
 
   console.log("🖍️ Finished tagging of html files...\n\n");
-})();
+}
 
 // Walk dirs to find .html files, and if it finds a dir recursively calls itself on that dir
 async function walkDirs(dirToTagPath, verboseLogs) {

@@ -8,7 +8,7 @@ import { generateTranslationFiles } from "./generateTranslationFiles.mjs";
 import { generateLocales } from "./generateLocales.mjs";
 import { generateConfig } from "./generateConfig.mjs";
 
-(async () => {
+export async function generate() {
   console.log("\n--- Starting Rosey CloudCannon Connector ---");
 
   console.log("\n🏗️ Reading config file...");
@@ -39,4 +39,4 @@ import { generateConfig } from "./generateConfig.mjs";
   console.log("\n🏗️ Finished generating locales files!");
 
   console.log("\n--- Finished Rosey CloudCannon Connector ---");
-})();
+}
