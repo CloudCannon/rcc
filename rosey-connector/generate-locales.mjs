@@ -8,7 +8,7 @@ import {
   getTranslationHtmlFilename,
   getTranslationFilePath,
   handleConfigPaths,
-} from "./helpers/file-helpers.mjs";
+} from "../utils/file-helpers.mjs";
 import dotenv from "dotenv";
 const md = markdownit({ html: true });
 dotenv.config();

@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 /**
  * @import {Root} from 'hast'
  */
@@ -13,8 +11,8 @@ import rehypeFormat from "rehype-format";
 import { unified } from "unified";
 import { visit } from "unist-util-visit";
 
-import { isDirectory } from "../rosey-connector/helpers/file-helpers.mjs";
-import { generateRoseyId } from "../rosey-connector/helpers/text-formatters.mjs";
+import { isDirectory } from "../utils/file-helpers.mjs";
+import { generateRoseyId } from "../utils/main.mjs";
 
 // Find all of the .html pages in the build output
 // Scan the output build dir

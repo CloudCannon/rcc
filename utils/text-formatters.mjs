@@ -1,5 +1,3 @@
-import slugify from "slugify";
-
 // Used for removing elements from text for links.
 // Spaces have already been worked out whether to be preserved around these eles by htmlToMarkdown
 // hr and br are the exception where they will always represent a new word and therefore a space
@@ -42,19 +40,9 @@ function customEncodingForIds(text) {
   const fullyEncoded = vanillaEncode.replaceAll(".", "%2E");
   return fullyEncoded;
 }
-function generateRoseyId(text) {
-  if (!text) {
-    return "";
-  }
-  // const formattedText = formatTextForIds(text).toLowerCase();
-  const slugifiedText = slugify(text);
-  // Dont remove special chars, just encode them
-  const encodedSlug = customEncodingForIds(slugifiedText);
-  return encodedSlug;
-}
 
 export {
-  generateRoseyId,
   formatTextForInputComments,
   removeFormattingElementsForHiglightUrls,
+  customEncodingForIds,
 };

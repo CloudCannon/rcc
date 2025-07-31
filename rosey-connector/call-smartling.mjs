@@ -20,8 +20,8 @@ import {
   isDirectory,
   readTranslationFile,
   handleConfigPaths,
-} from "./helpers/file-helpers.mjs";
-import { htmlToMarkdown } from "./helpers/html-to-markdown.mjs";
+} from "../utils/file-helpers.mjs";
+import { htmlToMarkdown } from "../utils/html-to-markdown.mjs";
 dotenv.config();
 
 export async function callSmartling(configData) {

@@ -1,12 +1,10 @@
-#!/usr/bin/env node
-
-import { readConfigFile, handleConfigPaths } from "./helpers/file-helpers.mjs";
-import { configWarnings } from "./configWarnings.mjs";
-import { checkAndCleanRemovedLocales } from "./cleanUnusedFiles.mjs";
-import { callSmartling } from "./callSmartling.mjs";
-import { generateTranslationFiles } from "./generateTranslationFiles.mjs";
-import { generateLocales } from "./generateLocales.mjs";
-import { generateConfig } from "./generateConfig.mjs";
+import { readConfigFile, handleConfigPaths } from "../utils/file-helpers.mjs";
+import { configWarnings } from "./config-warnings.mjs";
+import { checkAndCleanRemovedLocales } from "./clean-unused-files.mjs";
+import { callSmartling } from "./call-smartling.mjs";
+import { generateTranslationFiles } from "./generate-translation-files.mjs";
+import { generateLocales } from "./generate-locales.mjs";
+import { generateConfig } from "../utils/generate-config.mjs";
 
 export async function generate() {
   console.log("\n--- Starting Rosey CloudCannon Connector ---");

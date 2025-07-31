@@ -12,14 +12,15 @@ export async function generateConfig(
   // Check if a config already exists
   try {
     await fs.promises.access(configPath);
-    console.log("🏗️ Found an RCC config file.");
+    console.log("🏗️ Found the RCC config file.");
     return;
   } catch (error) {
     console.log("🏗️ No existing config file - Creating one...");
     // If not read the example one
     const exampleConfigPath = path.join(
-      "rosey-connector",
-      "helpers",
+      "node_modules",
+      "rosey-cloudcannon-connector",
+      "utils",
       "example-config.yaml"
     );
     const buffer = await fs.promises.readFile(exampleConfigPath);

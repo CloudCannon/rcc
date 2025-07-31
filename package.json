@@ -1,9 +1,13 @@
 {
   "name": "rosey-cloudcannon-connector",
-  "version": "1.0.4",
+  "version": "1.0.11",
   "description": "Middleware that connects Rosey to CloudCannon to enable editing of Rosey translations via CloudCannon's CMS.",
   "bin": {
     "rosey-cloudcannon-connector": "./main.mjs"
+  },
+  "exports": {
+    ".": "./main.mjs",
+    "./utils": "./utils/main.mjs"
   },
   "repository": {
     "type": "git",
@@ -31,14 +35,14 @@
     "slugify": "^1.6.6",
     "yaml": "^2.4.2",
     "markdown-it": "^13.0.1",
-    "unified": "^11.0.5",
     "@inquirer/prompts": "^7.6.0",
+    "smartling-api-sdk-nodejs": "^2.11.0",
+    "unified": "^11.0.5",
     "rehype-remark": "^10.0.1",
     "rehype-parse": "^9.0.1",
     "rehype-stringify": "^10.0.1",
     "remark-stringify": "^11.0.0",
     "rehype-format": "^5.0.1",
-    "unist-util-visit": "^5.0.0",
-    "smartling-api-sdk-nodejs": "^2.11.0"
+    "unist-util-visit": "^5.0.0"
   }
 }

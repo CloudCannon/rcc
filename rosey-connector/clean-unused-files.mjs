@@ -1,7 +1,7 @@
 import fs from "fs";
 import path from "path";
 import slugify from "slugify";
-import { handleConfigPaths } from "./helpers/file-helpers.mjs";
+import { handleConfigPaths } from "../utils/file-helpers.mjs";
 
 const currentDateTime = Date(Date.now()).toString();
 const currentDateTimeSlugified = slugify(currentDateTime);

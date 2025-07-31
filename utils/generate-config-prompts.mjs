@@ -1,25 +1,21 @@
 import { input, confirm } from "@inquirer/prompts";
-import { generateConfig } from "./generateConfig.mjs";
+import { generateConfig } from "./generate-config.mjs";
 
-(async () => {
+export async function generateConfigPrompts() {
   console.log(
-    `🏗️ Follow the prompts to generate the config file needed to use the Rosey CloudCannon Connector...`
-  );
-
-  console.log(
-    `Answer a few questions to generate your config file. You can always change these values later.`
+    `🏗️ Answer a few questions to generate your RCC config file. You can change these values later.`
   );
 
   // Get locales for config
   const localesInput = await input({
-    message: "Enter your desired locales, leaving a space between each locale.",
+    message: "Enter the locales you will be using, separated by a space.",
   });
   const localesToWrite = localesInput.split(" ");
 
   // Get highlight comment info for config
   const isHighlightComment = await confirm({
     message:
-      "Do you want to display a comment for each translation input that links to each phrase on the untranslated page for context?",
+      "Do you want to display a comment on each input that links to the original phrase on the untranslated page?",
     default: true,
   });
   const highlightCommentSettings = {
@@ -28,14 +24,15 @@ import { generateConfig } from "./generateConfig.mjs";
   };
   if (isHighlightComment) {
     highlightCommentSettings.untranslatedSiteUrl = await input({
-      message: "Enter your untranslated site's URL.",
+      message:
+        "Enter your site's URL. Use the untranslated site if you're editing translations and running the multilingual site generation on separate sites.",
     });
   }
 
   // Get git history settings
   const isGitHistoryComment = await confirm({
     message:
-      "Do you want to display a comment that links to each page's git history using your git provider's interface?",
+      "Do you want to display a comment that links to each translation file's git history?",
     default: false,
   });
   const gitHistoryCommentSettings = {
@@ -59,4 +56,4 @@ import { generateConfig } from "./generateConfig.mjs";
   );
 
   console.log(`🏗️ Finished generating files...`);
-})();
+}

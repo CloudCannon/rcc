@@ -8,14 +8,14 @@ import {
   getYamlFileName,
   createParentDirIfExists,
   handleConfigPaths,
-} from "./helpers/file-helpers.mjs";
+} from "../utils/file-helpers.mjs";
 import {
   initDefaultInputs,
   getInputConfig,
   initNamespacePageInputs,
   getNamespaceInputConfig,
   sortTranslationIntoInputGroup,
-} from "./helpers/input-helpers.mjs";
+} from "../utils/input-helpers.mjs";
 
 export async function generateTranslationFiles(configData) {
   // Get all the config data
