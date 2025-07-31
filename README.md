@@ -29,7 +29,9 @@ This option is for you if you want to use the default redirect that comes with R
 
 3. On your `production` site add the environment variable `ROSEYPROD`, with a value of `true`.
 
-4. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one. Add it on your staging branch, so that when you publish your changes to production the postbuild is included.
+4. Install the RCC by running `npm i rosey-cloudcannon-connector` in the root of your repository.
+
+5. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one. Add it on your staging branch, so that when you publish your changes to production the postbuild is included.
 
   `.cloudcannon/postbuild`
 
@@ -38,9 +40,9 @@ This option is for you if you want to use the default redirect that comes with R
 
     if [[ $ROSEYPROD != "true" ]];
     then
-      node rosey-tagger/main.mjs --source dist # Add the flag --verbose for more logs
+      npx rosey-cloudcannon-connector tag --source dist
       npx rosey generate --source dist
-      node rosey-connector/main.mjs
+      npx rosey-cloudcannon-connector generate
     fi
 
     if [[ $ROSEYPROD == "true" ]];
@@ -60,16 +62,18 @@ You can use this option if you don't need the default redirect that comes with R
 
 2. Add the environment variable `SYNC_PATHS`, with the value `/rosey/`.
 
-3. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one.
+3. Install the RCC by running `npm i rosey-cloudcannon-connector` in the root of your repository.
+
+4. Add a `.cloudcannon` directory in the root of your project if you don't have one already. Add a `postbuild` file to it, replacing `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one.
 
   `.cloudcannon/postbuild`
 
   ```bash
     #!/usr/bin/env bash
 
-    node rosey-tagger/main.mjs --source dist # Add the flag --verbose for more logs
+    npx rosey-cloudcannon-connector tag --source dist
     npx rosey generate --source dist
-    node rosey-connector/main.mjs
+    npx rosey-cloudcannon-connector generate
 
     echo "Translating site with Rosey"
     mv ./dist ./untranslated_site                  
@@ -78,44 +82,9 @@ You can use this option if you don't need the default redirect that comes with R
 
 ### Rosey setup
 
-1. Copy the following dependencies to your project's `package.json` and run `npm i`.
+1. Run `npx rosey-cloudcannon-connector generate-config` in the terminal in the root of your directory to generate a config file. If you want you can just skip to the next step and one will be generated for you on the next CloudCannon build.
 
-    `package.json`:
-
-    ``` json
-    "dependencies": {
-      "rosey": "^2.3.3",
-      "dotenv": "^16.4.5",
-      "slugify": "^1.6.6",
-      "yaml": "^2.4.2",
-      "markdown-it": "^13.0.1",
-      "unified": "^11.0.5",
-      "@inquirer/prompts": "^7.6.0",
-      "rehype-remark": "^10.0.1",
-      "rehype-parse": "^9.0.1",
-      "rehype-stringify": "^10.0.1",
-      "remark-stringify": "^11.0.0",
-      "rehype-format": "^5.0.1",
-      "unist-util-visit": "^5.0.0",
-      "smartling-api-sdk-nodejs": "^2.11.0",
-    }
-    ```
-
-2. Copy the `rosey-connector`, and `rosey-tagger` directories to your project.
-
-3. Run `node rosey-connector/generate.mjs` in the terminal in the root of your directory to generate a config file. If you want you can just skip to the next step and one will be generated for you.
-
-4. Commit and push your changes, and wait for the CloudCannon build to finish. Then pull your changes down to your local. 
-
-    All the files you need to get going will have been generated as part of the CloudCannon build. 
-
-> [!NOTE]
-> If you skipped generating a configuration file via the CLI **add at least one language code to the `locales` array** in the `rosey/rcc.yml` file. Remember to replace the placeholder urls if using either of the link features. Once again commit and push, then wait for the CloudCannon build to finish. Then pull your changes down to your local.
-
-5. Add a `translations` collection to your `cloudcannon.config.yml`. If you have the [collection_groups](https://cloudcannon.com/documentation/articles/configure-your-site-navigation/#options) configuration key defined, remember to add `translations` to a collection group, so that it is visible in your sidebar in CloudCannon. 
-
-
-    If your site is nested in a subdirectory and you're using the [source](https://cloudcannon.com/documentation/articles/configuration-file-reference/#source) key you'll need to remove it, and manually add the subdirectory to each path that needs it (probably just your collections). The translations collection's path `rosey` does not need the prefix of the subdirectory since it lives in the root of our project. Schema paths in CloudCannon are not affected by the `source` key, so do not need updating.
+2. Add a `translations` collection to your `cloudcannon.config.yml`. If you have the [collection_groups](https://cloudcannon.com/documentation/articles/configure-your-site-navigation/#options) configuration key defined, add `translations` to a collection group, so that it is visible in your sidebar in CloudCannon. 
 
     `cloudcannon.config.yml`
 
@@ -137,6 +106,20 @@ You can use this option if you don't need the default redirect that comes with R
               comment: Provide a translated URL, and Rosey will build this page at that address.
     ```
 
+> [!NOTE]
+> If your site is nested in a subdirectory and you're using the [source](https://cloudcannon.com/documentation/articles/configuration-file-reference/#source) key you'll need to remove it, and manually add the subdirectory to each of the paths that were relying on it. The `rosey` collection's path does not need the prefix of the subdirectory since it lives in the root of our project. Schema paths in CloudCannon are not affected by the `source` key, so do not need updating.
+
+3. Commit and push your changes, and wait for the CloudCannon build to finish. Then pull your changes down to your local. 
+
+    All the files you need to get going will have been generated as part of the CloudCannon build. 
+
+> [!NOTE]
+> Make sure there is **at least one locale code to the `locales` array** in the `rosey/rcc.yml` file. Remember to replace the placeholder urls with your own if using either of the link features.
+
+> [!NOTE]
+> Remember to replace the placeholder urls with your own if using either of the link features. 
+
+
 ## Tagging content for translation
 
 ### Manual tagging
@@ -149,13 +132,13 @@ An example tag in [Eleventy](https://www.11ty.dev/) may look like:
   <h1 class="heading" data-rosey="{{ heading.heading_text | slugify }}">{{ heading.heading_text }}</h1>
 ```
 
-Eleventy comes with the `slugify` global filter, which you can use to turn the tagged elements content into an ID friendly slug, and use that as the translation key. If you are using an SSG that doesn't have a `slugify` filter built in - like Astro - you can import a helper function which has been provided in  `rosey-connector/helpers/component-helper.js`.
+Eleventy comes with the `slugify` global filter, which you can use to turn the tagged elements content into an ID friendly slug, and use that as the translation key. If you are using an SSG that doesn't have a `slugify` filter built in - like Astro - you can import a helper function which has been provided in `rosey-cloudcannon-connector/utils`.
 
 An example tag in [Astro](https://astro.build/) may look like:
 
 ```jsx
   ...
-  import { generateRoseyId } from "rosey-connector/helpers/text-formatters.mjs";
+  import { generateRoseyId } from "rosey-cloudcannon-connector/utils";
 
   const { heading } = Astro.props;
   ---
@@ -197,7 +180,7 @@ An example for a header component in Astro might look like:
 
 ```jsx
 ---
-import { generateRoseyId } from "rosey-connector/helpers/text-formatters.mjs";
+import { generateRoseyId } from "rosey-cloudcannon-connector/utils";
 
 const { links } = Astro.props;
 ---

@@ -71,6 +71,8 @@ _inputs:
       Add and remove the locales you need for your site. Locales can be any
       format, usually either a two letter code (es), or a hyphenated four letter
       code (es-ES).
+  locales[*]:
+    type: string
   input_lengths:
     type: object
     options:
@@ -79,6 +81,12 @@ _inputs:
         text: Label and Textarea controls
         subtext: 
           - template: "Label: {label}, Textarea: {textarea}"
+  input_lengths.label:
+    type: number
+    comment: At what character length will inputs concatenate their label, and create a context box to see the whole translation.
+  input_lengths.textarea:
+    type: number
+    comment: At what character length will inputs concatenate their label, and create a context box to see the whole translation.
   see_on_page_comment:
     type: object
     options:
@@ -88,6 +96,19 @@ _inputs:
           - template: "{'Enabled'|if=enabled|default='Disabled'}"
         subtext:
           - template: "Link text: {comment_text}, Site url: {base_url}"
+  see_on_page_comment.enabled:
+    type: switch
+    comment: >-
+      Enable links for each translation input that show a user the original phrase in context on the untranslated page.
+  see_on_page_comment.base_url:
+    hidden: '!enabled'
+    comment: >-
+      The url of the untranslated site. Used to generate links to the original content to help provide
+      context to translators.
+  see_on_page_comment.comment_text:
+    hidden: '!enabled'
+    comment: >-
+      The text used for the link.
   git_history_link:
     type: object
     options:
@@ -97,6 +118,18 @@ _inputs:
           - template: "{'Enabled'|if=enabled|default='Disabled'}"
         subtext:
           - template: "Link text: {comment_text}, Repo url: {repo_url}"
+  git_history_link.enabled:
+    type: switch
+    comment: >-
+      Enable links for each translation file that show a user the git history for the file.
+  git_history_link.base_url:
+    hidden: '!enabled'
+    comment: >-
+      The url of the git repository. Used to generate links to the translation file's git history.
+  git_history_link.comment_text:
+    hidden: '!enabled'
+    comment: >-
+      The text used for the link.
   namespace_pages:
     type: array
     comment: >-
@@ -105,11 +138,6 @@ _inputs:
       namespaces, and grouped on the namespace page. See the [Rosey
       docs](https://rosey.app/docs/namespacing/) for details on adding
       namespaces to your html.
-  base_url:
-    comment: >-
-      The url to the CloudCannon staging site that you enter your translation
-      data to. Used to generate links to the original content to help provide
-      context to translators.
   rosey_paths:
     type: object
     options:
@@ -135,7 +163,7 @@ _inputs:
         icon: smart_toy
         text:
           - template: "{'Enabled'|if=enabled|default='Disabled'}"
-  enabled:
+  smartling.enabled:
     type: switch
     comment: >-
       Enable automatic Smartling AI powered machine translations? Requires a
@@ -145,11 +173,11 @@ _inputs:
   dev_project_id:
     type: text
     hidden: '!enabled'
-    comment: Enter your Smartling project id here
+    comment: Enter your Smartling project id here. This will be supplied by Smartling when you sign up.
   dev_user_identifier:
     type: text
     hidden: '!enabled'
-    comment: Enter your Smartling user id here
+    comment: Enter your Smartling user id here. This will be supplied by Smartling when you sign up.
   ping_interval:
     type: number
     hidden: '!enabled'
@@ -187,8 +215,3 @@ _inputs:
     comment: >-
       The unique identifier that Smartling uses for this site. Can be anything
       as long as it's unique to this site in your Smartling project.
-  tagged_body_content_elements:
-    type: array
-    comment: >-
-      The block level elements to add data-rosey tags to when parsing body
-      content on this site.
