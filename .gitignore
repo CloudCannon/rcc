@@ -1,1 +1,9 @@
 node_modules
+.DS_Store
+docs/_site/
+docs/.DS_Store
+docs/node_modules/
+docs/.jampack
+docs/.cache
+docs/src/assets/styles/bookshop.css
+docs/css/

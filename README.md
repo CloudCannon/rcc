@@ -209,7 +209,15 @@ const { links } = Astro.props;
 
 This project allows for automatic AI-powered translations through Smartling. It uses the [Node.js SDK](https://help.smartling.com/hc/en-us/articles/4405992477979-Node-js-SDK). You must sign up for an account, and enter your Smartling credentials in the rcc configuration file and site's environment variables for this to work.
 
-To add automatic AI-powered translations - which your editors can then QA in CloudCannon - enable Smartling in your `rosey/rcc.yaml` file, by setting `enabled: true` under the Smartling section. Make sure to fill in your `dev_project_id`, and `dev_user_identifier`, with the credentials in your Smartling account. Add your secret API key to your environment variables with the key of `DEV_USER_SECRET` in CloudCannon on your staging site (or your only site if you're not using a publishing workflow). You can set this locally in a `.env` file if you want to test it in your development environment.  
+To add automatic AI-powered translations - which your editors can then QA in CloudCannon:
+
+1. Add your secret API key to your environment variables with the key of `DEV_USER_SECRET` in CloudCannon on your staging site (or your only site if you're not using a publishing workflow). You can set this locally in a `.env` file if you want to test it in your development environment. Save your changes and wait for the build to finish.
+
+2. Enable Smartling in your `rosey/rcc.yaml` file, by setting `enabled: true` under the Smartling section. 
+
+3. Fill in your `dev_project_id`, and `dev_user_identifier`, with the values given to you by Smartling.
+
+4. Save your changes. Your translations should now be sent to Smartling.
 
 > [!CAUTION]
 > Make sure to not push any secret API keys to your source control. Make sure the `.env` file is in your `.gitignore` if you are testing locally.

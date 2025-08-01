@@ -1,0 +1,1176 @@
+# Timezone of your site in IANA format. This is used by date and datetime inputs
+# within the CloudCannon Data Editor.
+timezone: Etc/UTC
+
+# Base path to your source files, relative to the root folder of your repository.
+source: src
+
+# The locations of various types of files within your site.
+# Each path is relative to your site's source folder.
+paths:
+  static: ""
+  uploads: assets/images
+
+collections_config:
+  pages:
+    url: "/[slug]/"
+    glob: 
+      - "*.md"
+    disable_add_folder: true
+    path: pages
+    icon: waving_hand
+    schemas:
+      default:
+        path: .cloudcannon/schemas/page.md
+    add_options:
+      - name: Add Site Page
+        editor: content
+        schema: default
+    _enabled_editors:
+      - content
+      - visual
+  navigation:
+    disable_url: true
+    path: _data
+    disable_add: true
+    disable_add_folder: true
+    icon: table_rows
+    glob:
+      - nav.yml
+      - footer.yml
+  theme_palette:
+    disable_url: true
+    path: _data
+    disable_add: true
+    disable_add_folder: true
+    icon: palette
+    glob: 
+      - theme.yml
+  banner:
+    disable_url: true
+    path: _data
+    disable_add: true
+    disable_add_folder: true
+    icon: add_alert
+    glob:
+      - banner.yml
+    preview:
+      gallery:
+        icon: add_alert
+      metadata:
+        - icon: date_range
+          text: 
+            - key: show_until
+        - icon: add_alert
+          text: 
+            - key: enable_banner
+  docs:
+    path: docs
+    url: /docs/[full_slug]/
+    icon: assignment
+    disable_add_folder: true
+    schemas:
+      default:
+        path: .cloudcannon/schemas/docs.md
+    add_options:
+      - name: Read the docs
+        icon: local_library
+        href: https://docs.cloudcannon.com
+      - name: Add Document
+        editor: content      
+        schema: default
+    _enabled_editors:
+      - content
+      - visual
+    preview:
+      metadata: 
+        - icon: folder
+          text: 
+            - key: nav_section
+        - icon: format_list_numbered
+          text: 
+            - key: weight
+  meta_data:
+    disable_url: true
+    path: _data
+    icon: settings
+    disable_add: true
+    disable_add_folder: true
+    glob: 
+      - meta.yml
+      
+      
+
+# Control which collections are displayed in the CloudCannon site navigation,
+# and how those collections are grouped.
+collection_groups:
+  - heading: Base Pages
+    collections:
+      - pages
+  - heading: Docs
+    collections:
+      - docs
+  - heading: Site Settings
+    collections:
+      - Meta_Data
+      - Theme_Palette
+      - Navigation
+      - banner
+
+# Structures
+
+
+_structures:
+  product_logo_structure:
+    values:
+      - label: Image
+        icon: add_photo_alternate
+        value: 
+          logo_image:
+          logo_image_dark:
+      - label: Text
+        icon: border_color
+        value: 
+          logo_heading: 
+  footer_link_structure:
+    values:
+      - label: Add Image Link
+        icon: add_photo_alternate
+        value: 
+          url_path:
+          image_path:
+          image_alt_text:
+      - label: Add Text Link
+        icon: add_link
+        value: 
+          url_path:
+          link_title:
+  nav_link_structure:
+    values:
+      - label: Link with Icon
+        icon: add_photo_alternate
+        value:
+          link_title:
+          link_url:
+          link_label:
+          link_icon_path:
+      - label: Text Link
+        icon: add_link
+        value: 
+          link_label:
+          link_url:
+        preview:
+          text: Site Link
+          icon: add_link
+
+_inputs:
+  trim_left:
+    hidden: true
+  trim_right:
+    hidden: true
+  permalink:
+    hidden: true
+  layout:
+    hidden: true
+  eleventyNavigation:
+    label: Navigation
+    comment: Options for displaying the page in the sidebar navigation
+  eleventyNavigation.key:
+    label: Sidebar Nav Title
+    comment: The name of the page shown in the sidebar navigation
+  eleventyNavigation.order:
+    comment: The order of the page in the sidebar group
+  tags:
+    comment: The name of the section the page is nested under in the sidebar navigation (use 'page' for Root pages)
+  title: 
+    type: text
+    label: Page Title
+  nav_title:
+    type: text
+    label: Sidebar Nav Title
+    comment: The name of the page shown in the sidebar navigation
+  nav_section:
+    type: text
+    label: Parent Section
+    comment: The name of the section the page is nested under in the sidebar navigation
+  weight:
+    type: number
+    comment: The order of the page in the sidebar group
+  project_name:
+    type: text
+  default_og_image:
+    type: image
+    comment: The default image for social media sharing
+  logo: 
+    type: object
+    label: Site Logo
+    comment: Choose between image or text based logos
+    options:
+      structures: _structures.product_logo_structure
+  footer_links:
+    type: array
+    comment: choose between image or text based links
+    options:
+      structures: _structures.footer_link_structure
+  footer_width:
+    type: select
+    options:
+      values: 
+        - contain
+        - full
+  logo_image:
+    type: image
+    comment: Default Display
+  logo_image_dark:
+    type: image
+    comment: Displays when dark mode is enabled
+  logo_text:
+    type: text
+  side_nav_title:
+    type: text
+    label: Sidebar Nav Title
+  favicon:
+    type: object
+  nav_links:
+    type: array
+    label: Navigation Links
+    options:
+      structures: _structures.nav_link_structure
+  link_title:
+    type: text
+    comment: Name used for alt text
+  link_url:
+    type: url 
+    comment: 'if external link, include https://'
+  link_label:
+    type: text
+    comment: Text displayed on the link
+  link_icon_path:
+    type: image
+    comment: '*prefers svgs for dark mode'
+  url_path:
+    type: text
+    comment: 'if external link, include https://'
+  light:
+    type: object
+    label: Light theme color palette
+  dark:
+    type: object
+    label: Dark theme color palette
+  typography:
+    type: object
+    label: Text
+    comment: Text color palette
+  button_colors:
+    type: object
+    label: Buttons
+    comment: Button color palette
+  background_colors:
+    type: object
+    label: BG
+    comment: Background color palette
+  code_block_colors:
+    type: object
+    label: Code Blocks
+    comment: Code block color palette
+  border_colors:
+    type: object
+    label: Borders
+    comment: Border color palette
+  focus_colors:
+    type: object
+    label: Focus
+    comment: Focus color palette
+  shortcode_colors:
+    type: object
+    label: Shortcode
+    comment: Shortcode color palette
+  scrollbar_colors:
+    type: object
+    label: Scrollbars
+    comment: Scrollbar color palette
+  pagefind_colors:
+    type: object
+    label: Pagefind
+    comment: Pagefind color palette
+  text: 
+    type: color
+    label: Primary text
+    comment: Main text color
+  flip-text:
+    type: color
+    comment: Text color for dark backgrounds
+  highlight: 
+    type: color
+    label: Highlighted text
+    comment: Text color for highlighted text.
+  body-bg-color: 
+    type: color
+    comment: Main body background color.
+  code-element: 
+    type: color
+    label: HTML element tags
+    comment: Next color for codeblock html element tags. 
+  code-attribute:
+    type: color
+    label: HTML attributes
+    comment: Text color for codeblock html attributes.
+  code-bool:
+    type: color
+    label: Boolean values
+    comment: Text color for codeblock boolean values.
+  code-params:
+    type: color
+    label: Function/HTML parameters
+    comment: Text color for codeblock function/html parameters.
+  code-values: 
+    type: color
+    label: Key values
+    comment: Text color for codeblock key values.
+  background-body: 
+    type: color
+    comment: Main body background color.
+  background: 
+    type: color
+    comment: Background color for main content area. 
+  background-alt: 
+    type: color
+    comment: Background color for alternate content area.
+  selection: 
+    type: color
+    comment: Selected text background color. 
+  text-main:
+    type: color
+    comment: Main text color. 
+  text-bright: 
+    type: color
+    comment: Text color for bright text.
+  text-muted: 
+    type: color
+    comment: Text color for muted text.
+  links: 
+    type: color
+    comment: Text color for links. 
+  focus: 
+    type: color
+    comment: Focus color for links. 
+  border:
+    type: color
+    comment: Border color for elements.
+  code: 
+    type: color
+    label: Codeblock text color
+    comment: Text color for codeblock text. 
+  button-base: 
+    type: color
+    comment: Background color for buttons.
+  button-hover: 
+    type: color
+    comment: Background color for buttons on hover.
+  scrollbar-thumb: 
+    type: color
+    comment: Scrollbar thumb color.
+  scrollbar-thumb-hover:
+    type: color
+    comment: Scrollbar thumb color on hover. 
+  form-placeholder: 
+    type: color
+    comment: Placeholder text color for form inputs. 
+  form-text:
+    type: color
+    comment: Text color for form inputs.
+  variable:
+    type: color
+    comment: Text color for codeblock variable names.
+  diffcode-highlighted: 
+    type: color
+    options:
+      format: hex
+      alpha: true
+    comment: Background color for highlighted lines in diffcode shortcode.
+  diffcode-added: 
+    type: color
+    options:
+      format: hex
+      alpha: true
+    comment: Background color for added lines in diffcode shortcode.
+  diffcode-removed: 
+    type: color
+    options:
+      format: hex
+      alpha: true
+    comment: Background color for removed lines in diffcode shortcode.
+  pagefind-ui-primary:
+    type: color
+    comment: Primary color for pagefind ui. 
+  pagefind-ui-secondary:
+    type: color
+    comment: Secondary color for pagefind ui. 
+  pagefind-ui-background:
+    type: color
+    comment: Background color for pagefind ui. 
+  pagefind-ui-border:
+    type: color
+    comment: Border color for pagefind ui.
+  pagefind-ui-tag:
+    type: color
+    comment: Tag color for pagefind ui.
+  small_icon:
+    type: image
+    comment: Dimensions - 16px x 16px
+  large_icon:
+    type: image
+    comment: Dimensions - 32px x 32px
+  apple_touch_icon:
+    type: image
+    comment: Dimensions - 57px x 57px
+  shortcut_icon:
+    type: image
+    comment: Bookmark icon
+  
+
+# Snippets
+_snippets_imports:
+  eleventy_liquid: true
+
+_snippets:
+  highlight:
+    snippet: "{% capture content %}\n```[[lang]][[inner]]```\n{% endcapture %}{% diffcode content %}"
+    params: 
+      lang:
+        parser: argument
+        options:
+          editor_key: language
+          forbidden_tokens: ["```"]
+          style: 
+            output: inline
+          model:
+            editor_key: language
+            optional: true
+      inner:
+        parser: content
+        options:  
+          editor_key: inner_code
+          style:
+            output: block
+            block:
+              leading: "\n"
+              trailing: "\n"
+              indent: ""
+    inline: false
+    preview:
+      text: Highlight
+      subtext: 
+        - key: language
+        - Code block with syntax highlighting.
+      icon: code
+    picker_preview:
+      text: Highlight
+      subtext: Code block with syntax highlighting.
+      icon: code
+    _inputs:
+      inner_code:
+        type: code
+        label: Content
+      language:
+        type: select
+        options:
+          values: _select_data.languages
+          value_key: key
+          preview:
+            text:
+              - key: display_name
+    
+   
+          
+  summary_divider:
+    snippet: "{% summary_divider %}"
+    inline: true
+    preview:
+      text: Summary Divider
+      icon: summarize
+    picker_preview:
+      text: Summary Divider
+      subtext: Marker to show which content to include in the article summary.
+      icon: summarize
+      
+  param:
+    template: eleventy_liquid_shortcode_positional_args
+    definitions:
+      shortcode_name: param
+      positional_args:
+        - editor_key: param_name
+          type: string
+    inline: true
+    preview:
+      text: Param
+      icon: data_object
+    picker_preview:
+      text: Param
+      subtext: Front matter parameter.
+      icon: data_object
+    _inputs:
+      param_name:
+        type: text
+        label: Param
+        comment: The frontmatter parameter to display.
+
+  gist:
+    template: eleventy_liquid_shortcode_positional_args
+    definitions:
+      shortcode_name: gist
+      positional_args:
+        - editor_key: username
+          type: string        
+        - editor_key: id
+          type: string
+        - editor_key: file
+          type: string
+          optional: true
+    inline: false
+    preview:
+      text: Gist
+      subtext: 
+        - key: username
+        - GitHub Gist embed.
+      icon: integration_instructions
+    picker_preview:
+      text: Gist
+      subtext: GitHub Gist embed.
+      icon: integration_instructions
+    _inputs:
+      username:
+        type: text
+        comment: Name of the user that owns the Gist.
+      id:
+        label: ID
+        type: text
+        comment: ID of the Gist to embed.
+      file:
+        type: text    
+        comment: Name of the file to embed, if the Gist contains multiple.
+        
+  figure:
+    template: eleventy_liquid_shortcode_positional_args
+    definitions:
+      shortcode_name: figure
+      positional_args:
+        - editor_key: src
+          type: string
+        - editor_key: pageTitle
+          type: string
+          optional: true    
+        - editor_key: alt
+          type: string
+          optional: true
+        - editor_key: caption
+          type: string
+          optional: true
+        - editor_key: link_url
+          type: string
+          optional: true
+        - editor_key: link_target
+          type: string
+          optional: true
+        - editor_key: link_rel
+          type: string
+          optional: true
+        - editor_key: attr
+          type: string
+          optional: true
+        - editor_key: attrlink
+          type: string
+          optional: true
+        - editor_key: className
+          type: string
+          optional: true
+        - editor_key: width
+          type: string
+          optional: true
+        - editor_key: height
+          type: string
+          optional: true
+    inline: false
+    preview:
+      text: Figure
+      subtext: Full-width image with an optional caption below.
+      icon: image
+      image: 
+        - key: src
+        - No preview available
+    picker_preview:
+      text: Figure
+      subtext: Full-width image with an optional caption below.
+      icon: image
+    _inputs:
+      src:
+        type: image
+        comment: The image to display.
+      pageTitle:
+        type: text
+        comment: Image title.
+      alt:
+        type: text
+        comment: Alternate text if the image cannot be displayed.
+      caption:
+        type: text
+        comment: Image caption.
+      link_url:
+        type: url
+        label: Link
+        comment: URL for the image to link to.
+      link_target:
+        type: text
+        label: Target
+        comment: Target attribute for the image link.
+        hidden: "!link_url"
+      link_rel:
+        type: text
+        label: Rel
+        comment: Rel attribute for the image link.
+        hidden: "!link_url"
+      attr:
+        type: text
+        comment: Image attribution text.
+      attrlink:
+        type: url
+        comment: URL for the attribution to link to.
+      className:
+        type: text
+        label: Class
+        comment: Class attribute of the HTML figure tag.
+      width:
+        type: text
+        comment: Width attribute of the image.
+      height:
+        type: text
+        comment: Height attribute of the image.
+        
+  twitter:
+    template: eleventy_liquid_shortcode_positional_args
+    definitions:
+      shortcode_name: twitter
+      positional_args:
+        - editor_key: user_id
+          type: string 
+        - editor_key: twitter_id
+          type: string
+    inline: false
+    preview:
+      text: Tweet
+      subtext: 
+        - key: user_id
+        - Twitter tweet embed.
+      icon: message
+    picker_preview:
+      text: Tweet
+      subtext: Twitter tweet embed.
+      icon: message
+    _inputs:
+      user_id:
+        type: text
+        label: User
+        comment: Name of the user that made the tweet.
+      twitter_id: 
+        type: text
+        label: ID
+        comment: ID of the tweet to embed.
+        
+  vimeo:
+    template: eleventy_liquid_shortcode_positional_args
+    definitions:
+      shortcode_name: vimeo
+      positional_args:
+        - editor_key: vimeo_id
+          type: string
+        - editor_key: class_name
+          type: string  
+          optional: true
+        - editor_key: page_title
+          type: string
+          optional: true
+    inline: false
+    preview:
+      text: 
+        - key: page_title
+        - Vimeo  
+      subtext:
+        - key: vimeo_id
+        - Vimeo video embed.
+      icon: videocam
+    picker_preview:
+      text: Vimeo
+      subtext: Vimeo video embed.
+      icon: videocam
+    _inputs:
+      vimeo_id: 
+        type: text
+        label: ID
+        comment: ID of the Vimeo video to embed.
+      class_name:
+        type: text
+        label: Class
+        comment: HTML class of the embedded video.
+      page_title:
+        type: text
+        comment: Title of the video embed for accessibility.
+        
+  youtube:
+    template: eleventy_liquid_shortcode_positional_args
+    definitions:
+      shortcode_name: youtube
+      positional_args:
+        - editor_key: youtube_id
+          type: string
+        - editor_key: autoplay
+          type: string  
+          optional: true
+        - editor_key: page_title
+          type: string
+          optional: true
+        - editor_key: class_name
+          type: string
+          optional: true
+    inline: false
+    preview:
+      text: 
+        - key: page_title
+        - YouTube    
+      subtext:
+        - key: youtube_id
+        - YouTube video embed.
+      icon: smart_display
+    picker_preview:
+      text: YouTube
+      subtext: YouTube video embed.
+      icon: smart_display
+    _inputs:
+      youtube_id: 
+        type: text
+        label: ID
+        comment: ID of the YouTube video to embed.
+      autoplay:
+        comment: Automatically start video playback.
+        type: select
+        options:
+          values:
+            - "true"
+      page_title:
+        type: text
+        comment: Title of the video embed for accessibility.
+      class_name:
+        type: text
+        label: Class
+        comment: HTML class of the embedded video.
+        
+  diffcode:
+    template: eleventy_liquid_include
+    definitions:
+      include_name: shortcodes/diffcode.html
+      named_args:
+        - editor_key: lang
+          type: string
+        - editor_key: inner
+          parser: content
+          options:              
+            style:
+              output: block
+              block:
+                leading: "\n"
+                trailing: "\n"
+                indent: ""
+    inline: false
+    preview:
+      text: Diffcode
+      subtext: Difference formatter
+      icon: difference
+    picker_preview:
+      text: Diffcode
+      subtext: Difference formatter
+      icon: difference
+    _inputs:
+      lang:
+        type: select
+        options:
+          values: _select_data.languages
+          value_key: key
+          preview:
+            text:
+              - key: display_name
+
+      inner:
+        type: code
+        label: Inner Code
+        
+  tree:
+    snippet: "{% capture treecontent %}[[inner]]{% endcapture %}{% tree treecontent %}"
+    params: 
+      inner:
+        parser: content
+        options:  
+          editor_key: inner_code
+          style:
+            output: block
+            block:
+              leading: "\n"
+              trailing: "\n"
+              indent: ""
+    inline: false
+    definitions:
+      shortcode_name: tree
+      content_key: inner_code
+    preview:
+      text: Tree
+      subtext: Tree directory formatter
+      icon: account_tree
+    picker_preview:
+      text: Tree
+      subtext: Tree directory formatter
+      icon: account_tree
+    _inputs:
+      inner_code:
+        type: code
+
+
+_select_data:
+  languages:        
+    - key: 1c
+      display_name: 1C
+    - key: abnf
+      display_name: ABNF
+    - key: accesslog
+      display_name: Access logs
+    - key: ada
+      display_name: Ada        
+    - key: arduino
+      display_name: Arduino (C++ w/Arduino libs)
+    - key: armasm
+      display_name: ARM assembler
+    - key: avrasm
+      display_name: AVR assembler
+    - key: actionscript
+      display_name: Actionscript
+    - key: angelscript
+      display_name: AngelScript
+    - key: apache
+      display_name: Apache
+    - key: applescript
+      display_name: AppleScript
+    - key: arcade
+      display_name: Arcade
+    - key: asciidoc
+      display_name: AsciiDoc
+    - key: aspectj
+      display_name: AspectJ
+    - key: autohotkey
+      display_name: AutoHotkey
+    - key: autoit
+      display_name: AutoIt
+    - key: awk
+      display_name: Awk
+    - key: bash
+      display_name: Bash
+    - key: basic
+      display_name: Basic
+    - key: bnf
+      display_name: BNF
+    - key: brainfuck
+      display_name: Brainfuck
+    - key: csharp
+      display_name: C#
+    - key: c
+      display_name: C
+    - key: cpp
+      display_name: C++
+    - key: cal
+      display_name: C/AL
+    - key: cos
+      display_name: Cache Object Script
+    - key: cmake
+      display_name: CMake
+    - key: coq
+      display_name: Coq
+    - key: csp
+      display_name: CSP
+    - key: css
+      display_name: CSS
+    - key: capnproto
+      display_name: Cap'n Proto
+    - key: clojure
+      display_name: Clojure
+    - key: coffeescript
+      display_name: CoffeeScript
+    - key: crmsh
+      display_name: Crmsh
+    - key: crystal
+      display_name: Crystal
+    - key: d
+      display_name: D
+    - key: dart
+      display_name: Dart
+    - key: dpr
+      display_name: Delphi
+    - key: diff
+      display_name: Diff
+    - key: django
+      display_name: Django
+    - key: dns
+      display_name: DNS Zone file
+    - key: dockerfile
+      display_name: Dockerfile
+    - key: dos
+      display_name: DOS
+    - key: dsconfig
+      display_name: dsconfig
+    - key: dts
+      display_name: DTS (Device Tree)
+    - key: dust
+      display_name: Dust
+    - key: ebnf
+      display_name: EBNF
+    - key: elixir
+      display_name: Elixir
+    - key: elm
+      display_name: Elm
+    - key: erlang
+      display_name: Erlang
+    - key: excel
+      display_name: Excel
+    - key: fsharp
+      display_name: F#
+    - key: fix
+      display_name: FIX
+    - key: fortran
+      display_name: Fortran
+    - key: gcode
+      display_name: G-Code
+    - key: gams
+      display_name: Gams
+    - key: gauss
+      display_name: GUASS
+    - key: gherkin
+      display_name: Gherkin
+    - key: go
+      display_name: Go
+    - key: golo
+      display_name: Golo
+    - key: gradle
+      display_name: Gradle
+    - key: graphql
+      display_name: GraphQL
+    - key: groovy
+      display_name: Groovy
+    - key: xml
+      display_name: HTML, XML
+    - key: http
+      display_name: HTTP
+    - key: haml
+      display_name: Haml
+    - key: handlebars
+      display_name: Handlebars
+    - key: haskell
+      display_name: Haskell
+    - key: haxe
+      display_name: Haxe
+    - key: hy
+      display_name: Hy
+    - key: ini
+      display_name: Ini, TOML
+    - key: inform7
+      display_name: Inform7
+    - key: irpf90 
+      display_name: IRPF90
+    - key: json
+      display_name: JSON
+    - key: java
+      display_name: Java
+    - key: javascript
+      display_name: JavaScript
+    - key: julia
+      display_name: Julia
+    - key: julia-repl
+      display_name: Julia REPL
+    - key: kotlin
+      display_name: Kotlin
+    - key: tex
+      display_name: LaTeX
+    - key: leaf
+      display_name: Leaf
+    - key: lasso
+      display_name: Lasso
+    - key: less
+      display_name: Less
+    - key: ldif
+      display_name: LDIF
+    - key: lisp
+      display_name: Lisp
+    - key: livecodeserver
+      display_name: LiveCode Server
+    - key: livescript
+      display_name: LiveScript
+    - key: lua
+      display_name: Lua
+    - key: makefile
+      display_name: Makefile
+    - key: markdown
+      display_name: Markdown
+    - key: mathematica
+      display_name: Mathematica
+    - key: matlab
+      display_name: Matlab
+    - key: maxima
+      display_name: Maxima
+    - key: mel
+      display_name: Maya Embedded Language
+    - key: mercury
+      display_name: Mercury
+    - key: mips
+      display_name: MIPS Assembler
+    - key: mizar
+      display_name: Mizar
+    - key: mojolicious
+      display_name: Mojolicious
+    - key: monkey
+      display_name: Monkey
+    - key: moonscript
+      display_name: Moonscript
+    - key: n1ql
+      display_name: N1QL
+    - key: nsis
+      display_name: NSIS
+    - key: nginx
+      display_name: Nginx
+    - key: nim
+      display_name: Nim
+    - key: nix
+      display_name: Nix
+    - key: ocaml
+      display_name: OCaml
+    - key: objectivec
+      display_name: Objective C
+    - key: glsl
+      display_name: OpenGL Shading Language
+    - key: openscad
+      display_name: OpenSCAD
+    - key: ruleslanguage
+      display_name: Oracle Rules Language
+    - key: oxygene
+      display_name: Oxygene
+    - key: pf
+      display_name: PF
+    - key: php
+      display_name: PHP
+    - key: parser3
+      display_name: Parser3
+    - key: perl
+      display_name: Perl
+    - key: plaintext
+      display_name: Plaintext
+    - key: pony
+      display_name: Pony
+    - key: pgsql
+      display_name: PostgreSQL & PL/pgSQL
+    - key: powershell
+      display_name: PowerShell
+    - key: processing
+      display_name: Processing
+    - key: prolog
+      display_name: Prolog
+    - key: properties
+      display_name: Properties
+    - key: proto
+      display_name: Protocol Buffers
+    - key: puppet
+      display_name: Puppet
+    - key: python
+      display_name: Python
+    - key: profile
+      display_name: Python profiler results
+    - key: python-repl
+      display_name: Python REPL
+    - key: k
+      display_name: Q
+    - key: qml
+      display_name: QML
+    - key: r
+      display_name: R
+    - key: reasonml
+      display_name: ReasonML
+    - key: rib
+      display_name: RenderMan RIB
+    - key: rsl
+      display_name: RenderMan RSL
+    - key: graph
+      display_name: Roboconf
+    - key: ruby
+      display_name: Ruvy
+    - key: rust
+      display_name: Rust
+    - key: SAS
+      display_name: SAS
+    - key: scss
+      display_name: SCSS
+    - key: sql
+      display_name: SQL
+    - key: p21
+      display_name: STEP Part 21
+    - key: scala
+      display_name: Scala
+    - key: scheme
+      display_name: Scheme
+    - key: scilab
+      display_name: Scilab
+    - key: shell
+      display_name: Shell
+    - key: smali
+      display_name: Smali
+    - key: smalltalk
+      display_name: Smalltalk
+    - key: sml
+      display_name: SML
+    - key: stan
+      display_name: Stan
+    - key: stata
+      display_name: Stata
+    - key: stylus
+      display_name: Stylus
+    - key: subunit
+      display_name: SubUnit
+    - key: swift
+      display_name: Swift
+    - key: tcl
+      display_name: Tcl
+    - key: tap
+      display_name: Test Anything Protocol
+    - key: thrift
+      display_name: Thrift
+    - key: tp
+      display_name: TP
+    - key: twig
+      display_name: Twig
+    - key: typescript
+      display_name: TypeScript
+    - key: vbnet
+      display_name: VB.Net
+    - key: vbscript
+      display_name: VBScript
+    - key: vhdl
+      display_name: VHDL
+    - key: vala
+      display_name: Vala
+    - key: verilog
+      display_name: Verilog
+    - key: vim
+      display_name: Vim Script
+    - key: axapta
+      display_name: X++
+    - key: x86asm
+      display_name: x86 Assembly
+    - key: xl
+      display_name: XL
+    - key: xquery
+      display_name: XQuery
+    - key: yml
+      display_name: YAML
+    - key: zephir
+      display_name: Zephir
