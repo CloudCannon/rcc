@@ -1,6 +1,6 @@
 {
   "name": "rosey-cloudcannon-connector",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "description": "Middleware that connects Rosey to CloudCannon to enable editing of Rosey translations via CloudCannon's CMS.",
   "bin": {
     "rosey-cloudcannon-connector": "./main.mjs"

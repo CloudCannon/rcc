@@ -72,7 +72,7 @@ _inputs:
       format, usually either a two letter code (es), or a hyphenated four letter
       code (es-ES).
   locales[*]:
-    type: string
+    type: text
   input_lengths:
     type: object
     options:
