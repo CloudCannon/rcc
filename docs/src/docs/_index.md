@@ -54,7 +54,7 @@ This option is for you if you want the default redirect that comes with Rosey, a
 
 3. On your `production` site add the environment variable `ROSEY_PROD`, with a value of `true`.
 
-4. On staging, install the RCC by running `npm i rosey-cloudcannon-connector` in the root of your repository.
+4. On staging, install the RCC by running `npm i rosey-cloudcannon-connector` in the root of your project.
 
 5. On staging, add a `.cloudcannon/postbuild` file at the root of your project if you don't have one already. Replace `dist` with the build output directory of your project. If you already have a CloudCannon postbuild file, add this logic to your current one.
 
