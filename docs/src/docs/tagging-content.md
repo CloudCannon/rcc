@@ -21,18 +21,10 @@ Some SSGs - like Eleventy - come with a global `slugify` filter, which you can u
 
 An example tag in [Eleventy](https://www.11ty.dev/) may look like:
 
-{% capture content %}
-```
-<h1 class="heading" data-rosey="{{ heading.heading_text | slugify }}">{{ heading.heading_text }}</h1>
-```
-{% endcapture %}{% diffcode content %}
-
-```liquid
-  <h1 class="heading" data-rosey="{{ heading.heading_text | slugify }}">{{ heading.heading_text }}</h1>
-```
-
 ```html
-<h1 class="heading" data-rosey="{% raw %}{{ heading.heading_text | slugify }}{% endraw %}">{% raw %}{{ heading.heading_text }}{% endraw %}</h1>
+<h1 class="heading" data-rosey="{% raw %}{{ heading.heading_text | slugify }}{% endraw %}">
+  {% raw %}{{ heading.heading_text }}{% endraw %}
+</h1>
 ```
 
 If you are using an SSG that doesn't have a `slugify` filter built in - like Astro - you can import a helper function to generate the Rosey IDs. One has been provided at `rosey-cloudcannon-connector/utils`.
