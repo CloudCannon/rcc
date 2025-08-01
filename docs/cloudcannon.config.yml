@@ -3,7 +3,7 @@
 timezone: Etc/UTC
 
 # Base path to your source files, relative to the root folder of your repository.
-source: src
+source: docs/src
 
 # The locations of various types of files within your site.
 # Each path is relative to your site's source folder.
@@ -112,14 +112,12 @@ collection_groups:
       - docs
   - heading: Site Settings
     collections:
-      - Meta_Data
-      - Theme_Palette
-      - Navigation
+      - meta_data
+      - theme_palette
+      - navigation
       - banner
 
 # Structures
-
-
 _structures:
   product_logo_structure:
     values:
