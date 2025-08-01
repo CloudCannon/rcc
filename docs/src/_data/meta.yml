@@ -1,5 +1,5 @@
-project_name: Alto — Eleventy Documentation theme
-default_og_image: /assets/images/uploads/alto.png
+project_name: Rosey CloudCannon Connector Docs
+default_og_image: /assets/images/logos/cloudcannon.svg
 favicon:
   small_icon: /assets/images/meta/favicon-16x16.png
   large_icon: /assets/images/meta/favicon-32x32.png

@@ -1,8 +1,8 @@
 side_nav_title: Docs
 nav_links:
   - link_title: GitHub
-    link_url: https://github.com/cloudcannon/alto-eleventy-template
-    link_label: 1.0.0
-    link_icon_path: /assets/images/github.svg
+    link_url: https://github.com/CloudCannon/rcc
+    link_label: 1.0.13
+    link_icon_path: /assets/images/logos/github.svg
 logo:
-  logo_heading: Alto
+  logo_heading: RCC
