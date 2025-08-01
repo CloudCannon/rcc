@@ -17,7 +17,7 @@ draft: false
 The Rosey CloudCannon Connector provides a way to enter and edit translations used by [Rosey](https://rosey.app/) inside of CloudCannon's CMS. It then turns these translations into the JSON files that Rosey uses in tandem with your site's tagged HTML to generate a multilingual site. 
 
 
-Translations are displayed to editors in a form-like interface, with links to each original phrase in context on it's untranslated page. An optional Smartling integration is provided for automatic [AI-powered machine translations](https://www.smartling.com/software/smartling-translate/), which editors can then QA and edit as needed.
+Translations are displayed to editors in a form-like interface, with links to each original phrase in context on it's untranslated page. An optional [Smartling](https://www.smartling.com/) integration is provided for automatic [AI-powered machine translations](https://www.smartling.com/software/smartling-translate/), which editors can then QA and edit as needed.
 
 
 ![Screenshot of editing interface in CloudCannon](/assets/images/screenshot-editing.png)
