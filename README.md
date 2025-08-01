@@ -9,7 +9,7 @@ The Rosey CloudCannon Connector provides a way to enter and edit translations us
 Translations are displayed to editors in a form-like interface, with links to each original phrase in context on it's untranslated page. An optional [Smartling](https://www.smartling.com/) integration is provided for automatic [AI-powered machine translations](https://www.smartling.com/software/smartling-translate/), which editors can then QA and edit as needed.
 
 
-![Screenshot of editing interface in CloudCannon](/assets/images/screenshot-editing.png)
+![Screenshot of editing interface in CloudCannon](docs/src/assets/images/screenshot-editing.png)
 
 
 ## How it works
