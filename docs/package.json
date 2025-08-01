@@ -8,7 +8,8 @@
     "eleventy:watch": "ELEVENTY_ENV=development eleventy --serve",
     "sass:watch": "sass --no-source-map --watch src/assets/styles/site.scss _site/css/site.css",
     "sass:build": "sass --no-source-map src/assets/styles/site.scss _site/css/site.css",
-    "start": "npm-run-all sass:build --parallel sass:watch eleventy:watch"
+    "start": "npm-run-all sass:build --parallel sass:watch eleventy:watch",
+    "build": "npm-run-all sass:build eleventy:build"
   },
   "keywords": [],
   "author": "",
