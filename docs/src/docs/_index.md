@@ -79,7 +79,7 @@ This option is for you if you want the default redirect that comes with Rosey, a
 
 ## The rest of the setup
 
-1. Run `npx rosey-cloudcannon-connector generate-config` in a terminal in the root of your project to generate a config file, and follow the prompts to populate the file. You can change your answers later by editing the generated `rosey/rcc.config` file if you need.
+1. Run `npx rosey-cloudcannon-connector generate-config` in a terminal in the root of your project to generate a config file, and follow the prompts to populate the file. You can change your answers later by editing the generated `rosey/rcc.yaml` file if you need.
 
 
 2. Add a `translations` collection to your `cloudcannon.config.yml` under the `collections_config` key. 
@@ -124,7 +124,7 @@ This option is for you if you want the default redirect that comes with Rosey, a
     All the files you need to get going will have been generated as part of the CloudCannon build. 
 
 
-> Make sure there is **at least one locale code to the `locales` array** in the `rosey/rcc.yml` file. Remember to replace the placeholder urls with your own if using either of the link features.
+> Make sure there is **at least one locale code to the `locales` array** in the `rosey/rcc.yaml` file. Remember to replace the placeholder urls with your own if using either of the link features.
 
 
 > Remember to replace the placeholder urls with your own if using either of the link features. 
