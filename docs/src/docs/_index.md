@@ -70,7 +70,7 @@ This option is for you if you want the default redirect that comes with Rosey, a
 
     if [[ $ROSEY_PROD == "true" ]];
     then
-      node rosey-tagger/main.mjs --source dist
+      npx rosey-cloudcannon-connector tag --source dist
       echo "Translating site with Rosey"
       mv ./dist ./untranslated_site                  
       npx rosey build --source untranslated_site --dest dist 
