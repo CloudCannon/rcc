@@ -158,7 +158,7 @@ async function generateLocale(locale, configData) {
 
         if (!localeData[key] || data[key].isNewTranslation) {
           let isKeyMarkdown = false;
-          markdownNamespaceArray.map((markdownNamespace) => {
+          markdownNamespaceArray?.map((markdownNamespace) => {
             if (key.includes(`${markdownNamespace.id}:`)) {
               isKeyMarkdown = true;
             }

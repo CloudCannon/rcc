@@ -186,7 +186,7 @@ async function setupInputConfig(
   // Determine whether the key is a markdown type input
   let isKeyMarkdown = false;
   let inputOptions = {};
-  markdownNamespaceArray.map((markdownNamespace) => {
+  markdownNamespaceArray?.map((markdownNamespace) => {
     if (inputKey.includes(`${markdownNamespace.id}:`)) {
       isKeyMarkdown = true;
       inputOptions = markdownNamespace.enabled_markdown_options;

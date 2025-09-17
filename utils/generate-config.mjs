@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import YAML from "yaml";
+import migrateConfig from "./migrate-config.mjs";
 
 export async function generateConfig(
   locales,
@@ -13,6 +14,18 @@ export async function generateConfig(
   try {
     await fs.promises.access(configPath);
     console.log("🏗️ Found the RCC config file.");
+    // Check for old version without markdown_keys in config
+    // If no key (so not empty array) add the default, and it's input config
+    const checkedConfig = await migrateConfig(configPath);
+    if (checkedConfig.hasMigratedConfig) {
+      await fs.promises.writeFile(
+        configPath,
+        YAML.stringify(checkedConfig.configData)
+      );
+      console.log("🏗️ Updated the config file.");
+    } else {
+      console.log("🏗️ Config file already up to date.");
+    }
     return;
   } catch (error) {
     console.log("🏗️ No existing config file - Creating one...");
