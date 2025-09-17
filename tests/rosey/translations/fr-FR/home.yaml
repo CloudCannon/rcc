@@ -1,0 +1,25 @@
+_inputs:
+  $:
+    type: object
+    comment: "[index.html](https://adjective-noun.cloudvent.net/index.html)"
+    options:
+      place_groups_below: false
+      groups:
+        - heading: Still to translate (fr-FR)
+          comment: "[index.html](https://adjective-noun.cloudvent.net/index.html)"
+          inputs:
+            - a-test
+        - heading: Already translated (fr-FR)
+          comment: "[index.html](https://adjective-noun.cloudvent.net/index.html)"
+          inputs: []
+  a-test:
+    label: This is our HTML file.
+    hidden: false
+    type: textarea
+    options: {}
+    comment: "[See in
+      context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20i\
+      s%20our%20HTML%20file.)"
+    context: {}
+urlTranslation: index-basic.html
+a-test: ""

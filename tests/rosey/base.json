@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "keys": {
+    "a-test": {
+      "original": "\n      This is our HTML file.\n    ",
+      "value": null,
+      "pages": {
+        "index.html": 1
+      },
+      "total": 1
+    }
+  }
+}

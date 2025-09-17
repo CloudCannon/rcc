@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "keys": {
+    "a-dir/index-reduced.html": {
+      "original": "a-dir/index-reduced.html",
+      "value": null,
+      "pages": {},
+      "total": 0
+    },
+    "a-dir/index.html": {
+      "original": "a-dir/index.html",
+      "value": null,
+      "pages": {},
+      "total": 0
+    },
+    "index.html": {
+      "original": "index.html",
+      "value": null,
+      "pages": {},
+      "total": 0
+    }
+  }
+}

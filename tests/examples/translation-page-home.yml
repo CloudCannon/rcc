@@ -1,0 +1,25 @@
+_inputs:
+  $:
+    type: object
+    comment: "[-basic](https://cool-ski.cloudvent.net/-basic)"
+    options:
+      place_groups_below: false
+      groups:
+        - heading: Still to translate (fr-FR)
+          comment: "[-basic](https://cool-ski.cloudvent.net/-basic)"
+          inputs:
+            - a-test
+        - heading: Already translated (fr-FR)
+          comment: "[-basic](https://cool-ski.cloudvent.net/-basic)"
+          inputs: []
+  a-test:
+    label: This is our HTML file.
+    hidden: false
+    type: textarea
+    options: {}
+    comment: "[See in
+      context](https://cool-ski.cloudvent.net/-basic#:~:text=This%20is%20our%20\
+      HTML%20file.)"
+    context: {}
+urlTranslation: index-basic.html
+a-test: ""
