@@ -32,7 +32,8 @@ export async function generateTranslationFiles(configData) {
   const translationFilesDirPath = handleConfigPaths(
     configData.rosey_paths.translations_dir_path
   );
-  const namespaceArray = configData.namespace_pages;
+  const markdownNamespaceArray = configData.markdown_keys;
+  const namespacePagesArray = configData.namespace_pages;
 
   // Get the base.json and base.urls.json
   const baseFileData = await readJsonFromFile(baseFilePath);
@@ -50,7 +51,8 @@ export async function generateTranslationFiles(configData) {
       baseFileData,
       baseUrlFileData,
       translationFilesDirPath,
-      namespaceArray
+      markdownNamespaceArray,
+      namespacePagesArray
     ).catch((err) => {
       console.error(`\n❌ Encountered an error translating ${locale}:`, err);
     });
@@ -65,7 +67,8 @@ async function generateTranslationFilesForLocale(
   baseFileData,
   baseUrlFileData,
   translationFilesDirPath,
-  namespaceArray
+  markdownNamespaceArray,
+  namespacePagesArray
 ) {
   console.log(`\n🌍 Processing locale: ${locale}`);
   const logStatistics = {
@@ -91,7 +94,7 @@ async function generateTranslationFilesForLocale(
     translationsLocalePath,
     baseUrlFileDataKeys,
     pages,
-    namespaceArray
+    namespacePagesArray
   );
 
   // Loop through the pages present in the base.json
@@ -106,8 +109,6 @@ async function generateTranslationFilesForLocale(
         locale,
         yamlPageName
       );
-      // Ensure nested translation pages have parent directory
-      await createParentDirIfExists(page, translationFilesDirPath, locale);
 
       // Get existing translation page data, returns a fallback if none exists
       const translationFileData = await readTranslationFile(
@@ -132,10 +133,19 @@ async function generateTranslationFilesForLocale(
         translationFileData,
         translationDataToWrite,
         page,
-        namespaceArray,
+        markdownNamespaceArray,
+        namespacePagesArray,
         seeOnPageCommentSettings,
         inputLengths
       );
+
+      // If the only keys on the page are urlTranslation and _inputs, then return early and don't gen page
+      if (Object.keys(translationDataToWrite).length <= 2) {
+        return;
+      }
+
+      // Ensure nested translation pages have parent directory
+      await createParentDirIfExists(page, translationFilesDirPath, locale);
 
       // Write the file back once we've processed the translations
       await fs.promises.writeFile(
@@ -149,7 +159,7 @@ async function generateTranslationFilesForLocale(
   // After the normal pages are done looping and writing,
   // loop over the namespaced pages, and write a file for each
   await Promise.all(
-    namespaceArray.map(async (namespace) => {
+    namespacePagesArray.map(async (namespace) => {
       const namespaceFilePath = path.join(
         translationFilesDirPath,
         locale,
@@ -167,7 +177,7 @@ async function generateTranslationFilesForLocale(
 
       await Promise.all(
         Object.keys(baseFileData.keys).map(async (inputKey) => {
-          if (!inputKey.startsWith(`${namespace}:`)) {
+          if (!inputKey.includes(`${namespace}:`)) {
             return;
           }
           const baseTranslationObj = baseFileData.keys[inputKey];
@@ -186,7 +196,8 @@ async function generateTranslationFilesForLocale(
             await getNamespaceInputConfig(
               inputKey,
               baseTranslationObj,
-              inputLengths
+              inputLengths,
+              markdownNamespaceArray
             );
 
           // Add each entry to page object group depending on whether they are already translated or not
@@ -196,6 +207,11 @@ async function generateTranslationFilesForLocale(
           );
         })
       );
+
+      // If the only key on the page is _inputs, return early and don't gen a page
+      if (Object.keys(namespaceTranslationDataToWrite).length <= 1) {
+        return;
+      }
 
       // Write the file back once we've processed the translations
       await fs.promises.writeFile(
@@ -208,7 +224,7 @@ async function generateTranslationFilesForLocale(
 
   // Log statistics
   const totalNumberOfPages = Object.keys(baseUrlFileDataKeys).length;
-  const totalNumberOfNamespacePages = namespaceArray.length;
+  const totalNumberOfNamespacePages = namespacePagesArray.length;
   console.log(
     `- ${logStatistics.numberOfTranslationFilesUpdated}/${totalNumberOfPages} Translation files generated.`
   );
@@ -235,7 +251,8 @@ async function processTranslations(
   translationFileData,
   translationDataToWrite,
   page,
-  namespaceArray,
+  markdownNamespaceArray,
+  namespacePagesArray,
   seeOnPageCommentSettings,
   inputLengths
 ) {
@@ -248,16 +265,17 @@ async function processTranslations(
       if (!baseTranslationObj.pages[page]) {
         return;
       }
-      // Check for namespace and exit early
+
+      // Check for namespace page in the key and exit early
       // since this translation key belongs to a ns page, not one of the real pages we're looping through
-      let isInputKeyNamespace = false;
-      for (const namespace of namespaceArray) {
-        if (inputKey.startsWith(`${namespace}:`)) {
-          isInputKeyNamespace = true;
+      let inputKeyBelongsToNamespacePage = false;
+      for (const namespace of namespacePagesArray) {
+        if (inputKey.includes(`${namespace}:`)) {
+          inputKeyBelongsToNamespacePage = true;
           break;
         }
       }
-      if (isInputKeyNamespace) {
+      if (inputKeyBelongsToNamespacePage) {
         return;
       }
 
@@ -277,7 +295,8 @@ async function processTranslations(
         page,
         baseTranslationObj,
         seeOnPageCommentSettings,
-        inputLengths
+        inputLengths,
+        markdownNamespaceArray
       );
 
       // Add each entry to page object group depending on whether they are already translated or not

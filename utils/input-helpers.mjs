@@ -106,7 +106,8 @@ async function getInputConfig(
   page,
   baseTranslationObj,
   seeOnPageCommentSettings,
-  inputLengths
+  inputLengths,
+  markdownNamespaceArray
 ) {
   const seeOnPageCommentEnabled = seeOnPageCommentSettings.enabled;
   const baseUrl = seeOnPageCommentSettings.base_url;
@@ -132,6 +133,7 @@ async function getInputConfig(
     inputLengths,
     originalPhraseTidiedForComment,
     untranslatedPhraseMarkdown,
+    markdownNamespaceArray,
     locationString
   );
 
@@ -141,7 +143,8 @@ async function getInputConfig(
 async function getNamespaceInputConfig(
   inputKey,
   baseTranslationObj,
-  inputLengths
+  inputLengths,
+  markdownNamespaceArray
 ) {
   const untranslatedPhrase = baseTranslationObj.original.trim();
   const untranslatedPhraseMarkdown = await htmlToMarkdown(untranslatedPhrase);
@@ -153,7 +156,8 @@ async function getNamespaceInputConfig(
     inputKey,
     inputLengths,
     originalPhraseTidiedForComment,
-    untranslatedPhraseMarkdown
+    untranslatedPhraseMarkdown,
+    markdownNamespaceArray
   );
 
   return inputConfig;
@@ -164,11 +168,13 @@ async function setupInputConfig(
   inputLengths,
   originalPhraseTidiedForComment,
   untranslatedPhraseMarkdown,
-  locationString
+  markdownNamespaceArray,
+  locationString // Optional - if undefined we do an empty comment
 ) {
-  const isKeyMarkdown = inputKey.startsWith("rcc-markdown:");
   const labelCutoffLength = inputLengths.label;
   const textareaCutoffLength = inputLengths.textarea;
+
+  // Determine input settings
   const isInputShortText =
     untranslatedPhraseMarkdown.length < textareaCutoffLength;
   const isLabelConcat =
@@ -177,35 +183,27 @@ async function setupInputConfig(
     ? `${originalPhraseTidiedForComment.substring(0, labelCutoffLength)}...`
     : originalPhraseTidiedForComment;
 
+  // Determine whether the key is a markdown type input
+  let isKeyMarkdown = false;
+  let inputOptions = {};
+  markdownNamespaceArray.map((markdownNamespace) => {
+    if (inputKey.includes(`${markdownNamespace.id}:`)) {
+      isKeyMarkdown = true;
+      inputOptions = markdownNamespace.enabled_markdown_options;
+    }
+  });
   const inputType = isKeyMarkdown
     ? "markdown"
     : isInputShortText
     ? "text"
     : "textarea";
 
-  const options = isKeyMarkdown
-    ? {
-        bold: true,
-        italic: true,
-        strike: true,
-        link: true,
-        subscript: true,
-        superscript: true,
-        underline: true,
-        code: true,
-        undo: true,
-        redo: true,
-        removeformat: true,
-        copyformatting: true,
-      }
-    : {};
-
   const inputConfig = {
     label: formattedLabel,
     hidden: untranslatedPhraseMarkdown === "",
     type: inputType,
-    options: options,
-    comment: locationString || "", // Only on normal pages
+    options: inputOptions, // Empty obj unless markdown options
+    comment: locationString || "", // Namespace pages don't have location string so fallback to empty string
     context: isLabelConcat
       ? {
           open: false,

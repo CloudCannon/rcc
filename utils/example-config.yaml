@@ -13,6 +13,23 @@ input_lengths:
   # Define when an input is a simple text input, and when it should grow to be a textarea input.
   textarea: 20
 
+# Configure markdown inputs
+markdown_keys:
+  - id: rcc-markdown
+    enabled_markdown_options:
+      bold: true
+      italic: true
+      strike: true
+      link: true
+      subscript: true
+      superscript: true
+      underline: true
+      code: true
+      undo: true
+      redo: true
+      removeformat: true
+      copyformatting: true
+
 # Shows a comment under each input that links to where the phrase is used on the page.
 see_on_page_comment:
   # Define whether these 'context' comments should be enabled at all.
@@ -87,6 +104,11 @@ _inputs:
   input_lengths.textarea:
     type: number
     comment: At what character length will inputs concatenate their label, and create a context box to see the whole translation.
+  markdown_keys:
+    type: array
+    comment: Define namespaces that nominate a translation as requiring a type markdown input. Each markdown key namespace can define which markdown options are enabled.
+    options:
+      structures: _structures.markdown_key
   see_on_page_comment:
     type: object
     options:
@@ -215,3 +237,55 @@ _inputs:
     comment: >-
       The unique identifier that Smartling uses for this site. Can be anything
       as long as it's unique to this site in your Smartling project.
+
+_structures:
+  markdown_key:
+    values:
+      - value:
+          id: 
+          enabled_markdown_options:
+            bold: true
+            italic: true
+            strike: true
+            link: true
+            subscript: true
+            superscript: true
+            underline: true
+            code: true
+            undo: true
+            redo: true
+            removeformat: true
+            copyformatting: true
+        _inputs:
+          id: 
+            type: text
+            comment: The value used for the namespace that nominates a Rosey tag as needing a markdown type input for it's translation.
+          enabled_markdown_options:
+            type: object
+            options:
+              preview:
+                icon: list
+          bold:
+            type: switch
+          italic:
+            type: switch
+          strike:
+            type: switch
+          link:
+            type: switch
+          subscript:
+            type: switch
+          superscript:
+            type: switch
+          underline:
+            type: switch
+          code:
+            type: switch
+          undo:
+            type: switch
+          redo:
+            type: switch
+          removeformat:
+            type: switch
+          copyformatting:
+            type: switch

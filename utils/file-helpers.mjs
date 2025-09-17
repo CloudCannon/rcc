@@ -80,7 +80,7 @@ async function readConfigFile(configFilePath) {
 function getTranslationHtmlFilename(
   translationFilename,
   baseUrlFileData,
-  namespaceArray
+  namespacePagesArray
 ) {
   if (translationFilename === "home.yaml") {
     return "index.html";
@@ -108,7 +108,7 @@ function getTranslationHtmlFilename(
   // But no need to log a warning if its in ns arr as it makes sense there's no .html file for ns pages
   if (
     !fileName &&
-    !namespaceArray?.includes(translationFilename.replace(".yaml", ""))
+    !namespacePagesArray?.includes(translationFilename.replace(".yaml", ""))
   ) {
     console.log(
       `No .html filename found for ${translationFilename} in our base.urls.json`
@@ -175,7 +175,7 @@ async function archiveOldTranslationFiles(
   translationsLocalePath,
   baseUrlFileDataKeys,
   pages,
-  namespaceArray
+  namespacePagesArray
 ) {
   await Promise.all(
     translationsFiles.map(async (fileName) => {
@@ -213,7 +213,7 @@ async function archiveOldTranslationFiles(
 
       // Don't archive namespaced pages
       let isFilePathNamespace = false;
-      for (const namespace of namespaceArray) {
+      for (const namespace of namespacePagesArray) {
         if (filePath.endsWith(`${namespace}.yaml`)) {
           isFilePathNamespace = true;
           break;

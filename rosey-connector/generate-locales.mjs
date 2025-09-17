@@ -51,7 +51,8 @@ async function generateLocale(locale, configData) {
     handleConfigPaths(configData.rosey_paths.rosey_base_urls_file_path)
   );
   const baseUrlFileData = JSON.parse(baseUrlsFile.toString("utf-8")).keys;
-  const namespaceArray = configData.namespace_pages;
+  const namespacePagesArray = configData.namespace_pages;
+  const markdownNamespaceArray = configData.markdown_keys;
 
   // Update logs
   const baseFileDataKeys = Object.keys(baseFileData);
@@ -102,7 +103,7 @@ async function generateLocale(locale, configData) {
         oldUrlsLocaleData,
         baseFileData,
         baseUrlFileData,
-        namespaceArray
+        namespacePagesArray
       );
 
       localeDataEntries[filename] = response;
@@ -156,7 +157,12 @@ async function generateLocale(locale, configData) {
         }
 
         if (!localeData[key] || data[key].isNewTranslation) {
-          const isKeyMarkdown = key.startsWith("rcc-markdown:");
+          let isKeyMarkdown = false;
+          markdownNamespaceArray.map((markdownNamespace) => {
+            if (key.includes(`${markdownNamespace.id}:`)) {
+              isKeyMarkdown = true;
+            }
+          });
 
           localeData[key] = {
             original: data[key].original,
@@ -181,7 +187,7 @@ async function generateLocale(locale, configData) {
   );
 
   // Check keysToUpdate for anything with a blank string
-  // Remove any of those kets from logStatistics.completedTranslations
+  // Remove any of those keys from logStatistics.completedTranslations
   // It may have snuck in there if we there are duplicate keys on separate pages
 
   for (const key of Object.keys(keysToUpdate)) {
@@ -207,6 +213,8 @@ async function generateLocale(locale, configData) {
         if (data[key] || data[key] === "" || data[key] === null) {
           data[key] = keysToUpdate[key];
           updatedKeys.push(key);
+          // Empty duplicates may have thrown off the logs but are now overwritten
+          delete logStatistics.missingTranslations[key];
         }
       }
 
@@ -285,7 +293,7 @@ async function processTranslation(
   oldUrlsLocaleData,
   baseFileData,
   baseUrlFileData,
-  namespaceArray
+  namespacePagesArray
 ) {
   const localeData = {};
   const localeUrlsData = {};
@@ -309,7 +317,7 @@ async function processTranslation(
   const translationHtmlFilename = getTranslationHtmlFilename(
     translationFilename,
     baseUrlFileData,
-    namespaceArray
+    namespacePagesArray
   );
 
   // Check if theres a translation and
