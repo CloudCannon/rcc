@@ -1,10 +1,10 @@
 {
-	"a-test": {
-		"original": "\n      This is our HTML file.\n    ",
-		"value": "\n      This is our HTML file.\n    "
-	},
-	"a-translation-preserved": {
+	"a-rosey-id-with-a-translation-to-preserve": {
 		"original": "A list item",
 		"value": "An existing translation to preserve."
+	},
+	"a-rosey-id-with-no-translation": {
+		"original": "\n      This piece of text has no translation.\n    ",
+		"value": "\n      This piece of text has no translation.\n    "
 	}
 }

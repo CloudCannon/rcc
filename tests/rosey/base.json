@@ -1,16 +1,16 @@
 {
   "version": 2,
   "keys": {
-    "a-test": {
-      "original": "\n      This is our HTML file.\n    ",
+    "a-rosey-id-with-a-translation-to-preserve": {
+      "original": "A list item",
       "value": null,
       "pages": {
         "index.html": 1
       },
       "total": 1
     },
-    "a-translation-preserved": {
-      "original": "A list item",
+    "a-rosey-id-with-no-translation": {
+      "original": "\n      This piece of text has no translation.\n    ",
       "value": null,
       "pages": {
         "index.html": 1

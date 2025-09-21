@@ -8,21 +8,12 @@ _inputs:
         - heading: Still to translate (fr-FR)
           comment: "[index.html](https://adjective-noun.cloudvent.net/index.html)"
           inputs:
-            - a-test
+            - a-rosey-id-with-no-translation
         - heading: Already translated (fr-FR)
           comment: "[index.html](https://adjective-noun.cloudvent.net/index.html)"
           inputs:
-            - a-translation-preserved
-  a-test:
-    label: This is our HTML file.
-    hidden: false
-    type: textarea
-    options: {}
-    comment: "[See in
-      context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20i\
-      s%20our%20HTML%20file.)"
-    context: {}
-  a-translation-preserved:
+            - a-rosey-id-with-a-translation-to-preserve
+  a-rosey-id-with-a-translation-to-preserve:
     label: A list item
     hidden: false
     type: text
@@ -31,6 +22,15 @@ _inputs:
       context](https://adjective-noun.cloudvent.net/index.html#:~:text=A%20list\
       %20item)"
     context: {}
+  a-rosey-id-with-no-translation:
+    label: This piece of text has no translation.
+    hidden: false
+    type: textarea
+    options: {}
+    comment: "[See in
+      context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20p\
+      iece%20of%20text%20has%20no%20translation.)"
+    context: {}
 urlTranslation: index.html
-a-test: ""
-a-translation-preserved: An existing translation to preserve.
+a-rosey-id-with-a-translation-to-preserve: An existing translation to preserve.
+a-rosey-id-with-no-translation: ""

@@ -18,7 +18,7 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
     return;
   });
 
-  describe("Test the config file generation if none exists", () => {
+  describe("The config file is generated if none exists", () => {
     test("A config file is generated", async () => {
       const configFileExists = await fileExists("./rosey/rcc.yaml");
       expect(configFileExists).toBe(true);
@@ -37,7 +37,10 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
     });
   });
 
-  describe("Adding RCC to a site containing a couple of Rosey ids and a config file containing a locale", () => {
+  describe("Add RCC to a site containing Rosey ids, and a config file containing a locale", () => {
+    const translationKey = "a-rosey-id-with-no-translation";
+    const translationOriginalPhrase = "This piece of text has no translation.";
+
     let localeData;
 
     // Write a locale to the generated config and run generate() again
@@ -56,6 +59,30 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       return;
     });
 
+    test("A translations directory is created", async () => {
+      // TODO:
+    });
+
+    test("A translations file is created", async () => {
+      // TODO:
+    });
+
+    test("Freshly generated translation files contain input config", async () => {
+      // TODO:
+    });
+
+    test("Freshly generated translation files contain urlTranslation key", async () => {
+      // TODO:
+    });
+
+    test("Freshly generated translation files contain an empty Rosey id key", async () => {
+      // TODO:
+    });
+
+    test("A namespaced page is not created if one is configured but there are no translations using it", async () => {
+      // TODO:
+    });
+
     test("A locales directory is created", async () => {
       const localeDirectoryExists = await isDirectory("./rosey/locales");
       expect(localeDirectoryExists).toBe(true);
@@ -67,19 +94,23 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
     });
 
     test("A Rosey id is added to the locales file", async () => {
-      expect(localeData).toHaveProperty("a-test");
+      expect(localeData).toHaveProperty(translationKey);
     });
 
     test("A Rosey id with no translation falls back to use the original for it's value", async () => {
-      expect(localeData["a-test"].value.trim()).toBe("This is our HTML file.");
+      expect(localeData[translationKey].value.trim()).toBe(
+        translationOriginalPhrase
+      );
     });
   });
 
-  describe("A site containing existing translations running the RCC workflow", () => {
+  describe("Run the RCC on a site containing existing translations", () => {
     const translationPageWithTranslation =
       "./rosey/translations/fr-FR/home.yaml";
-    const existingTranslationKey = "a-translation-preserved";
+    const existingTranslationKey = "a-rosey-id-with-a-translation-to-preserve";
     const existingTranslationPhrase = "An existing translation to preserve.";
+
+    // TODO: Add ids using a namespace like common to the base.json (or the test files themselves)
 
     let localeData;
     let translationData;
@@ -107,15 +138,90 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       return;
     });
 
-    test("Test an existing translation is preserved", async () => {
-      expect(translationData["a-translation-preserved"].trim()).toBe(
+    test("An existing translation is preserved", async () => {
+      expect(translationData[existingTranslationKey].trim()).toBe(
         existingTranslationPhrase
       );
     });
-    test("Test an existing translation makes it to locales", async () => {
-      expect(localeData["a-translation-preserved"].value.trim()).toBe(
+
+    test("An existing translation makes it to locales", async () => {
+      expect(localeData[existingTranslationKey].value.trim()).toBe(
         existingTranslationPhrase
       );
+    });
+
+    test("Ids without a translation fallback to the original when added to the locale file", async () => {
+      // TODO:
+    });
+
+    test("Ids with a translation are added to the locale file", async () => {
+      // TODO:
+    });
+
+    test("An input of type: text is created", async () => {
+      // TODO:
+    });
+
+    test("An input of type: textarea is created", async () => {
+      // TODO:
+    });
+
+    test("An input of type: markdown is created", async () => {
+      // TODO:
+    });
+
+    test("An translation with a long original text has a context field in its input config", async () => {
+      // TODO:
+    });
+
+    test("An input has a correctly formatted `See on page` link if configured", async () => {
+      // TODO:
+    });
+
+    test("An input does not have a `See on page` link if not enabled", async () => {
+      // TODO:
+    });
+
+    test("The page has a git repository link if configured", async () => {
+      // TODO:
+    });
+
+    test("The page does not have a git repository link if not enabled", async () => {
+      // TODO:
+    });
+
+    test("A namespace page is created if a Rosey id containing a configured namespace_page id is detected", async () => {
+      // TODO:
+    });
+
+    test("More than one namespace page is created if configured, and Rosey ids containing the namespace_pages are detected", async () => {
+      // TODO:
+    });
+
+    test("Ids with namespaces are correctly assigned as markdown with the correct options that are in the config file `markdown_keys`", async () => {
+      // TODO:
+    });
+
+    test("Ids with namespaces are correctly assigned as belonging to a namespaced page, even amongst arbitrary namespaces like `footer:`", async () => {
+      // TODO:
+    });
+
+    test("Translation files are archived if their page is removed", async () => {
+      // TODO:
+    });
+
+    test("Clearing a translation updates duplicates with translations that used to exist", async () => {
+      // - To be empty
+      // - And fallback to the original in the locales file
+      // TODO:
+    });
+
+    test("- Log data updates correctly when a translation is added (with duplicates on other pages", async () => {
+      // TODO:
+    });
+
+    test("- Log data updates correctly when a translation is removed (with duplicates on other pages)", async () => {
+      // TODO:
     });
   });
 });
