@@ -5,6 +5,7 @@
   },
   "devDependencies": {
     "jest": "^30.1.3",
+    "rosey": "^2.3.8",
     "yaml": "^2.8.1"
   }
 }
