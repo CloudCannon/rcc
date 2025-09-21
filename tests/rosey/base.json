@@ -8,6 +8,14 @@
         "index.html": 1
       },
       "total": 1
+    },
+    "a-translation-preserved": {
+      "original": "A list item",
+      "value": null,
+      "pages": {
+        "index.html": 1
+      },
+      "total": 1
     }
   }
 }

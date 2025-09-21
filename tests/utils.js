@@ -6,6 +6,15 @@ async function isDirectory(filePath) {
   return stats.isDirectory();
 }
 
+async function fileExists(filePath) {
+  try {
+    await fs.promises.access(filePath);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
 async function readFile(filePath, fallbackString) {
   try {
     const buffer = await fs.promises.readFile(filePath);
@@ -37,4 +46,4 @@ async function readJSON(filePath) {
   return JSON.parse(buffer);
 }
 
-export { isDirectory, readFile, readJSON, readYaml };
+export { isDirectory, readFile, readJSON, readYaml, fileExists };

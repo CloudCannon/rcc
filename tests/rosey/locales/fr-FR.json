@@ -2,5 +2,9 @@
 	"a-test": {
 		"original": "\n      This is our HTML file.\n    ",
 		"value": "\n      This is our HTML file.\n    "
+	},
+	"a-translation-preserved": {
+		"original": "A list item",
+		"value": "An existing translation to preserve."
 	}
 }

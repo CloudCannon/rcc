@@ -11,7 +11,8 @@ _inputs:
             - a-test
         - heading: Already translated (fr-FR)
           comment: "[index.html](https://adjective-noun.cloudvent.net/index.html)"
-          inputs: []
+          inputs:
+            - a-translation-preserved
   a-test:
     label: This is our HTML file.
     hidden: false
@@ -21,5 +22,15 @@ _inputs:
       context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20i\
       s%20our%20HTML%20file.)"
     context: {}
-urlTranslation: index-basic.html
+  a-translation-preserved:
+    label: A list item
+    hidden: false
+    type: text
+    options: {}
+    comment: "[See in
+      context](https://adjective-noun.cloudvent.net/index.html#:~:text=A%20list\
+      %20item)"
+    context: {}
+urlTranslation: index.html
 a-test: ""
+a-translation-preserved: An existing translation to preserve.

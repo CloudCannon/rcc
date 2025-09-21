@@ -1,69 +1,120 @@
 import fs from "fs";
+import YAML from "yaml";
 import { generate } from "../rosey-connector/main.mjs";
 import { execSync } from "child_process";
-import { isDirectory, readFile, readJSON, readYaml } from "./utils";
+import { fileExists, isDirectory, readFile, readJSON, readYaml } from "./utils";
 
 const testBuildDir = "_site";
 
-async function initializeRoseyData() {
-  await fs.promises.mkdir("rosey/translations/fr-FR", { recursive: true });
-
-  const exampleConfigData = await readFile("./examples/example-config.yml");
-  await fs.promises.writeFile("rosey/rcc.yaml", exampleConfigData);
-}
-
-describe("Run the whole RCC workflow", () => {
-  // Setup and Teardown
+describe("Run `rosey-cloudcannon-connector generate`", () => {
+  // Setup
   beforeAll(async () => {
+    // Remove last rounds tests
     await fs.promises.rm("./rosey", { recursive: true, force: true });
-    await initializeRoseyData();
 
-    execSync(`npx rosey generate --source ${testBuildDir}`);
+    // Simulate running a postbuild
+    execSync(`npx rosey generate --source ${testBuildDir}`); // Only need to run this once at the start (base.json doesn't change)
     await generate();
     return;
   });
 
-  // Tests
-  describe("Test the locales files", () => {
-    test("Check if a locales directory is created", async () => {
-      const result = await isDirectory("./rosey/locales");
-      expect(result).toBe(true);
+  describe("Test the config file generation if none exists", () => {
+    test("A config file is generated", async () => {
+      const configFileExists = await fileExists("./rosey/rcc.yaml");
+      expect(configFileExists).toBe(true);
     });
-
-    test("Test a tagged translation makes it to locales file", async () => {
-      const fileData = await readJSON("./rosey/locales/fr-FR.json");
-      expect(fileData["a-test"].value.trim()).toBe("This is our HTML file.");
+    test("A config file has the correct top level keys", async () => {
+      const configFileData = await readYaml("./rosey/rcc.yaml");
+      expect(configFileData).toHaveProperty("locales");
+      expect(configFileData).toHaveProperty("input_lengths");
+      expect(configFileData).toHaveProperty("markdown_keys");
+      expect(configFileData).toHaveProperty("see_on_page_comment");
+      expect(configFileData).toHaveProperty("git_history_link");
+      expect(configFileData).toHaveProperty("namespace_pages");
+      expect(configFileData).toHaveProperty("rosey_paths");
+      expect(configFileData).toHaveProperty("smartling");
+      expect(configFileData).toHaveProperty("_inputs");
     });
   });
 
-  describe("Run the whole RCC workflow with an existing translation", () => {
-    beforeAll(async () => {
-      // Create an existing translation file and run the rcc again
-      const exampleTranslationPageData = await readYaml(
-        "./examples/translation-page-home.yml"
-      );
-      await fs.promises.writeFile(
-        "rosey/translations/fr-FR/home.yaml",
-        exampleTranslationPageData
-      );
+  describe("Adding RCC to a site containing a couple of Rosey ids and a config file containing a locale", () => {
+    let localeData;
 
+    // Write a locale to the generated config and run generate() again
+    beforeAll(async () => {
+      const configData = await readYaml("./rosey/rcc.yaml");
+
+      configData.locales.push("fr-FR");
+
+      await fs.promises.writeFile(
+        "./rosey/rcc.yaml",
+        YAML.stringify(configData)
+      );
       await generate();
+
+      localeData = await readJSON("./rosey/locales/fr-FR.json");
       return;
     });
-    // TODO:
-    test("Test an existing translation makes it to locales", async () => {
-      const localesFileData = await readJSON("./rosey/locales/fr-FR.json");
-      expect(localesFileData["a-test"].value.trim()).toBe(
-        "This is our HTML file."
+
+    test("A locales directory is created", async () => {
+      const localeDirectoryExists = await isDirectory("./rosey/locales");
+      expect(localeDirectoryExists).toBe(true);
+    });
+
+    test("A locales JSON file is created", async () => {
+      const localeFileExists = await fileExists("./rosey/locales/fr-FR.json");
+      expect(localeFileExists).toBe(true);
+    });
+
+    test("A Rosey id is added to the locales file", async () => {
+      expect(localeData).toHaveProperty("a-test");
+    });
+
+    test("A Rosey id with no translation falls back to use the original for it's value", async () => {
+      expect(localeData["a-test"].value.trim()).toBe("This is our HTML file.");
+    });
+  });
+
+  describe("A site containing existing translations running the RCC workflow", () => {
+    const translationPageWithTranslation =
+      "./rosey/translations/fr-FR/home.yaml";
+    const existingTranslationKey = "a-translation-preserved";
+    const existingTranslationPhrase = "An existing translation to preserve.";
+
+    let localeData;
+    let translationData;
+
+    // Add some translations files containing translations before we run generate again
+    beforeAll(async () => {
+      // Create an existing translation file that contains translations
+      const existingTranslationPageData = await readYaml(
+        translationPageWithTranslation
+      );
+
+      existingTranslationPageData[existingTranslationKey] =
+        existingTranslationPhrase;
+
+      await fs.promises.writeFile(
+        translationPageWithTranslation,
+        YAML.stringify(existingTranslationPageData)
+      );
+      // Simulate running a postbuild
+      await generate();
+
+      localeData = await readJSON("./rosey/locales/fr-FR.json");
+      translationData = await readYaml(translationPageWithTranslation);
+
+      return;
+    });
+
+    test("Test an existing translation is preserved", async () => {
+      expect(translationData["a-translation-preserved"].trim()).toBe(
+        existingTranslationPhrase
       );
     });
-    // TODO:
-    test("Test an existing translation is preserved", async () => {
-      const translationFileData = await readYaml(
-        "./rosey/translations/fr-FR/home.yaml"
-      );
-      expect(translationFileData["a-test"].value.trim()).toBe(
-        "This is our HTML file."
+    test("Test an existing translation makes it to locales", async () => {
+      expect(localeData["a-translation-preserved"].value.trim()).toBe(
+        existingTranslationPhrase
       );
     });
   });
