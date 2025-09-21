@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - tests # TODO: remove this before merge
   pull_request:
     branches:
       - main
