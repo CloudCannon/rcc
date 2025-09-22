@@ -18,6 +18,20 @@ markdown_keys:
       redo: true
       removeformat: true
       copyformatting: true
+  - id: second-markdown-key
+    enabled_markdown_options:
+      bold: false
+      italic: true
+      strike: true
+      link: true
+      subscript: true
+      superscript: true
+      underline: true
+      code: true
+      undo: true
+      redo: true
+      removeformat: true
+      copyformatting: true
 see_on_page_comment:
   enabled: true
   base_url: https://adjective-noun.cloudvent.net/

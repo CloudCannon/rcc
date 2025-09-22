@@ -6,5 +6,13 @@
 	"a-rosey-id-with-no-translation": {
 		"original": "\n      This piece of text has no translation.\n    ",
 		"value": "\n      This piece of text has no translation.\n    "
+	},
+	"rcc-markdown:a-nested-list-item-with-markdown-options": {
+		"original": "A nested list item with markdown options",
+		"value": "A nested list item with markdown options"
+	},
+	"second-markdown-key:a-different-nested-list-item-with-markdown-options": {
+		"original": "A different nested list item with markdown options",
+		"value": "A different nested list item with markdown options"
 	}
 }

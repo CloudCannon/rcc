@@ -16,6 +16,22 @@
         "index.html": 1
       },
       "total": 1
+    },
+    "rcc-markdown:a-nested-list-item-with-markdown-options": {
+      "original": "A nested list item with markdown options",
+      "value": null,
+      "pages": {
+        "index.html": 1
+      },
+      "total": 1
+    },
+    "second-markdown-key:a-different-nested-list-item-with-markdown-options": {
+      "original": "A different nested list item with markdown options",
+      "value": null,
+      "pages": {
+        "index.html": 1
+      },
+      "total": 1
     }
   }
 }

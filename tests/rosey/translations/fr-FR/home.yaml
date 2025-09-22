@@ -9,6 +9,8 @@ _inputs:
           comment: "[index.html](https://adjective-noun.cloudvent.net/index.html)"
           inputs:
             - a-rosey-id-with-no-translation
+            - rcc-markdown:a-nested-list-item-with-markdown-options
+            - second-markdown-key:a-different-nested-list-item-with-markdown-options
         - heading: Already translated (fr-FR)
           comment: "[index.html](https://adjective-noun.cloudvent.net/index.html)"
           inputs:
@@ -31,6 +33,55 @@ _inputs:
       context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20p\
       iece%20of%20text%20has%20no%20translation.)"
     context: {}
+  rcc-markdown:a-nested-list-item-with-markdown-options:
+    label: A nested list item with markdown options
+    hidden: false
+    type: markdown
+    options:
+      bold: true
+      italic: true
+      strike: true
+      link: true
+      subscript: true
+      superscript: true
+      underline: true
+      code: true
+      undo: true
+      redo: true
+      removeformat: true
+      copyformatting: true
+    comment: "[See in
+      context](https://adjective-noun.cloudvent.net/index.html#:~:text=A%20nest\
+      ed%20list%20item%20with%20markdown%20options)"
+    context: {}
+  second-markdown-key:a-different-nested-list-item-with-markdown-options:
+    label: A different nested list item with markdown...
+    hidden: false
+    type: markdown
+    options:
+      bold: false
+      italic: true
+      strike: true
+      link: true
+      subscript: true
+      superscript: true
+      underline: true
+      code: true
+      undo: true
+      redo: true
+      removeformat: true
+      copyformatting: true
+    comment: "[See in
+      context](https://adjective-noun.cloudvent.net/index.html#:~:text=A%20diff\
+      erent%20nested%20list,item%20with%20markdown%20options)"
+    context:
+      open: false
+      title: Untranslated Text
+      icon: translate
+      content: |
+        A different nested list item with markdown options
 urlTranslation: index.html
 a-rosey-id-with-a-translation-to-preserve: An existing translation to preserve.
 a-rosey-id-with-no-translation: ""
+rcc-markdown:a-nested-list-item-with-markdown-options: ""
+second-markdown-key:a-different-nested-list-item-with-markdown-options: ""

@@ -40,14 +40,34 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
   describe("Add RCC to a site containing Rosey ids, and a config file containing a locale", () => {
     const translationKey = "a-rosey-id-with-no-translation";
     const translationOriginalPhrase = "This piece of text has no translation.";
+    const translationFilePath = "./rosey/translations/fr-FR/home.yaml";
+    const localeFilePath = "./rosey/locales/fr-FR.json";
 
     let localeData;
+    let translationData;
 
     // Write a locale to the generated config and run generate() again
     beforeAll(async () => {
       const configData = await readYaml("./rosey/rcc.yaml");
 
       configData.locales.push("fr-FR");
+      configData.markdown_keys.push({
+        id: "second-markdown-key",
+        enabled_markdown_options: {
+          bold: false,
+          italic: true,
+          strike: true,
+          link: true,
+          subscript: true,
+          superscript: true,
+          underline: true,
+          code: true,
+          undo: true,
+          redo: true,
+          removeformat: true,
+          copyformatting: true,
+        },
+      });
 
       await fs.promises.writeFile(
         "./rosey/rcc.yaml",
@@ -55,33 +75,87 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       );
       await generate();
 
-      localeData = await readJSON("./rosey/locales/fr-FR.json");
+      localeData = await readJSON(localeFilePath);
+      translationData = await readYaml(translationFilePath);
       return;
     });
 
-    // test("A translations directory is created", async () => {
-    //   // TODO:
-    // });
+    test("A translations directory is created", async () => {
+      const isTranslationsDirectory = await isDirectory("./rosey/translations");
+      expect(isTranslationsDirectory).toBe(true);
+    });
 
-    // test("A translations file is created", async () => {
-    //   // TODO:
-    // });
+    test("A translations file is created", async () => {
+      const translationFileExists = await fileExists(translationFilePath);
+      expect(translationFileExists).toBe(true);
+    });
 
-    // test("Freshly generated translation files contain input config", async () => {
-    //   // TODO:
-    // });
+    test("Freshly generated translation files contain urlTranslation key", async () => {
+      expect(translationData).toHaveProperty("urlTranslation");
+    });
 
-    // test("Freshly generated translation files contain urlTranslation key", async () => {
-    //   // TODO:
-    // });
+    test("Freshly generated translation files contain an empty Rosey id key", async () => {
+      expect(translationData).toHaveProperty(translationKey);
+      expect(translationData[translationKey]).toBe("");
+    });
 
-    // test("Freshly generated translation files contain an empty Rosey id key", async () => {
-    //   // TODO:
-    // });
+    test("Freshly generated translation files contain input config", async () => {
+      expect(translationData).toHaveProperty("_inputs");
+      expect(Object.keys(translationData["_inputs"]).length).toBeGreaterThan(0);
+    });
 
-    // test("A namespaced page is not created if one is configured but there are no translations using it", async () => {
-    //   // TODO:
-    // });
+    test("Input 'See on page' comments are formatted correctly", async () => {
+      const formattedComment =
+        "[See in context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20piece%20of%20text%20has%20no%20translation.)";
+      expect(translationData._inputs[translationKey].comment).toBe(
+        formattedComment
+      );
+    });
+
+    test("Markdown options are added to a keys input config if containing a markdown namespace", async () => {
+      const markdownOptionsPath =
+        translationData._inputs[
+          "rcc-markdown:a-nested-list-item-with-markdown-options"
+        ].options;
+      expect(markdownOptionsPath.bold).toBe(true);
+      expect(markdownOptionsPath.italic).toBe(true);
+      expect(markdownOptionsPath.strike).toBe(true);
+      expect(markdownOptionsPath.link).toBe(true);
+      expect(markdownOptionsPath.subscript).toBe(true);
+      expect(markdownOptionsPath.superscript).toBe(true);
+      expect(markdownOptionsPath.underline).toBe(true);
+      expect(markdownOptionsPath.code).toBe(true);
+      expect(markdownOptionsPath.undo).toBe(true);
+      expect(markdownOptionsPath.redo).toBe(true);
+      expect(markdownOptionsPath.removeformat).toBe(true);
+      expect(markdownOptionsPath.copyformatting).toBe(true);
+    });
+
+    test("Different markdown options are added to keys with markdown_key namespaces", async () => {
+      const markdownOptionsPath =
+        translationData._inputs[
+          "second-markdown-key:a-different-nested-list-item-with-markdown-options"
+        ].options;
+      expect(markdownOptionsPath.bold).toBe(false);
+      expect(markdownOptionsPath.italic).toBe(true);
+      expect(markdownOptionsPath.strike).toBe(true);
+      expect(markdownOptionsPath.link).toBe(true);
+      expect(markdownOptionsPath.subscript).toBe(true);
+      expect(markdownOptionsPath.superscript).toBe(true);
+      expect(markdownOptionsPath.underline).toBe(true);
+      expect(markdownOptionsPath.code).toBe(true);
+      expect(markdownOptionsPath.undo).toBe(true);
+      expect(markdownOptionsPath.redo).toBe(true);
+      expect(markdownOptionsPath.removeformat).toBe(true);
+      expect(markdownOptionsPath.copyformatting).toBe(true);
+    });
+
+    test("A namespaced page is not created if one is configured but there are no translations using it", async () => {
+      const defaultNamespacePageExists = await fileExists(
+        "./rosey/translations/fr-FR/common.yaml"
+      );
+      expect(defaultNamespacePageExists).toBe(false);
+    });
 
     test("A locales directory is created", async () => {
       const localeDirectoryExists = await isDirectory("./rosey/locales");
@@ -89,7 +163,7 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
     });
 
     test("A locales JSON file is created", async () => {
-      const localeFileExists = await fileExists("./rosey/locales/fr-FR.json");
+      const localeFileExists = await fileExists(localeFilePath);
       expect(localeFileExists).toBe(true);
     });
 
@@ -170,7 +244,7 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
     //   // TODO:
     // });
 
-    // test("An translation with a long original text has a context field in its input config", async () => {
+    // test("A translation with a long original text has a context field in its input config and label concat", async () => {
     //   // TODO:
     // });
 
@@ -203,6 +277,10 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
     // });
 
     // test("Ids with namespaces are correctly assigned as belonging to a namespaced page, even amongst arbitrary namespaces like `footer:`", async () => {
+    //   // TODO:
+    // });
+
+    // test("Translations are correctly grouped into 'Still to translated', or 'Translated' in the page root obj input config", async () => {
     //   // TODO:
     // });
 
