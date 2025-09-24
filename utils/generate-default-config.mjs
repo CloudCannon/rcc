@@ -11,9 +11,9 @@ export default function generateDefaultConfigFile() {
         # Define the behaviour for when an input in the editor facing files will concatenate it's label, 
         # and create a context box to see the whole translation.
         # https://cloudcannon.com/documentation/articles/inputs-reference/#_inputs.*.context
-      label: 42
+      label: 64
       # Define when an input is a simple text input, and when it should grow to be a textarea input.
-      textarea: 20
+      textarea: 40
 
     # Configure markdown inputs
     markdown_keys:
