@@ -1,0 +1,61 @@
+_inputs:
+  $:
+    type: object
+    comment: Translations that appear on many pages
+    options:
+      place_groups_below: false
+      groups:
+        - heading: Still to translate (fr-FR)
+          comment: Text to translate
+          inputs:
+            - header:nav:about
+            - header:nav:blog
+            - header:nav:rcc-markdown:a-markdown-input
+            - header:nav:rcc-markdown:a-namespace-page-markdown-input
+        - heading: Already translated (fr-FR)
+          comment: Text already translated
+          inputs: []
+  header:nav:about:
+    label: About
+    hidden: false
+    type: text
+    options: {}
+    comment: ""
+    context: {}
+  header:nav:blog:
+    label: Blog
+    hidden: false
+    type: text
+    options: {}
+    comment: ""
+    context: {}
+  header:nav:rcc-markdown:a-markdown-input:
+    label: A markdown input
+    hidden: false
+    type: markdown
+    options: &a1
+      bold: true
+      italic: true
+      strike: true
+      link: true
+      subscript: true
+      superscript: true
+      underline: true
+      code: true
+      undo: true
+      redo: true
+      removeformat: true
+      copyformatting: true
+    comment: ""
+    context: {}
+  header:nav:rcc-markdown:a-namespace-page-markdown-input:
+    label: A namespace page markdown input
+    hidden: false
+    type: markdown
+    options: *a1
+    comment: ""
+    context: {}
+header:nav:about: ""
+header:nav:blog: ""
+header:nav:rcc-markdown:a-markdown-input: ""
+header:nav:rcc-markdown:a-namespace-page-markdown-input: ""

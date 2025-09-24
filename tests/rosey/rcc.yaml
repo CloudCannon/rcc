@@ -1,8 +1,8 @@
 locales:
   - fr-FR
 input_lengths:
-  label: 42
-  textarea: 20
+  label: 64
+  textarea: 40
 markdown_keys:
   - id: rcc-markdown
     enabled_markdown_options:
@@ -43,6 +43,8 @@ git_history_link:
   comment_text: Git history
 namespace_pages:
   - common
+  - an-unused-namespace-page
+  - header
 rosey_paths:
   rosey_base_file_path: ./rosey/base.json
   rosey_base_urls_file_path: ./rosey/base.urls.json

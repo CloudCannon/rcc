@@ -1,8 +1,8 @@
 {
   "version": 2,
   "keys": {
-    "a-dir/index-reduced.html": {
-      "original": "a-dir/index-reduced.html",
+    "a-dir/a-page-with-no-translations.html": {
+      "original": "a-dir/a-page-with-no-translations.html",
       "value": null,
       "pages": {},
       "total": 0

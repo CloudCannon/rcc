@@ -37,11 +37,14 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
     });
   });
 
-  describe("Add RCC to a site containing Rosey ids, and a config file containing a locale", () => {
-    const translationKey = "a-rosey-id-with-no-translation";
-    const translationOriginalPhrase = "This piece of text has no translation.";
+  describe("Add RCC to a site containing Rosey ids, and a config file with values set", () => {
     const translationFilePath = "./rosey/translations/fr-FR/home.yaml";
     const localeFilePath = "./rosey/locales/fr-FR.json";
+    const noTranslationRoseyId = "a-rosey-id-with-no-translation";
+    const longPhraseRoseyId =
+      "A-long-piece-of-text-that-should-be-a-textarea-not-just-a-simple-text-input%2E-Some-extra-words-for-length%2E";
+    const unusedNamespacePage = "an-unused-namespace-page";
+    const customNamespacePage = "header";
 
     let localeData;
     let translationData;
@@ -51,6 +54,8 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       const configData = await readYaml("./rosey/rcc.yaml");
 
       configData.locales.push("fr-FR");
+      configData.namespace_pages.push(unusedNamespacePage);
+      configData.namespace_pages.push(customNamespacePage);
       configData.markdown_keys.push({
         id: "second-markdown-key",
         enabled_markdown_options: {
@@ -80,101 +85,205 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       return;
     });
 
-    test("A translations directory is created", async () => {
-      const isTranslationsDirectory = await isDirectory("./rosey/translations");
-      expect(isTranslationsDirectory).toBe(true);
+    describe("The generation of translation files", () => {
+      test("A translations directory is created", async () => {
+        const isTranslationsDirectory = await isDirectory(
+          "./rosey/translations"
+        );
+        expect(isTranslationsDirectory).toBe(true);
+      });
+
+      test("A translations file is created", async () => {
+        const translationFileExists = await fileExists(translationFilePath);
+        expect(translationFileExists).toBe(true);
+      });
+
+      test("No translation file is created if a content page exists for it, but there are no translations belong to it", async () => {
+        const translationFileExists = await fileExists(
+          "./rosey/translations/fr-FR/a-dir/a-page-with-no-translations.yaml"
+        );
+        expect(translationFileExists).toBe(false);
+      });
+
+      test("A namespace page is not created if one is configured but there are no translations using it", async () => {
+        const unusedNamespacePageExists = await fileExists(
+          `./rosey/translations/fr-FR/${unusedNamespacePage}.yaml`
+        );
+        expect(unusedNamespacePageExists).toBe(false);
+      });
+
+      test("A namespace page is created if a Rosey id containing a configured namespace_page id is detected", async () => {
+        const customNamespacePageExists = await fileExists(
+          `./rosey/translations/fr-FR/${customNamespacePage}.yaml`
+        );
+        expect(customNamespacePageExists).toBe(true);
+      });
+
+      test("More than one namespace page is created if configured, and Rosey ids containing the namespace pages are detected", async () => {
+        const customNamespacePageExists = await fileExists(
+          `./rosey/translations/fr-FR/${customNamespacePage}.yaml`
+        );
+        expect(customNamespacePageExists).toBe(true);
+
+        const defaultNamespacePageExists = await fileExists(
+          `./rosey/translations/fr-FR/common.yaml`
+        );
+        expect(defaultNamespacePageExists).toBe(true);
+      });
+
+      test("Freshly generated translation files contain urlTranslation key", async () => {
+        expect(translationData).toHaveProperty("urlTranslation");
+      });
+
+      test("Freshly generated translation files contain an empty Rosey id key", async () => {
+        expect(translationData).toHaveProperty(noTranslationRoseyId);
+        expect(translationData[noTranslationRoseyId]).toBe("");
+      });
+
+      test("Freshly generated translation files contain input config", async () => {
+        expect(translationData).toHaveProperty("_inputs");
+        expect(Object.keys(translationData["_inputs"]).length).toBeGreaterThan(
+          0
+        );
+      });
+
+      test("Input 'See on page' comments are formatted correctly", async () => {
+        const formattedComment =
+          "[See in context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20piece%20of%20text%20has%20no%20translation.)";
+        expect(translationData._inputs[noTranslationRoseyId].comment).toBe(
+          formattedComment
+        );
+      });
+
+      test("An input of type: text is created", async () => {
+        const textRoseyId = "a-simple-text-input";
+
+        expect(translationData).toHaveProperty(textRoseyId);
+
+        const keyIsTypeText =
+          translationData._inputs[textRoseyId].type === "text";
+        expect(keyIsTypeText).toBe(true);
+      });
+
+      test("An input of type: textarea is created", async () => {
+        expect(translationData).toHaveProperty(longPhraseRoseyId);
+
+        const keyIsTypeTextArea =
+          translationData._inputs[longPhraseRoseyId].type === "textarea";
+        expect(keyIsTypeTextArea).toBe(true);
+      });
+
+      test("An input of type: markdown is created", async () => {
+        const markdownRoseyId =
+          "rcc-markdown:a-nested-list-item-with-markdown-options";
+
+        expect(translationData).toHaveProperty(markdownRoseyId);
+
+        const keyIsTypeMarkdown =
+          translationData._inputs[markdownRoseyId].type === "markdown";
+        expect(keyIsTypeMarkdown).toBe(true);
+      });
+
+      test("Markdown options are added to a keys input config if containing a markdown namespace", async () => {
+        const markdownOptionsPath =
+          translationData._inputs[
+            "rcc-markdown:a-nested-list-item-with-markdown-options"
+          ].options;
+        expect(markdownOptionsPath.bold).toBe(true);
+        expect(markdownOptionsPath.italic).toBe(true);
+        expect(markdownOptionsPath.strike).toBe(true);
+        expect(markdownOptionsPath.link).toBe(true);
+        expect(markdownOptionsPath.subscript).toBe(true);
+        expect(markdownOptionsPath.superscript).toBe(true);
+        expect(markdownOptionsPath.underline).toBe(true);
+        expect(markdownOptionsPath.code).toBe(true);
+        expect(markdownOptionsPath.undo).toBe(true);
+        expect(markdownOptionsPath.redo).toBe(true);
+        expect(markdownOptionsPath.removeformat).toBe(true);
+        expect(markdownOptionsPath.copyformatting).toBe(true);
+      });
+
+      test("Different markdown options are added to keys with markdown_key namespaces", async () => {
+        const markdownOptionsPath =
+          translationData._inputs[
+            "second-markdown-key:a-different-nested-list-item-with-markdown-options"
+          ].options;
+        expect(markdownOptionsPath.bold).toBe(false);
+        expect(markdownOptionsPath.italic).toBe(true);
+        expect(markdownOptionsPath.strike).toBe(true);
+        expect(markdownOptionsPath.link).toBe(true);
+        expect(markdownOptionsPath.subscript).toBe(true);
+        expect(markdownOptionsPath.superscript).toBe(true);
+        expect(markdownOptionsPath.underline).toBe(true);
+        expect(markdownOptionsPath.code).toBe(true);
+        expect(markdownOptionsPath.undo).toBe(true);
+        expect(markdownOptionsPath.redo).toBe(true);
+        expect(markdownOptionsPath.removeformat).toBe(true);
+        expect(markdownOptionsPath.copyformatting).toBe(true);
+      });
+
+      test("A translation with a long original text has a context field in its input config and label concat", async () => {
+        expect(translationData).toHaveProperty(longPhraseRoseyId);
+
+        const keyHasContextContent =
+          translationData._inputs[longPhraseRoseyId].context.content?.length >
+          0;
+        expect(keyHasContextContent).toBe(true);
+
+        const keyHasLabelConcat =
+          translationData._inputs[longPhraseRoseyId].label.endsWith("...");
+        expect(keyHasLabelConcat).toBe(true);
+      });
+
+      // test("An input has a correctly formatted `See on page` link if configured", async () => {
+      //   // TODO:
+      // });
+
+      // test("An input does not have a `See on page` link if not enabled", async () => {
+      //   // TODO:
+      // });
+
+      // test("The page has a git repository link if configured", async () => {
+      //   // TODO:
+      // });
+
+      // test("The page does not have a git repository link if not enabled", async () => {
+      //   // TODO:
+      // });
+
+      // test("Ids with namespaces are correctly assigned as markdown with the correct options that are in the config file `markdown_keys`", async () => {
+      //   // TODO:
+      // });
+
+      // test("Ids with namespaces are correctly assigned as belonging to a namespaced page, even amongst arbitrary namespaces like `footer:`", async () => {
+      //   // TODO:
+      // });
+
+      // test("Translations are correctly grouped into 'Still to translated', or 'Translated' in the page root obj input config", async () => {
+      //   // TODO:
+      // });
     });
 
-    test("A translations file is created", async () => {
-      const translationFileExists = await fileExists(translationFilePath);
-      expect(translationFileExists).toBe(true);
-    });
+    describe("The generation of locales files", () => {
+      test("A locales directory is created", async () => {
+        const localeDirectoryExists = await isDirectory("./rosey/locales");
+        expect(localeDirectoryExists).toBe(true);
+      });
 
-    test("Freshly generated translation files contain urlTranslation key", async () => {
-      expect(translationData).toHaveProperty("urlTranslation");
-    });
+      test("A locales JSON file is created", async () => {
+        const localeFileExists = await fileExists(localeFilePath);
+        expect(localeFileExists).toBe(true);
+      });
 
-    test("Freshly generated translation files contain an empty Rosey id key", async () => {
-      expect(translationData).toHaveProperty(translationKey);
-      expect(translationData[translationKey]).toBe("");
-    });
+      test("A Rosey id is added to the locales file", async () => {
+        expect(localeData).toHaveProperty(noTranslationRoseyId);
+      });
 
-    test("Freshly generated translation files contain input config", async () => {
-      expect(translationData).toHaveProperty("_inputs");
-      expect(Object.keys(translationData["_inputs"]).length).toBeGreaterThan(0);
-    });
-
-    test("Input 'See on page' comments are formatted correctly", async () => {
-      const formattedComment =
-        "[See in context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20piece%20of%20text%20has%20no%20translation.)";
-      expect(translationData._inputs[translationKey].comment).toBe(
-        formattedComment
-      );
-    });
-
-    test("Markdown options are added to a keys input config if containing a markdown namespace", async () => {
-      const markdownOptionsPath =
-        translationData._inputs[
-          "rcc-markdown:a-nested-list-item-with-markdown-options"
-        ].options;
-      expect(markdownOptionsPath.bold).toBe(true);
-      expect(markdownOptionsPath.italic).toBe(true);
-      expect(markdownOptionsPath.strike).toBe(true);
-      expect(markdownOptionsPath.link).toBe(true);
-      expect(markdownOptionsPath.subscript).toBe(true);
-      expect(markdownOptionsPath.superscript).toBe(true);
-      expect(markdownOptionsPath.underline).toBe(true);
-      expect(markdownOptionsPath.code).toBe(true);
-      expect(markdownOptionsPath.undo).toBe(true);
-      expect(markdownOptionsPath.redo).toBe(true);
-      expect(markdownOptionsPath.removeformat).toBe(true);
-      expect(markdownOptionsPath.copyformatting).toBe(true);
-    });
-
-    test("Different markdown options are added to keys with markdown_key namespaces", async () => {
-      const markdownOptionsPath =
-        translationData._inputs[
-          "second-markdown-key:a-different-nested-list-item-with-markdown-options"
-        ].options;
-      expect(markdownOptionsPath.bold).toBe(false);
-      expect(markdownOptionsPath.italic).toBe(true);
-      expect(markdownOptionsPath.strike).toBe(true);
-      expect(markdownOptionsPath.link).toBe(true);
-      expect(markdownOptionsPath.subscript).toBe(true);
-      expect(markdownOptionsPath.superscript).toBe(true);
-      expect(markdownOptionsPath.underline).toBe(true);
-      expect(markdownOptionsPath.code).toBe(true);
-      expect(markdownOptionsPath.undo).toBe(true);
-      expect(markdownOptionsPath.redo).toBe(true);
-      expect(markdownOptionsPath.removeformat).toBe(true);
-      expect(markdownOptionsPath.copyformatting).toBe(true);
-    });
-
-    test("A namespaced page is not created if one is configured but there are no translations using it", async () => {
-      const defaultNamespacePageExists = await fileExists(
-        "./rosey/translations/fr-FR/common.yaml"
-      );
-      expect(defaultNamespacePageExists).toBe(false);
-    });
-
-    test("A locales directory is created", async () => {
-      const localeDirectoryExists = await isDirectory("./rosey/locales");
-      expect(localeDirectoryExists).toBe(true);
-    });
-
-    test("A locales JSON file is created", async () => {
-      const localeFileExists = await fileExists(localeFilePath);
-      expect(localeFileExists).toBe(true);
-    });
-
-    test("A Rosey id is added to the locales file", async () => {
-      expect(localeData).toHaveProperty(translationKey);
-    });
-
-    test("A Rosey id with no translation falls back to use the original for it's value", async () => {
-      expect(localeData[translationKey].value.trim()).toBe(
-        translationOriginalPhrase
-      );
+      test("A Rosey id with no translation falls back to use the original for it's value", async () => {
+        expect(localeData[noTranslationRoseyId].value.trim()).toBe(
+          "This piece of text has no translation."
+        );
+      });
     });
   });
 
@@ -183,7 +292,6 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       "./rosey/translations/fr-FR/home.yaml";
     const existingTranslationKey = "a-rosey-id-with-a-translation-to-preserve";
     const existingTranslationPhrase = "An existing translation to preserve.";
-
     // TODO: Add ids using a namespace like common to the base.json (or the test files themselves)
 
     let localeData;
@@ -212,94 +320,46 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       return;
     });
 
-    test("An existing translation is preserved", async () => {
-      expect(translationData[existingTranslationKey].trim()).toBe(
-        existingTranslationPhrase
-      );
+    describe("Generating the translation files", () => {
+      test("An existing translation is preserved", async () => {
+        expect(translationData[existingTranslationKey].trim()).toBe(
+          existingTranslationPhrase
+        );
+      });
+
+      // test("Translation files are archived if their page is removed", async () => {
+      //   // TODO:
+      // });
+
+      // test("Clearing a translation updates duplicates with translations that used to exist", async () => {
+      //   // - To be empty
+      //   // - And fallback to the original in the locales file
+      //   // TODO:
+      // });
+
+      // test("- Log data updates correctly when a translation is added (with duplicates on other pages", async () => {
+      //   // TODO:
+      // });
+
+      // test("- Log data updates correctly when a translation is removed (with duplicates on other pages)", async () => {
+      //   // TODO:
+      // });
     });
 
-    test("An existing translation makes it to locales", async () => {
-      expect(localeData[existingTranslationKey].value.trim()).toBe(
-        existingTranslationPhrase
-      );
+    describe("Generating the locales files", () => {
+      test("An existing translation makes it to locales", async () => {
+        expect(localeData[existingTranslationKey].value.trim()).toBe(
+          existingTranslationPhrase
+        );
+      });
+
+      // test("Ids without a translation fallback to the original when added to the locale file", async () => {
+      //   // TODO:
+      // });
+
+      // test("Ids with a translation are added to the locale file", async () => {
+      //   // TODO:
+      // });
     });
-
-    // test("Ids without a translation fallback to the original when added to the locale file", async () => {
-    //   // TODO:
-    // });
-
-    // test("Ids with a translation are added to the locale file", async () => {
-    //   // TODO:
-    // });
-
-    // test("An input of type: text is created", async () => {
-    //   // TODO:
-    // });
-
-    // test("An input of type: textarea is created", async () => {
-    //   // TODO:
-    // });
-
-    // test("An input of type: markdown is created", async () => {
-    //   // TODO:
-    // });
-
-    // test("A translation with a long original text has a context field in its input config and label concat", async () => {
-    //   // TODO:
-    // });
-
-    // test("An input has a correctly formatted `See on page` link if configured", async () => {
-    //   // TODO:
-    // });
-
-    // test("An input does not have a `See on page` link if not enabled", async () => {
-    //   // TODO:
-    // });
-
-    // test("The page has a git repository link if configured", async () => {
-    //   // TODO:
-    // });
-
-    // test("The page does not have a git repository link if not enabled", async () => {
-    //   // TODO:
-    // });
-
-    // test("A namespace page is created if a Rosey id containing a configured namespace_page id is detected", async () => {
-    //   // TODO:
-    // });
-
-    // test("More than one namespace page is created if configured, and Rosey ids containing the namespace_pages are detected", async () => {
-    //   // TODO:
-    // });
-
-    // test("Ids with namespaces are correctly assigned as markdown with the correct options that are in the config file `markdown_keys`", async () => {
-    //   // TODO:
-    // });
-
-    // test("Ids with namespaces are correctly assigned as belonging to a namespaced page, even amongst arbitrary namespaces like `footer:`", async () => {
-    //   // TODO:
-    // });
-
-    // test("Translations are correctly grouped into 'Still to translated', or 'Translated' in the page root obj input config", async () => {
-    //   // TODO:
-    // });
-
-    // test("Translation files are archived if their page is removed", async () => {
-    //   // TODO:
-    // });
-
-    // test("Clearing a translation updates duplicates with translations that used to exist", async () => {
-    //   // - To be empty
-    //   // - And fallback to the original in the locales file
-    //   // TODO:
-    // });
-
-    // test("- Log data updates correctly when a translation is added (with duplicates on other pages", async () => {
-    //   // TODO:
-    // });
-
-    // test("- Log data updates correctly when a translation is removed (with duplicates on other pages)", async () => {
-    //   // TODO:
-    // });
   });
 });
