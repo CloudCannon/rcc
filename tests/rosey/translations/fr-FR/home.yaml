@@ -1,20 +1,21 @@
 _inputs:
   $:
     type: object
-    comment: "[index.html](https://adjective-noun.cloudvent.net/index.html)"
+    comment: ""
     options:
       place_groups_below: false
       groups:
         - heading: Still to translate (fr-FR)
-          comment: "[index.html](https://adjective-noun.cloudvent.net/index.html)"
+          comment: ""
           inputs:
             - A-long-piece-of-text-that-should-be-a-textarea-not-just-a-simple-text-input%2E-Some-extra-words-for-length%2E
             - a-rosey-id-with-no-translation
             - a-simple-text-input
+            - common:read-more
             - rcc-markdown:a-nested-list-item-with-markdown-options
             - second-markdown-key:a-different-nested-list-item-with-markdown-options
         - heading: Already translated (fr-FR)
-          comment: "[index.html](https://adjective-noun.cloudvent.net/index.html)"
+          comment: ""
           inputs:
             - a-rosey-id-with-a-translation-to-preserve
   A-long-piece-of-text-that-should-be-a-textarea-not-just-a-simple-text-input%2E-Some-extra-words-for-length%2E:
@@ -22,9 +23,7 @@ _inputs:
     hidden: false
     type: textarea
     options: {}
-    comment: "[See in
-      context](https://adjective-noun.cloudvent.net/index.html#:~:text=A%20long\
-      %20piece%20of,extra%20words%20for%20length.)"
+    comment: ""
     context:
       open: false
       title: Untranslated Text
@@ -37,27 +36,28 @@ _inputs:
     hidden: false
     type: text
     options: {}
-    comment: "[See in
-      context](https://adjective-noun.cloudvent.net/index.html#:~:text=A%20list\
-      %20item)"
+    comment: ""
     context: {}
   a-rosey-id-with-no-translation:
     label: This piece of text has no translation.
     hidden: false
     type: text
     options: {}
-    comment: "[See in
-      context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20p\
-      iece%20of%20text%20has%20no%20translation.)"
+    comment: ""
     context: {}
   a-simple-text-input:
     label: A simple text input
     hidden: false
     type: text
     options: {}
-    comment: "[See in
-      context](https://adjective-noun.cloudvent.net/index.html#:~:text=A%20simp\
-      le%20text%20input)"
+    comment: ""
+    context: {}
+  common:read-more:
+    label: Read more...
+    hidden: false
+    type: text
+    options: {}
+    comment: ""
     context: {}
   rcc-markdown:a-nested-list-item-with-markdown-options:
     label: A nested list item with markdown options
@@ -76,9 +76,7 @@ _inputs:
       redo: true
       removeformat: true
       copyformatting: true
-    comment: "[See in
-      context](https://adjective-noun.cloudvent.net/index.html#:~:text=A%20nest\
-      ed%20list%20item%20with%20markdown%20options)"
+    comment: ""
     context: {}
   second-markdown-key:a-different-nested-list-item-with-markdown-options:
     label: A different nested list item with markdown options
@@ -97,14 +95,13 @@ _inputs:
       redo: true
       removeformat: true
       copyformatting: true
-    comment: "[See in
-      context](https://adjective-noun.cloudvent.net/index.html#:~:text=A%20diff\
-      erent%20nested%20list,item%20with%20markdown%20options)"
+    comment: ""
     context: {}
 urlTranslation: index.html
 A-long-piece-of-text-that-should-be-a-textarea-not-just-a-simple-text-input%2E-Some-extra-words-for-length%2E: ""
 a-rosey-id-with-a-translation-to-preserve: An existing translation to preserve.
 a-rosey-id-with-no-translation: ""
 a-simple-text-input: ""
+common:read-more: ""
 rcc-markdown:a-nested-list-item-with-markdown-options: ""
 second-markdown-key:a-different-nested-list-item-with-markdown-options: ""

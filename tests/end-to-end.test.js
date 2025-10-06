@@ -2,7 +2,7 @@ import fs from "fs";
 import YAML from "yaml";
 import { generate } from "../rosey-connector/main.mjs";
 import { execSync } from "child_process";
-import { fileExists, isDirectory, readFile, readJSON, readYaml } from "./utils";
+import { fileExists, isDirectory, readFile, readJson, readYaml } from "./utils";
 
 const testBuildDir = "_site";
 
@@ -18,13 +18,30 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
     return;
   });
 
+  const translationFilePath = "./rosey/translations/fr-FR/home.yaml";
+  const localeFilePath = "./rosey/locales/fr-FR.json";
+  const configFilePath = "./rosey/rcc.yaml";
+  const baseJsonPath = "./rosey/base.json";
+  const baseUrlJsonPath = "./rosey/base.urls.json";
+
+  const textRoseyId = "a-simple-text-input";
+  const noTranslationRoseyId = "a-rosey-id-with-no-translation";
+  const longPhraseRoseyId =
+    "A-long-piece-of-text-that-should-be-a-textarea-not-just-a-simple-text-input%2E-Some-extra-words-for-length%2E";
+  const markdownRoseyId =
+    "rcc-markdown:a-nested-list-item-with-markdown-options";
+
+  const defaultNamespacePagePath = "./rosey/translations/fr-FR/common.yaml";
+  const unusedNamespacePage = "an-unused-namespace-page";
+  const customNamespacePage = "header";
+
   describe("The config file is generated if none exists", () => {
     test("A config file is generated", async () => {
-      const configFileExists = await fileExists("./rosey/rcc.yaml");
+      const configFileExists = await fileExists(configFilePath);
       expect(configFileExists).toBe(true);
     });
     test("A config file has the correct top level keys", async () => {
-      const configFileData = await readYaml("./rosey/rcc.yaml");
+      const configFileData = await readYaml(configFilePath);
       expect(configFileData).toHaveProperty("locales");
       expect(configFileData).toHaveProperty("input_lengths");
       expect(configFileData).toHaveProperty("markdown_keys");
@@ -38,20 +55,12 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
   });
 
   describe("Add RCC to a site containing Rosey ids, and a config file with values set", () => {
-    const translationFilePath = "./rosey/translations/fr-FR/home.yaml";
-    const localeFilePath = "./rosey/locales/fr-FR.json";
-    const noTranslationRoseyId = "a-rosey-id-with-no-translation";
-    const longPhraseRoseyId =
-      "A-long-piece-of-text-that-should-be-a-textarea-not-just-a-simple-text-input%2E-Some-extra-words-for-length%2E";
-    const unusedNamespacePage = "an-unused-namespace-page";
-    const customNamespacePage = "header";
-
     let localeData;
     let translationData;
 
     // Write a locale to the generated config and run generate() again
     beforeAll(async () => {
-      const configData = await readYaml("./rosey/rcc.yaml");
+      const configData = await readYaml(configFilePath);
 
       configData.locales.push("fr-FR");
       configData.namespace_pages.push(unusedNamespacePage);
@@ -73,14 +82,12 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
           copyformatting: true,
         },
       });
+      configData.git_history_link.enabled = true;
 
-      await fs.promises.writeFile(
-        "./rosey/rcc.yaml",
-        YAML.stringify(configData)
-      );
+      await fs.promises.writeFile(configFilePath, YAML.stringify(configData));
       await generate();
 
-      localeData = await readJSON(localeFilePath);
+      localeData = await readJson(localeFilePath);
       translationData = await readYaml(translationFilePath);
       return;
     });
@@ -126,7 +133,7 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
         expect(customNamespacePageExists).toBe(true);
 
         const defaultNamespacePageExists = await fileExists(
-          `./rosey/translations/fr-FR/common.yaml`
+          defaultNamespacePagePath
         );
         expect(defaultNamespacePageExists).toBe(true);
       });
@@ -147,17 +154,7 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
         );
       });
 
-      test("Input 'See on page' comments are formatted correctly", async () => {
-        const formattedComment =
-          "[See in context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20piece%20of%20text%20has%20no%20translation.)";
-        expect(translationData._inputs[noTranslationRoseyId].comment).toBe(
-          formattedComment
-        );
-      });
-
       test("An input of type: text is created", async () => {
-        const textRoseyId = "a-simple-text-input";
-
         expect(translationData).toHaveProperty(textRoseyId);
 
         const keyIsTypeText =
@@ -174,9 +171,6 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       });
 
       test("An input of type: markdown is created", async () => {
-        const markdownRoseyId =
-          "rcc-markdown:a-nested-list-item-with-markdown-options";
-
         expect(translationData).toHaveProperty(markdownRoseyId);
 
         const keyIsTypeMarkdown =
@@ -186,9 +180,7 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
 
       test("Markdown options are added to a keys input config if containing a markdown namespace", async () => {
         const markdownOptionsPath =
-          translationData._inputs[
-            "rcc-markdown:a-nested-list-item-with-markdown-options"
-          ].options;
+          translationData._inputs[markdownRoseyId].options;
         expect(markdownOptionsPath.bold).toBe(true);
         expect(markdownOptionsPath.italic).toBe(true);
         expect(markdownOptionsPath.strike).toBe(true);
@@ -235,33 +227,21 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
         expect(keyHasLabelConcat).toBe(true);
       });
 
-      // test("An input has a correctly formatted `See on page` link if configured", async () => {
-      //   // TODO:
-      // });
+      test("Inputs contain formatted 'See on page' comments if enabled", async () => {
+        const formattedComment =
+          "[See in context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20piece%20of%20text%20has%20no%20translation.)";
+        expect(translationData._inputs[noTranslationRoseyId].comment).toBe(
+          formattedComment
+        );
+      });
 
-      // test("An input does not have a `See on page` link if not enabled", async () => {
-      //   // TODO:
-      // });
-
-      // test("The page has a git repository link if configured", async () => {
-      //   // TODO:
-      // });
-
-      // test("The page does not have a git repository link if not enabled", async () => {
-      //   // TODO:
-      // });
-
-      // test("Ids with namespaces are correctly assigned as markdown with the correct options that are in the config file `markdown_keys`", async () => {
-      //   // TODO:
-      // });
-
-      // test("Ids with namespaces are correctly assigned as belonging to a namespaced page, even amongst arbitrary namespaces like `footer:`", async () => {
-      //   // TODO:
-      // });
-
-      // test("Translations are correctly grouped into 'Still to translated', or 'Translated' in the page root obj input config", async () => {
-      //   // TODO:
-      // });
+      test("The page has a git repository link if enabled", async () => {
+        const formattedLink =
+          "//  [Git history](https://github.com/org/repo/commits/main/rosey/translations/fr-FR/home.yaml)";
+        const pageCommentEndsWithFormattedLink =
+          translationData._inputs.$.comment.endsWith(formattedLink);
+        expect(pageCommentEndsWithFormattedLink).toBe(true);
+      });
     });
 
     describe("The generation of locales files", () => {
@@ -288,11 +268,14 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
   });
 
   describe("Run the RCC on a site containing existing translations", () => {
-    const translationPageWithTranslation =
-      "./rosey/translations/fr-FR/home.yaml";
-    const existingTranslationKey = "a-rosey-id-with-a-translation-to-preserve";
-    const existingTranslationPhrase = "An existing translation to preserve.";
-    // TODO: Add ids using a namespace like common to the base.json (or the test files themselves)
+    const existingTranslationToPreserve =
+      "An existing translation to preserve.";
+    const existingTranslationToPreserveId =
+      "a-rosey-id-with-a-translation-to-preserve";
+
+    const duplicateTranslationPage =
+      "./rosey/translations/fr-FR/a-dir/a-page-with-duplicate-translation.yaml";
+    const duplicateTranslationPhrase = "This is a duplicate translation";
 
     let localeData;
     let translationData;
@@ -300,66 +283,171 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
     // Add some translations files containing translations before we run generate again
     beforeAll(async () => {
       // Create an existing translation file that contains translations
-      const existingTranslationPageData = await readYaml(
-        translationPageWithTranslation
-      );
-
-      existingTranslationPageData[existingTranslationKey] =
-        existingTranslationPhrase;
-
+      const existingTranslationPageData = await readYaml(translationFilePath);
+      existingTranslationPageData[existingTranslationToPreserveId] =
+        existingTranslationToPreserve;
       await fs.promises.writeFile(
-        translationPageWithTranslation,
+        translationFilePath,
         YAML.stringify(existingTranslationPageData)
       );
+
+      // Add duplicate translations here - one is to be removed later
+      const existingHomepageTranslations = await readYaml(translationFilePath);
+      const existingDupePageTranslations = await readYaml(
+        duplicateTranslationPage
+      );
+      existingHomepageTranslations[textRoseyId] = duplicateTranslationPhrase;
+      existingDupePageTranslations[textRoseyId] = duplicateTranslationPhrase;
+      await fs.promises.writeFile(
+        translationFilePath,
+        YAML.stringify(existingHomepageTranslations)
+      );
+      await fs.promises.writeFile(
+        duplicateTranslationPage,
+        YAML.stringify(existingDupePageTranslations)
+      );
+
       // Simulate running a postbuild
       await generate();
 
-      localeData = await readJSON("./rosey/locales/fr-FR.json");
-      translationData = await readYaml(translationPageWithTranslation);
+      localeData = await readJson(localeFilePath);
+      translationData = await readYaml(translationFilePath);
 
       return;
     });
 
-    describe("Generating the translation files", () => {
-      test("An existing translation is preserved", async () => {
-        expect(translationData[existingTranslationKey].trim()).toBe(
-          existingTranslationPhrase
-        );
-      });
-
-      // test("Translation files are archived if their page is removed", async () => {
-      //   // TODO:
-      // });
-
-      // test("Clearing a translation updates duplicates with translations that used to exist", async () => {
-      //   // - To be empty
-      //   // - And fallback to the original in the locales file
-      //   // TODO:
-      // });
-
-      // test("- Log data updates correctly when a translation is added (with duplicates on other pages", async () => {
-      //   // TODO:
-      // });
-
-      // test("- Log data updates correctly when a translation is removed (with duplicates on other pages)", async () => {
-      //   // TODO:
-      // });
+    test("An existing translation is preserved", async () => {
+      expect(translationData[existingTranslationToPreserveId].trim()).toBe(
+        existingTranslationToPreserve
+      );
     });
 
-    describe("Generating the locales files", () => {
-      test("An existing translation makes it to locales", async () => {
-        expect(localeData[existingTranslationKey].value.trim()).toBe(
-          existingTranslationPhrase
+    test("Translations are correctly grouped into 'Still to translated', or 'Translated' in the page root obj input config", async () => {
+      const stillToTranslateList =
+        translationData._inputs.$.options.groups[0].inputs;
+      expect(stillToTranslateList.length).toBe(4);
+
+      const alreadyTranslatedList =
+        translationData._inputs.$.options.groups[1].inputs;
+      expect(alreadyTranslatedList.length).toBe(2);
+    });
+
+    test("An existing translation makes it to locales", async () => {
+      expect(localeData[existingTranslationToPreserveId].value.trim()).toBe(
+        existingTranslationToPreserve
+      );
+    });
+
+    describe("Testing when things are deleted", () => {
+      beforeAll(async () => {
+        const existingBaseJsonData = await readJson(baseJsonPath);
+        const existingBaseUrlData = await readJson(baseUrlJsonPath);
+
+        // As if a whole page with it's id has been deleted
+        delete existingBaseJsonData.keys["a-page-about-to-be-deleted"];
+        delete existingBaseUrlData.keys["a-dir/a-page-to-be-deleted.html"];
+
+        // As if a page with it's last active rosey id is deleted, but the page remains
+        delete existingBaseJsonData.keys[
+          "this-page-will-stay-but-the-id-will-go"
+        ];
+
+        await fs.promises.writeFile(
+          baseJsonPath,
+          JSON.stringify(existingBaseJsonData)
         );
+        await fs.promises.writeFile(
+          baseUrlJsonPath,
+          JSON.stringify(existingBaseUrlData)
+        );
+
+        const existingConfigData = await readYaml(configFilePath);
+        // Remove a namespace page from the config, re-run and expect it to no longer be in the translations
+        for (const [
+          index,
+          namespace_page,
+        ] of existingConfigData.namespace_pages.entries()) {
+          if (namespace_page === "common") {
+            existingConfigData.namespace_pages.splice(index, 1);
+          }
+        }
+
+        // Disable see on page comments and check they are subsequently disabled on translation pages
+        existingConfigData.see_on_page_comment.enabled = false;
+
+        // Disable git history comments and check they are subsequently disabled on translation pages
+        existingConfigData.git_history_link.enabled = false;
+
+        await fs.promises.writeFile(
+          configFilePath,
+          YAML.stringify(existingConfigData)
+        );
+
+        // Delete duped key off home
+        // Expect it to be deleted from a-page-with-duplicate-translations
+        const existingHomepageTranslations = await readYaml(
+          translationFilePath
+        );
+        existingHomepageTranslations[textRoseyId] = "";
+        await fs.promises.writeFile(
+          translationFilePath,
+          YAML.stringify(existingHomepageTranslations)
+        );
+
+        // Re-run generate
+        await generate();
       });
 
-      // test("Ids without a translation fallback to the original when added to the locale file", async () => {
-      //   // TODO:
-      // });
+      test("Translation files are archived if their page is removed", async () => {
+        // Check archived in rosey dir
+        const archivedDirExists = await isDirectory("./rosey/archived");
+        expect(archivedDirExists).toBe(true);
+        // Check it doesn't exist in translation file as well
+        const deletedPageExistsInTranslationsFiles = await fileExists(
+          "./rosey/translations/fr-FR/a-dir/a-page-to-be-deleted.yaml"
+        );
+        expect(deletedPageExistsInTranslationsFiles).toBe(false);
+      });
 
-      // test("Ids with a translation are added to the locale file", async () => {
-      //   // TODO:
-      // });
+      test("Translation files are removed if all of the Rosey ids on its page are removed", async () => {
+        const deletedPageExistsInTranslationsFiles = await fileExists(
+          "./rosey/translations/fr-FR/a-dir/a-page-with-ids-to-be-removed.yaml"
+        );
+        expect(deletedPageExistsInTranslationsFiles).toBe(false);
+      });
+
+      test("Namespace page files are archived if they're removed from config", async () => {
+        const deletedNamespacePageExists = await fileExists(
+          defaultNamespacePagePath
+        );
+        expect(deletedNamespacePageExists).toBe(false);
+      });
+
+      test("An input does not have a `See on page` link if not enabled", async () => {
+        const homepageTranslations = await readYaml(translationFilePath);
+        expect(homepageTranslations._inputs[textRoseyId].comment).toBe("");
+      });
+
+      test("The page does not have a git repository link if not enabled", async () => {
+        const homepageTranslations = await readYaml(translationFilePath);
+        expect(homepageTranslations._inputs.$.comment).toBe("");
+      });
+
+      test("Clearing a translation updates duplicates with translations that used to exist", async () => {
+        // (To be empty)
+        // (And fallback to the original in the locales file)
+        // Add the key a-simple-text-input to another page so that there are duplicates
+        // Both pages should contain the translation for that key
+        // Clearing the translation on one page and re-running should clear the translation on other pages
+        const duplicatePageTranslations = await readYaml(
+          duplicateTranslationPage
+        );
+        expect(duplicatePageTranslations[textRoseyId]).toBe("");
+        const localeData = await readJson(localeFilePath);
+        expect(localeData[textRoseyId].value).toBe(
+          localeData[textRoseyId].original
+        );
+      });
     });
   });
 });

@@ -16,15 +16,15 @@ dotenv.config();
 export async function generateLocales(configData) {
   const locales = configData.locales;
   // Loop through locales
-  for (let i = 0; i < locales.length; i++) {
-    const locale = locales[i];
-
-    try {
-      await generateLocale(locale, configData);
-    } catch (err) {
-      console.error(`❌ Encountered an error translating ${locale}:`, err);
-    }
-  }
+  await Promise.all(
+    locales.map(async (locale) => {
+      try {
+        await generateLocale(locale, configData);
+      } catch (err) {
+        console.error(`❌ Encountered an error translating ${locale}:`, err);
+      }
+    })
+  );
 }
 
 async function generateLocale(locale, configData) {

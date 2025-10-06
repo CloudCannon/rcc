@@ -19,7 +19,7 @@ export async function generate() {
   // Some warnings for commonly forgotten unconfigured values
   configWarnings(configData);
 
-  console.log("\n\n🏗️ Checking for content to archive...");
+  console.log("\n\n🏗️ Checking for old locales to archive...");
   await checkAndCleanRemovedLocales(configData);
 
   console.log("\n\n🏗️ Generating translation files...");

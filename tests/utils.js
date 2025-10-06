@@ -41,9 +41,9 @@ async function readYaml(filePath, fallbackString) {
   }
 }
 
-async function readJSON(filePath) {
+async function readJson(filePath) {
   const buffer = await fs.promises.readFile(filePath);
   return JSON.parse(buffer);
 }
 
-export { isDirectory, readFile, readJSON, readYaml, fileExists };
+export { isDirectory, readFile, readJson, readYaml, fileExists };

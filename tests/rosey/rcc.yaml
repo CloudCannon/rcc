@@ -33,7 +33,7 @@ markdown_keys:
       removeformat: true
       copyformatting: true
 see_on_page_comment:
-  enabled: true
+  enabled: false
   base_url: https://adjective-noun.cloudvent.net/
   comment_text: See in context
 git_history_link:
@@ -42,7 +42,6 @@ git_history_link:
   branch_name: main
   comment_text: Git history
 namespace_pages:
-  - common
   - an-unused-namespace-page
   - header
 rosey_paths:

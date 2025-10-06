@@ -122,6 +122,9 @@ function getYamlFileName(fileName) {
   if (!fileName) {
     return "";
   }
+  // TODO: Fix this for nested index files
+  // I'm guessing the first line is for sites with pages like `a-dir/a-page-with-ids-to-be-removed/index.html`
+  // rather than `a-dir/a-page-with-ids-to-be-removed.html`
   return fileName
     .replace("/index.html", ".yaml")
     .replace(".html", ".yaml")

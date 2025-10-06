@@ -1,6 +1,7 @@
 import fs from "fs";
 import YAML from "yaml";
 import path from "path";
+import { removeTranslationFilesWithNoActiveIds } from "./clean-unused-files.mjs";
 import {
   readJsonFromFile,
   readTranslationFile,
@@ -40,23 +41,32 @@ export async function generateTranslationFiles(configData) {
   const baseUrlFileData = await readJsonFromFile(baseUrlFilePath);
 
   // Generate translation files for each locale
-  for (let i = 0; i < locales.length; i++) {
-    const locale = locales[i];
+  await Promise.all(
+    locales.map(async (locale) => {
+      await generateTranslationFilesForLocale(
+        locale,
+        seeOnPageCommentSettings,
+        gitHistoryCommentSettings,
+        inputLengths,
+        baseFileData,
+        baseUrlFileData,
+        translationFilesDirPath,
+        markdownNamespaceArray,
+        namespacePagesArray
+      ).catch((err) => {
+        console.error(`\n❌ Encountered an error translating ${locale}:`, err);
+      });
 
-    await generateTranslationFilesForLocale(
-      locale,
-      seeOnPageCommentSettings,
-      gitHistoryCommentSettings,
-      inputLengths,
-      baseFileData,
-      baseUrlFileData,
-      translationFilesDirPath,
-      markdownNamespaceArray,
-      namespacePagesArray
-    ).catch((err) => {
-      console.error(`\n❌ Encountered an error translating ${locale}:`, err);
-    });
-  }
+      // Look for translation files that contain only ids that all been deleted at once
+      // and are therefore no longer in the base.json
+      console.log("\n\n🏗️ Checking for translation files to archive...");
+      await removeTranslationFilesWithNoActiveIds(
+        locale,
+        baseFileData,
+        translationFilesDirPath
+      );
+    })
+  );
 }
 
 async function generateTranslationFilesForLocale(
@@ -97,23 +107,26 @@ async function generateTranslationFilesForLocale(
     namespacePagesArray
   );
 
-  // Loop through the pages present in the base.json
+  // Loop through the pages present in the base.urls.json
   await Promise.all(
     pages.map(async (page) => {
       const translationDataToWrite = {};
 
       // Get the path of the equivalent translation page to the base.json one we're on
+      // TODO: Fix this for a-dir/index.html (which just becomes a-dir.yaml)
       const yamlPageName = getYamlFileName(page);
+
       const translationFilePath = path.join(
         translationFilesDirPath,
         locale,
         yamlPageName
       );
 
-      // Get existing translation page data, returns a fallback if none exists
+      // Get existing translation page data (returns a fallback if none exists)
       const translationFileData = await readTranslationFile(
         translationFilePath
       );
+
       // Set up inputs for the page if none exist already
       initDefaultInputs(
         translationDataToWrite,
@@ -123,8 +136,10 @@ async function generateTranslationFilesForLocale(
         seeOnPageCommentSettings,
         gitHistoryCommentSettings
       );
+
       // Process the url translation
       processUrlTranslation(translationFileData, translationDataToWrite, page);
+
       // Process the rest of the translations
       // As part of process translations, look for keys with a value in the namespace array
       // at the start and don't write them to the translation file
