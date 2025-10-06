@@ -66,6 +66,10 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       configData.locales.push("fr-FR");
       configData.namespace_pages.push(unusedNamespacePage);
       configData.namespace_pages.push(customNamespacePage);
+
+      // The tests use eg. about.html vs about/index.html
+      configData.index_html_pages_only = false;
+
       configData.markdown_keys.push({
         id: "second-markdown-key",
         enabled_markdown_options: {

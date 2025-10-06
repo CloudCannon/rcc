@@ -44,7 +44,7 @@ git_history_link:
 namespace_pages:
   - an-unused-namespace-page
   - header
-index_html_pages_only: true
+index_html_pages_only: false
 rosey_paths:
   rosey_base_file_path: ./rosey/base.json
   rosey_base_urls_file_path: ./rosey/base.urls.json

@@ -79,8 +79,8 @@ async function readConfigFile(configFilePath) {
 
 function getTranslationHtmlFilename(translationFilename, indexHtmlPagesOnly) {
   const htmlFileName = indexHtmlPagesOnly
-    ? translationFilename.replace(".yaml", ".html")
-    : translationFilename.replace(".yaml", "/index.html");
+    ? translationFilename.replace(".yaml", "/index.html")
+    : translationFilename.replace(".yaml", ".html");
 
   return htmlFileName;
 }
@@ -90,10 +90,10 @@ function getYamlFileName(fileName, indexHtmlPagesOnly) {
     return "";
   }
   if (indexHtmlPagesOnly) {
-    return fileName.replace(".html", ".yaml");
+    return fileName.replace("/index.html", ".yaml");
   }
 
-  return fileName.replace("/index.html", ".yaml");
+  return fileName.replace(".html", ".yaml");
 }
 
 function getPageString(page) {
