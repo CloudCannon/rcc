@@ -168,7 +168,7 @@ export default function generateDefaultConfigFile() {
           namespaces to your html.
       use_extensionless_urls:
         type: switch
-        comment: If built pages are like /about/index.html set this to false. If built pages are like /about.html set this to true.
+        comment: If pages are built like /about/index.html, set this to false. If pages are built like /about.html, set this to true.
       rosey_paths:
         type: object
         options:
