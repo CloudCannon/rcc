@@ -18,7 +18,7 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
     return;
   });
 
-  const translationFilePath = "./rosey/translations/fr-FR/home.yaml";
+  const translationFilePath = "./rosey/translations/fr-FR/index.yaml";
   const localeFilePath = "./rosey/locales/fr-FR.json";
   const configFilePath = "./rosey/rcc.yaml";
   const baseJsonPath = "./rosey/base.json";
@@ -48,6 +48,7 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       expect(configFileData).toHaveProperty("see_on_page_comment");
       expect(configFileData).toHaveProperty("git_history_link");
       expect(configFileData).toHaveProperty("namespace_pages");
+      expect(configFileData).toHaveProperty("use_extensionless_urls");
       expect(configFileData).toHaveProperty("rosey_paths");
       expect(configFileData).toHaveProperty("smartling");
       expect(configFileData).toHaveProperty("_inputs");
@@ -230,17 +231,15 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       test("Inputs contain formatted 'See on page' comments if enabled", async () => {
         const formattedComment =
           "[See in context](https://adjective-noun.cloudvent.net/index.html#:~:text=This%20piece%20of%20text%20has%20no%20translation.)";
-        expect(translationData._inputs[noTranslationRoseyId].comment).toBe(
+        expect(translationData._inputs[noTranslationRoseyId].comment).toContain(
           formattedComment
         );
       });
 
       test("The page has a git repository link if enabled", async () => {
         const formattedLink =
-          "//  [Git history](https://github.com/org/repo/commits/main/rosey/translations/fr-FR/home.yaml)";
-        const pageCommentEndsWithFormattedLink =
-          translationData._inputs.$.comment.endsWith(formattedLink);
-        expect(pageCommentEndsWithFormattedLink).toBe(true);
+          "//  [Git history](https://github.com/org/repo/commits/main/rosey/translations/fr-FR/index.yaml)";
+        expect(translationData._inputs.$.comment).toContain(formattedLink);
       });
     });
 

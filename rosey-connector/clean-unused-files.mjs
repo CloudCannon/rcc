@@ -29,12 +29,17 @@ export async function removeTranslationFilesWithNoActiveIds(
   );
 
   // Look at each file's keys and see if the file only contains deleted translation ids
-  translationFiles.map(async (translationFile) => {
-    const translationFilePath = path.join(
-      translationFilesForLocaleDirPath,
-      translationFile
-    );
-    if (!(await isDirectory(translationFilePath))) {
+  await Promise.all(
+    translationFiles.map(async (translationFile) => {
+      const translationFilePath = path.join(
+        translationFilesForLocaleDirPath,
+        translationFile
+      );
+
+      if (await isDirectory(translationFilePath)) {
+        return;
+      }
+
       const translationFileString = await fs.promises.readFile(
         translationFilePath,
         { encoding: "utf-8" }
@@ -67,8 +72,8 @@ export async function removeTranslationFilesWithNoActiveIds(
           `🧹 Archived ${translationFilePath} since it no longer contains any Rosey ids that exist in the base.json.`
         );
       }
-    }
-  });
+    })
+  );
 }
 
 export async function checkAndCleanRemovedLocales(configData) {

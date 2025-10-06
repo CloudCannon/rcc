@@ -33,6 +33,7 @@ export async function generateTranslationFiles(configData) {
   const translationFilesDirPath = handleConfigPaths(
     configData.rosey_paths.translations_dir_path
   );
+  const useExtensionlessUrls = configData.use_extensionless_urls ?? false;
   const markdownNamespaceArray = configData.markdown_keys;
   const namespacePagesArray = configData.namespace_pages;
 
@@ -52,7 +53,8 @@ export async function generateTranslationFiles(configData) {
         baseUrlFileData,
         translationFilesDirPath,
         markdownNamespaceArray,
-        namespacePagesArray
+        namespacePagesArray,
+        useExtensionlessUrls
       ).catch((err) => {
         console.error(`\n❌ Encountered an error translating ${locale}:`, err);
       });
@@ -78,7 +80,8 @@ async function generateTranslationFilesForLocale(
   baseUrlFileData,
   translationFilesDirPath,
   markdownNamespaceArray,
-  namespacePagesArray
+  namespacePagesArray,
+  useExtensionlessUrls
 ) {
   console.log(`\n🌍 Processing locale: ${locale}`);
   const logStatistics = {
@@ -102,9 +105,9 @@ async function generateTranslationFilesForLocale(
   await archiveOldTranslationFiles(
     translationsFiles,
     translationsLocalePath,
-    baseUrlFileDataKeys,
     pages,
-    namespacePagesArray
+    namespacePagesArray,
+    useExtensionlessUrls
   );
 
   // Loop through the pages present in the base.urls.json
@@ -113,8 +116,7 @@ async function generateTranslationFilesForLocale(
       const translationDataToWrite = {};
 
       // Get the path of the equivalent translation page to the base.json one we're on
-      // TODO: Fix this for a-dir/index.html (which just becomes a-dir.yaml)
-      const yamlPageName = getYamlFileName(page);
+      const yamlPageName = getYamlFileName(page, useExtensionlessUrls);
 
       const translationFilePath = path.join(
         translationFilesDirPath,
@@ -134,7 +136,8 @@ async function generateTranslationFilesForLocale(
         page,
         locale,
         seeOnPageCommentSettings,
-        gitHistoryCommentSettings
+        gitHistoryCommentSettings,
+        useExtensionlessUrls
       );
 
       // Process the url translation

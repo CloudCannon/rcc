@@ -50,6 +50,7 @@ async function generateLocale(locale, configData) {
   const baseUrlsFile = await fs.promises.readFile(
     handleConfigPaths(configData.rosey_paths.rosey_base_urls_file_path)
   );
+  const useExtensionlessUrls = configData.use_extensionless_urls ?? false;
   const baseUrlFileData = JSON.parse(baseUrlsFile.toString("utf-8")).keys;
   const namespacePagesArray = configData.namespace_pages;
   const markdownNamespaceArray = configData.markdown_keys;
@@ -103,7 +104,7 @@ async function generateLocale(locale, configData) {
         oldUrlsLocaleData,
         baseFileData,
         baseUrlFileData,
-        namespacePagesArray
+        useExtensionlessUrls
       );
 
       localeDataEntries[filename] = response;
@@ -181,6 +182,10 @@ async function generateLocale(locale, configData) {
         // add that to keys to update to sync duplicate keys on other pages
         if (data[key].isNewlyClearedTranslation) {
           keysToUpdate[key] = "";
+          localeData[key] = {
+            original: data[key].original,
+            value: data[key].original,
+          };
         }
       }
     })
@@ -293,7 +298,7 @@ async function processTranslation(
   oldUrlsLocaleData,
   baseFileData,
   baseUrlFileData,
-  namespacePagesArray
+  useExtensionlessUrls
 ) {
   const localeData = {};
   const localeUrlsData = {};
@@ -316,8 +321,7 @@ async function processTranslation(
 
   const translationHtmlFilename = getTranslationHtmlFilename(
     translationFilename,
-    baseUrlFileData,
-    namespacePagesArray
+    useExtensionlessUrls
   );
 
   // Check if theres a translation and

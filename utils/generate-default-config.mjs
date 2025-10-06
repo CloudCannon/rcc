@@ -56,6 +56,10 @@ export default function generateDefaultConfigFile() {
     namespace_pages:
       - common
 
+    # If built pages are like /about/index.html set this to false
+    # If built pages are like /about.html set this to true
+    use_extensionless_urls: true
+
     # Tells the RCC if you're storing the files Rosey expects in a different location to the default. 
     # You'll also need to update the CLI commands for Rosey in your staging & production site's postbuild.
     rosey_paths:
@@ -162,6 +166,9 @@ export default function generateDefaultConfigFile() {
           namespaces, and grouped on the namespace page. See the [Rosey
           docs](https://rosey.app/docs/namespacing/) for details on adding
           namespaces to your html.
+      use_extensionless_urls:
+        type: switch
+        comment: If built pages are like /about/index.html set this to false. If built pages are like /about.html set this to true.
       rosey_paths:
         type: object
         options:
