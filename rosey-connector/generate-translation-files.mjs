@@ -33,7 +33,7 @@ export async function generateTranslationFiles(configData) {
   const translationFilesDirPath = handleConfigPaths(
     configData.rosey_paths.translations_dir_path
   );
-  const useExtensionlessUrls = configData.use_extensionless_urls ?? false;
+  const indexHtmlPagesOnly = configData.index_html_pages_only ?? false;
   const markdownNamespaceArray = configData.markdown_keys;
   const namespacePagesArray = configData.namespace_pages;
 
@@ -54,7 +54,7 @@ export async function generateTranslationFiles(configData) {
         translationFilesDirPath,
         markdownNamespaceArray,
         namespacePagesArray,
-        useExtensionlessUrls
+        indexHtmlPagesOnly
       ).catch((err) => {
         console.error(`\n❌ Encountered an error translating ${locale}:`, err);
       });
@@ -81,7 +81,7 @@ async function generateTranslationFilesForLocale(
   translationFilesDirPath,
   markdownNamespaceArray,
   namespacePagesArray,
-  useExtensionlessUrls
+  indexHtmlPagesOnly
 ) {
   console.log(`\n🌍 Processing locale: ${locale}`);
   const logStatistics = {
@@ -107,7 +107,7 @@ async function generateTranslationFilesForLocale(
     translationsLocalePath,
     pages,
     namespacePagesArray,
-    useExtensionlessUrls
+    indexHtmlPagesOnly
   );
 
   // Loop through the pages present in the base.urls.json
@@ -116,7 +116,7 @@ async function generateTranslationFilesForLocale(
       const translationDataToWrite = {};
 
       // Get the path of the equivalent translation page to the base.json one we're on
-      const yamlPageName = getYamlFileName(page, useExtensionlessUrls);
+      const yamlPageName = getYamlFileName(page, indexHtmlPagesOnly);
 
       const translationFilePath = path.join(
         translationFilesDirPath,
@@ -137,7 +137,7 @@ async function generateTranslationFilesForLocale(
         locale,
         seeOnPageCommentSettings,
         gitHistoryCommentSettings,
-        useExtensionlessUrls
+        indexHtmlPagesOnly
       );
 
       // Process the url translation

@@ -124,20 +124,20 @@ function checkForMarkdownKeys(configData) {
     ];
   }
 
-  // Migrate to use use_extensionless_urls key. It's a boolean so our check has to check that it's undefined or null, not just false.
+  // Migrate to use index_html_pages_only key. It's a boolean so our check has to check that it's undefined or null, not just false.
   if (
-    !configData.use_extensionless_urls &&
-    configData.use_extensionless_urls !== false
+    !configData.index_html_pages_only &&
+    configData.index_html_pages_only !== false
   ) {
     hasMigratedConfig = true;
 
     console.log(
-      "⚠️ No 'use_extensionless_urls' key found in the rcc.yaml config file."
+      "⚠️ No 'index_html_pages_only' key found in the rcc.yaml config file."
     );
 
-    configData.use_extensionless_urls = false;
+    configData.index_html_pages_only = false;
 
-    configData._inputs.use_extensionless_urls = {
+    configData._inputs.index_html_pages_only = {
       type: "switch",
       comment:
         "If pages are built like /about/index.html, set this to false. If pages are built like /about.html, set this to true.",

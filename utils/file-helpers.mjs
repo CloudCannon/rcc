@@ -77,19 +77,19 @@ async function readConfigFile(configFilePath) {
   return configData;
 }
 
-function getTranslationHtmlFilename(translationFilename, useExtensionlessUrls) {
-  const htmlFileName = useExtensionlessUrls
+function getTranslationHtmlFilename(translationFilename, indexHtmlPagesOnly) {
+  const htmlFileName = indexHtmlPagesOnly
     ? translationFilename.replace(".yaml", ".html")
     : translationFilename.replace(".yaml", "/index.html");
 
   return htmlFileName;
 }
 
-function getYamlFileName(fileName, useExtensionlessUrls) {
+function getYamlFileName(fileName, indexHtmlPagesOnly) {
   if (!fileName) {
     return "";
   }
-  if (useExtensionlessUrls) {
+  if (indexHtmlPagesOnly) {
     return fileName.replace(".html", ".yaml");
   }
 
@@ -143,7 +143,7 @@ async function archiveOldTranslationFiles(
   translationsLocalePath,
   pages,
   namespacePagesArray,
-  useExtensionlessUrls
+  indexHtmlPagesOnly
 ) {
   await Promise.all(
     translationsFiles.map(async (fileName) => {
@@ -194,7 +194,7 @@ async function archiveOldTranslationFiles(
       // Get the html equivalent of the yaml file to check if it exists in base.json which deals in .html files
       const fileNameHtmlFormatted = getTranslationHtmlFilename(
         fileName,
-        useExtensionlessUrls
+        indexHtmlPagesOnly
       );
 
       // Archive the page if it no longer exists in base.json

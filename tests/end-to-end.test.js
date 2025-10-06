@@ -48,7 +48,7 @@ describe("Run `rosey-cloudcannon-connector generate`", () => {
       expect(configFileData).toHaveProperty("see_on_page_comment");
       expect(configFileData).toHaveProperty("git_history_link");
       expect(configFileData).toHaveProperty("namespace_pages");
-      expect(configFileData).toHaveProperty("use_extensionless_urls");
+      expect(configFileData).toHaveProperty("index_html_pages_only");
       expect(configFileData).toHaveProperty("rosey_paths");
       expect(configFileData).toHaveProperty("smartling");
       expect(configFileData).toHaveProperty("_inputs");

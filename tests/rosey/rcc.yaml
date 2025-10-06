@@ -44,7 +44,7 @@ git_history_link:
 namespace_pages:
   - an-unused-namespace-page
   - header
-use_extensionless_urls: true
+index_html_pages_only: true
 rosey_paths:
   rosey_base_file_path: ./rosey/base.json
   rosey_base_urls_file_path: ./rosey/base.urls.json
@@ -138,10 +138,10 @@ _inputs:
       namespaces, and grouped on the namespace page. See the [Rosey
       docs](https://rosey.app/docs/namespacing/) for details on adding
       namespaces to your html.
-  use_extensionless_urls:
+  index_html_pages_only:
     type: switch
-    comment: If built pages are like /about/index.html set this to false. If built
-      pages are like /about.html set this to true.
+    comment: If pages are built like /about/index.html, set this to false. If pages
+      are built like /about.html, set this to true.
   rosey_paths:
     type: object
     options:

@@ -13,7 +13,7 @@ function initDefaultInputs(
   locale,
   seeOnPageCommentSettings,
   gitHistoryCommentSettings,
-  useExtensionlessUrls
+  indexHtmlPagesOnly
 ) {
   // Create the inputs obj if there is none
   if (!data._inputs) {
@@ -23,7 +23,7 @@ function initDefaultInputs(
   // Create the page input object
   if (!data._inputs.$) {
     const pageString = getPageString(page);
-    const pageFilePath = getYamlFileName(page, useExtensionlessUrls);
+    const pageFilePath = getYamlFileName(page, indexHtmlPagesOnly);
     const seeOnPageCommentEnabled = seeOnPageCommentSettings.enabled;
     const baseUrl = seeOnPageCommentSettings.base_url;
     const gitHistoryCommentEnabled = gitHistoryCommentSettings.enabled;
