@@ -1,7 +1,8 @@
 import fs from "fs";
 import path from "path";
 import slugify from "slugify";
-import { handleConfigPaths } from "../utils/file-helpers.mjs";
+import YAML from "yaml";
+import { handleConfigPaths, isDirectory } from "../utils/file-helpers.mjs";
 
 const currentDateTime = Date(Date.now()).toString();
 const currentDateTimeSlugified = slugify(currentDateTime);
@@ -10,6 +11,70 @@ const archivedFilesDir = path.join(
   "archived",
   currentDateTimeSlugified
 );
+
+export async function removeTranslationFilesWithNoActiveIds(
+  locale,
+  baseFileData,
+  translationFilesDirPath
+) {
+  // We're in a locale
+  // Look through each file in the translations directory
+  const translationFilesForLocaleDirPath = path.join(
+    translationFilesDirPath,
+    locale
+  );
+  const translationFiles = await fs.promises.readdir(
+    translationFilesForLocaleDirPath,
+    { recursive: true }
+  );
+
+  // Look at each file's keys and see if the file only contains deleted translation ids
+  await Promise.all(
+    translationFiles.map(async (translationFile) => {
+      const translationFilePath = path.join(
+        translationFilesForLocaleDirPath,
+        translationFile
+      );
+
+      if (await isDirectory(translationFilePath)) {
+        return;
+      }
+
+      const translationFileString = await fs.promises.readFile(
+        translationFilePath,
+        { encoding: "utf-8" }
+      );
+      const translationFileData = YAML.parse(translationFileString);
+
+      // If the file contains only _inputs, urlTranslation, and id's that cannot be found in the base.json (meaning they've been deleted)
+      const translationFileKeys = Object.keys(translationFileData);
+
+      let containsActiveRoseyIds = false;
+      for (const roseyId of translationFileKeys) {
+        if (baseFileData.keys[roseyId]) {
+          containsActiveRoseyIds = true;
+        }
+      }
+
+      if (!containsActiveRoseyIds) {
+        const archivePath = path.join(
+          archivedFilesDir,
+          locale,
+          translationFile
+        );
+
+        const lastSlashInPath = archivePath.lastIndexOf("/");
+        const archivedFileDir = archivePath.substring(0, lastSlashInPath);
+        await fs.promises.mkdir(archivedFileDir, { recursive: true });
+
+        await fs.promises.rename(translationFilePath, archivePath);
+        console.log(
+          `🧹 Archived ${translationFilePath} since it no longer contains any Rosey ids that exist in the base.json.`
+        );
+      }
+    })
+  );
+}
 
 export async function checkAndCleanRemovedLocales(configData) {
   const haveWeArchivedFiles = [];
@@ -41,7 +106,7 @@ export async function checkAndCleanRemovedLocales(configData) {
 
       // Move the old translation files
       await fs.promises.rename(pathToArchive, archivePath);
-      console.log(`🧹 Archived locale ${localeDir} translation files.`);
+      console.log(`🧹 Archived ${localeDir} translation files.`);
       haveWeArchivedFiles.push(localeDir);
     }
   }
@@ -76,7 +141,7 @@ export async function checkAndCleanRemovedLocales(configData) {
         localeFile
       );
       await fs.promises.rename(filePathToArchive, archivePath);
-      console.log(`🧹 Archived locale ${localeCode} locale files.`);
+      console.log(`🧹 Archived ${localeCode} locale files.`);
       haveWeArchivedFiles.push(localeCode);
     }
   }

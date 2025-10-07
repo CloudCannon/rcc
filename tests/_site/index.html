@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head></head>
+
+<body>
+  <header data-rosey-ns="header">
+    <nav data-rosey-ns="nav">
+      <a href="/"><img src="/images/a-logo.png" alt="Logo"></a>
+      <ul>
+        <li><a href="/about/" data-rosey="about">About</a></li>
+        <li><a href="/blog/" data-rosey="blog">Blog</a></li>
+        <li data-rosey-ns="rcc-markdown">
+          <a href="/markdown/" data-rosey="a-namespace-page-markdown-input">
+            A namespace page markdown input
+          </a>
+        </li>
+      </ul>
+    </nav>
+  </header>
+  <p data-rosey="a-rosey-id-with-no-translation">
+    This piece of text has no translation.
+  </p>
+  <ol class="a-tight-list">
+    <li data-rosey="a-rosey-id-with-a-translation-to-preserve">A list item</li>
+    <li data-rosey="a-simple-text-input">A simple text input</li>
+    <li>
+      <ol>
+        <li data-rosey-ns="rcc-markdown" data-rosey="a-nested-list-item-with-markdown-options">A nested list item with
+          markdown options
+        </li>
+        <li data-rosey-ns="second-markdown-key" data-rosey="a-different-nested-list-item-with-markdown-options">A
+          different nested list
+          item with markdown options
+        </li>
+      </ol>
+    </li>
+  </ol>
+  <p
+    data-rosey="A-long-piece-of-text-that-should-be-a-textarea-not-just-a-simple-text-input%2E-Some-extra-words-for-length%2E">
+    A long piece of text that should be a textarea, not just a simple text input. Some extra words for length.
+  </p>
+  <a href="/blog/" data-rosey-ns="common" data-rosey="read-more">Read more...</a>
+</body>
+
+</html>

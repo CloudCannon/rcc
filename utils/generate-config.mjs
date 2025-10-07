@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import YAML from "yaml";
 import migrateConfig from "./migrate-config.mjs";
+import generateDefaultConfigFile from "./generate-default-config.mjs";
 
 export async function generateConfig(
   locales,
@@ -30,34 +31,28 @@ export async function generateConfig(
   } catch (error) {
     console.log("🏗️ No existing config file - Creating one...");
     // If not read the example one
-    const exampleConfigPath = path.join(
-      "node_modules",
-      "rosey-cloudcannon-connector",
-      "utils",
-      "example-config.yaml"
-    );
-    const buffer = await fs.promises.readFile(exampleConfigPath);
-    const exampleFileData = YAML.parse(buffer.toString("utf-8"));
+    const exampleConfigString = generateDefaultConfigFile();
+    const exampleConfigData = YAML.parse(exampleConfigString.toString("utf-8"));
 
     // Add to the config file if this is being generated via the cli,
     // otherwise just use the example file if it's happening automatically
 
     // Add locales to the config
     if (locales?.length) {
-      exampleFileData.locales = locales;
+      exampleConfigData.locales = locales;
     }
     // Add highlight comment to config
     if (highlightCommentSettings?.isHighlightComment) {
-      exampleFileData.see_on_page_comment.enabled = true;
-      exampleFileData.see_on_page_comment.base_url =
+      exampleConfigData.see_on_page_comment.enabled = true;
+      exampleConfigData.see_on_page_comment.base_url =
         highlightCommentSettings.untranslatedSiteUrl;
     }
     // Add git history comment to config
     if (gitHistoryCommentSettings?.isGitHistoryComment) {
-      exampleFileData.git_history_link.enabled = true;
-      exampleFileData.git_history_link.repo_url =
+      exampleConfigData.git_history_link.enabled = true;
+      exampleConfigData.git_history_link.repo_url =
         gitHistoryCommentSettings.gitRepoUrl;
-      exampleFileData.git_history_link.branch_name =
+      exampleConfigData.git_history_link.branch_name =
         gitHistoryCommentSettings.branchToUse;
     }
 
@@ -65,7 +60,7 @@ export async function generateConfig(
     await fs.promises.mkdir("rosey", { recursive: true });
 
     // Write the example config to the correct place
-    await fs.promises.writeFile(configPath, YAML.stringify(exampleFileData));
+    await fs.promises.writeFile(configPath, YAML.stringify(exampleConfigData));
     console.log("🏗️ Generated an RCC config file!");
   }
 }

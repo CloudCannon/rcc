@@ -1,0 +1,25 @@
+name: Run Tests
+
+on:
+  push:
+    branches:
+      - main
+      - tests # TODO: remove this before merge
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  Tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install dependencies
+        run: |
+          npm install
+          cd tests
+          npm install 
+      - name: Run tests
+        run: |
+          cd tests
+          npm test

@@ -13,7 +13,12 @@ export default async function migrateConfig(configPath) {
 }
 
 function checkForMarkdownKeys(configData) {
+  let hasMigratedConfig = false;
+
+  // Migrate to use markdown keys
   if (!configData.markdown_keys) {
+    hasMigratedConfig = true;
+
     console.log("⚠️ No 'markdown_keys' key found in the rcc.yaml config file.");
     console.log("🏗️ Adding key with it's default value and input config...");
     configData.markdown_keys = [
@@ -117,13 +122,30 @@ function checkForMarkdownKeys(configData) {
         },
       },
     ];
-    return {
-      hasMigratedConfig: true,
-      configData,
+  }
+
+  // Migrate to use index_html_pages_only key. It's a boolean so our check has to check that it's undefined or null, not just false.
+  if (
+    !configData.index_html_pages_only &&
+    configData.index_html_pages_only !== false
+  ) {
+    hasMigratedConfig = true;
+
+    console.log(
+      "⚠️ No 'index_html_pages_only' key found in the rcc.yaml config file."
+    );
+
+    configData.index_html_pages_only = false;
+
+    configData._inputs.index_html_pages_only = {
+      type: "switch",
+      comment:
+        "If pages are built like /about/index.html, set this to false. If pages are built like /about.html, set this to true.",
     };
   }
+
   return {
-    hasMigratedConfig: false,
+    hasMigratedConfig: hasMigratedConfig,
     configData,
   };
 }

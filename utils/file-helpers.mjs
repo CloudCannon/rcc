@@ -77,55 +77,23 @@ async function readConfigFile(configFilePath) {
   return configData;
 }
 
-function getTranslationHtmlFilename(
-  translationFilename,
-  baseUrlFileData,
-  namespacePagesArray
-) {
-  if (translationFilename === "home.yaml") {
-    return "index.html";
-  }
+function getTranslationHtmlFilename(translationFilename, indexHtmlPagesOnly) {
+  const htmlFileName = indexHtmlPagesOnly
+    ? translationFilename.replace(".yaml", "/index.html")
+    : translationFilename.replace(".yaml", ".html");
 
-  const htmlFileName = translationFilename.replace(".yaml", "/index.html");
-  const extensionlessHtmlFileName = translationFilename.replace(
-    ".yaml",
-    ".html"
-  );
-
-  const baseUrlFileDataKeys = Object.keys(baseUrlFileData);
-
-  // Check whether the filename is filename.html or filename/index.html
-  let fileName = "";
-  if (baseUrlFileDataKeys.includes(htmlFileName)) {
-    fileName = htmlFileName;
-  }
-  if (baseUrlFileDataKeys.includes(extensionlessHtmlFileName)) {
-    fileName = extensionlessHtmlFileName;
-  }
-
-  // Before throwing a log check that the file doesn't exist, and check that it's not in our namespace arr
-  // We will still return an empty string as the fileName, as its used for urlTranslations check
-  // But no need to log a warning if its in ns arr as it makes sense there's no .html file for ns pages
-  if (
-    !fileName &&
-    !namespacePagesArray?.includes(translationFilename.replace(".yaml", ""))
-  ) {
-    console.log(
-      `No .html filename found for ${translationFilename} in our base.urls.json`
-    );
-  }
-
-  return fileName;
+  return htmlFileName;
 }
 
-function getYamlFileName(fileName) {
+function getYamlFileName(fileName, indexHtmlPagesOnly) {
   if (!fileName) {
     return "";
   }
-  return fileName
-    .replace("/index.html", ".yaml")
-    .replace(".html", ".yaml")
-    .replace("index", "home");
+  if (indexHtmlPagesOnly) {
+    return fileName.replace("/index.html", ".yaml");
+  }
+
+  return fileName.replace(".html", ".yaml");
 }
 
 function getPageString(page) {
@@ -173,9 +141,9 @@ async function createParentDirIfExists(
 async function archiveOldTranslationFiles(
   translationsFiles,
   translationsLocalePath,
-  baseUrlFileDataKeys,
   pages,
-  namespacePagesArray
+  namespacePagesArray,
+  indexHtmlPagesOnly
 ) {
   await Promise.all(
     translationsFiles.map(async (fileName) => {
@@ -226,7 +194,7 @@ async function archiveOldTranslationFiles(
       // Get the html equivalent of the yaml file to check if it exists in base.json which deals in .html files
       const fileNameHtmlFormatted = getTranslationHtmlFilename(
         fileName,
-        baseUrlFileDataKeys
+        indexHtmlPagesOnly
       );
 
       // Archive the page if it no longer exists in base.json

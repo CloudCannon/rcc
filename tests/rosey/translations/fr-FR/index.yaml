@@ -1,0 +1,107 @@
+_inputs:
+  $:
+    type: object
+    comment: ""
+    options:
+      place_groups_below: false
+      groups:
+        - heading: Still to translate (fr-FR)
+          comment: ""
+          inputs:
+            - A-long-piece-of-text-that-should-be-a-textarea-not-just-a-simple-text-input%2E-Some-extra-words-for-length%2E
+            - a-rosey-id-with-no-translation
+            - a-simple-text-input
+            - common:read-more
+            - rcc-markdown:a-nested-list-item-with-markdown-options
+            - second-markdown-key:a-different-nested-list-item-with-markdown-options
+        - heading: Already translated (fr-FR)
+          comment: ""
+          inputs:
+            - a-rosey-id-with-a-translation-to-preserve
+  A-long-piece-of-text-that-should-be-a-textarea-not-just-a-simple-text-input%2E-Some-extra-words-for-length%2E:
+    label: A long piece of text that should be a textarea, not just a simpl...
+    hidden: false
+    type: textarea
+    options: {}
+    comment: ""
+    context:
+      open: false
+      title: Untranslated Text
+      icon: translate
+      content: >
+        A long piece of text that should be a textarea, not just a simple text
+        input. Some extra words for length.
+  a-rosey-id-with-a-translation-to-preserve:
+    label: A list item
+    hidden: false
+    type: text
+    options: {}
+    comment: ""
+    context: {}
+  a-rosey-id-with-no-translation:
+    label: This piece of text has no translation.
+    hidden: false
+    type: text
+    options: {}
+    comment: ""
+    context: {}
+  a-simple-text-input:
+    label: A simple text input
+    hidden: false
+    type: text
+    options: {}
+    comment: ""
+    context: {}
+  common:read-more:
+    label: Read more...
+    hidden: false
+    type: text
+    options: {}
+    comment: ""
+    context: {}
+  rcc-markdown:a-nested-list-item-with-markdown-options:
+    label: A nested list item with markdown options
+    hidden: false
+    type: markdown
+    options:
+      bold: true
+      italic: true
+      strike: true
+      link: true
+      subscript: true
+      superscript: true
+      underline: true
+      code: true
+      undo: true
+      redo: true
+      removeformat: true
+      copyformatting: true
+    comment: ""
+    context: {}
+  second-markdown-key:a-different-nested-list-item-with-markdown-options:
+    label: A different nested list item with markdown options
+    hidden: false
+    type: markdown
+    options:
+      bold: false
+      italic: true
+      strike: true
+      link: true
+      subscript: true
+      superscript: true
+      underline: true
+      code: true
+      undo: true
+      redo: true
+      removeformat: true
+      copyformatting: true
+    comment: ""
+    context: {}
+urlTranslation: index.html
+A-long-piece-of-text-that-should-be-a-textarea-not-just-a-simple-text-input%2E-Some-extra-words-for-length%2E: ""
+a-rosey-id-with-a-translation-to-preserve: An existing translation to preserve.
+a-rosey-id-with-no-translation: ""
+a-simple-text-input: ""
+common:read-more: ""
+rcc-markdown:a-nested-list-item-with-markdown-options: ""
+second-markdown-key:a-different-nested-list-item-with-markdown-options: ""

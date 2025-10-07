@@ -1,0 +1,23 @@
+_inputs:
+  $:
+    type: object
+    comment: ""
+    options:
+      place_groups_below: false
+      groups:
+        - heading: Still to translate (fr-FR)
+          comment: ""
+          inputs: []
+        - heading: Already translated (fr-FR)
+          comment: ""
+          inputs:
+            - a-simple-text-input
+  a-simple-text-input:
+    label: A simple text input
+    hidden: false
+    type: text
+    options: {}
+    comment: ""
+    context: {}
+urlTranslation: a-dir/a-page-with-duplicate-translation.html
+a-simple-text-input: ""

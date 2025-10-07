@@ -16,15 +16,15 @@ dotenv.config();
 export async function generateLocales(configData) {
   const locales = configData.locales;
   // Loop through locales
-  for (let i = 0; i < locales.length; i++) {
-    const locale = locales[i];
-
-    try {
-      await generateLocale(locale, configData);
-    } catch (err) {
-      console.error(`❌ Encountered an error translating ${locale}:`, err);
-    }
-  }
+  await Promise.all(
+    locales.map(async (locale) => {
+      try {
+        await generateLocale(locale, configData);
+      } catch (err) {
+        console.error(`❌ Encountered an error translating ${locale}:`, err);
+      }
+    })
+  );
 }
 
 async function generateLocale(locale, configData) {
@@ -50,8 +50,8 @@ async function generateLocale(locale, configData) {
   const baseUrlsFile = await fs.promises.readFile(
     handleConfigPaths(configData.rosey_paths.rosey_base_urls_file_path)
   );
+  const indexHtmlPagesOnly = configData.index_html_pages_only ?? false;
   const baseUrlFileData = JSON.parse(baseUrlsFile.toString("utf-8")).keys;
-  const namespacePagesArray = configData.namespace_pages;
   const markdownNamespaceArray = configData.markdown_keys;
 
   // Update logs
@@ -103,7 +103,7 @@ async function generateLocale(locale, configData) {
         oldUrlsLocaleData,
         baseFileData,
         baseUrlFileData,
-        namespacePagesArray
+        indexHtmlPagesOnly
       );
 
       localeDataEntries[filename] = response;
@@ -181,6 +181,10 @@ async function generateLocale(locale, configData) {
         // add that to keys to update to sync duplicate keys on other pages
         if (data[key].isNewlyClearedTranslation) {
           keysToUpdate[key] = "";
+          localeData[key] = {
+            original: data[key].original,
+            value: data[key].original,
+          };
         }
       }
     })
@@ -293,7 +297,7 @@ async function processTranslation(
   oldUrlsLocaleData,
   baseFileData,
   baseUrlFileData,
-  namespacePagesArray
+  indexHtmlPagesOnly
 ) {
   const localeData = {};
   const localeUrlsData = {};
@@ -316,8 +320,7 @@ async function processTranslation(
 
   const translationHtmlFilename = getTranslationHtmlFilename(
     translationFilename,
-    baseUrlFileData,
-    namespacePagesArray
+    indexHtmlPagesOnly
   );
 
   // Check if theres a translation and
