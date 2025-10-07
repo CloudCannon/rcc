@@ -78,19 +78,26 @@ async function readConfigFile(configFilePath) {
 }
 
 function getTranslationHtmlFilename(translationFilename, indexHtmlPagesOnly) {
-  const htmlFileName = indexHtmlPagesOnly
-    ? translationFilename.replace(".yaml", "/index.html")
-    : translationFilename.replace(".yaml", ".html");
+  if (!translationFilename) {
+    return "";
+  }
 
-  return htmlFileName;
+  if (indexHtmlPagesOnly) {
+    return translationFilename
+      .replace("index.yaml", "index.html")
+      .replace(".yaml", "/index.html");
+  }
+
+  return translationFilename.replace(".yaml", ".html");
 }
 
 function getYamlFileName(fileName, indexHtmlPagesOnly) {
   if (!fileName) {
     return "";
   }
+
   if (indexHtmlPagesOnly) {
-    return fileName.replace("/index.html", ".yaml");
+    return fileName.replace("/index.html", ".yaml").replace(".html", ".yaml");
   }
 
   return fileName.replace(".html", ".yaml");
@@ -100,6 +107,7 @@ function getPageString(page) {
   if (page === "index.html") {
     return page;
   }
+
   return page.replace(".html", "").replace("index", "");
 }
 
@@ -200,7 +208,7 @@ async function archiveOldTranslationFiles(
       // Archive the page if it no longer exists in base.json
       if (!pages.includes(fileNameHtmlFormatted)) {
         console.log(
-          `🧹 Archiving translation file: ${filePath}, as it no longer exists in the pages in our base.json, or namespaced pages.`
+          `🧹 Archiving translation file: ${filePath}, as the page ${fileNameHtmlFormatted} no longer exists in the pages in our base.json, and it is not a namespaced page.`
         );
 
         // Create the archive dir to move the old files to

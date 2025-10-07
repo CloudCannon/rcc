@@ -56,8 +56,8 @@ export default function generateDefaultConfigFile() {
     namespace_pages:
       - common
 
-    # If built pages are like /about/index.html set this to true
-    # If built pages are like /about.html set this to false
+    # If pages are built like /about/index.html set this to true
+    # If pages are built like /about.html set this to false
     index_html_pages_only: true
 
     # Tells the RCC if you're storing the files Rosey expects in a different location to the default. 
@@ -168,7 +168,7 @@ export default function generateDefaultConfigFile() {
           namespaces to your html.
       index_html_pages_only:
         type: switch
-        comment: If pages are built like /about/index.html, set this to false. If pages are built like /about.html, set this to true.
+        comment: If pages are built like /about/index.html set this to true. If pages are built like /about.html set this to false.
       rosey_paths:
         type: object
         options:
