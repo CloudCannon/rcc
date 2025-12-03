@@ -1,6 +1,6 @@
 # Rosey CloudCannon Connector
 
-See more detailed documentation [here](https://rad-turnip.cloudvent.net/).
+See more detailed documentation [here](https://rosey.cc/).
 
 
 The Rosey CloudCannon Connector provides a way to enter and edit translations used by [Rosey](https://rosey.app/) inside of CloudCannon's CMS. It then turns these translations into the JSON files that Rosey uses in tandem with your site's tagged HTML to generate a multilingual site. 
