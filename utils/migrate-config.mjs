@@ -135,7 +135,7 @@ function checkForMarkdownKeys(configData) {
       "⚠️ No 'index_html_pages_only' key found in the rcc.yaml config file."
     );
 
-    configData.index_html_pages_only = false;
+    configData.index_html_pages_only = true;
 
     configData._inputs.index_html_pages_only = {
       type: "switch",
