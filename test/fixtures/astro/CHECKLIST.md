@@ -38,6 +38,10 @@ headlessly).
       losing that entry is the scenario resetting, not a bug.
 - [ ] **Duplicates** (`/duplicates/`): edit one `shared` paragraph → the other
       updates to match. The sibling with no `data-rosey` is **not** editable.
+- [ ] **Duplicate + stale**: with a stale duplicate pair and the panel open, edit
+      one instance → its row goes, and the sibling's remaining row relabels to the
+      new text (~150ms later, when the sibling sync lands) rather than keeping the
+      pre-edit label.
 - [ ] **Nested** (`/nested/`): the deep element is editable and its key resolves
       to `nested:section:card:*` (verbose logs show it with `?data-rcc-verbose`).
 - [ ] **Index** (`/`): the no-`data-rosey` paragraph is **not** editable.

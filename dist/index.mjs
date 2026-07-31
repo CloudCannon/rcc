@@ -400,7 +400,11 @@ var listDirty = true;
 function removeStaleRow(t) {
   const row = staleRows.get(t);
   staleRows.delete(t);
-  if (!listDirty) row?.remove();
+  if (!listDirty) row?.wrap.remove();
+}
+function relabelStaleRow(t, html) {
+  if (listDirty || !t.stale) return;
+  staleRows.get(t)?.relabel(truncateText(stripToText(html) || t.roseyKey, 48));
 }
 function showCaughtUp(panel) {
   const count = panel.querySelector("[data-rcc-panel-count]");
@@ -643,7 +647,13 @@ function buildStaleRow(t) {
   row.appendChild(resolveBtn);
   itemWrap.appendChild(row);
   itemWrap.appendChild(diff);
-  staleRows.set(t, itemWrap);
+  staleRows.set(t, {
+    wrap: itemWrap,
+    relabel: (text) => {
+      preview.textContent = text;
+      scrollBtn.setAttribute("aria-label", `Go to \u201C${text}\u201D`);
+    }
+  });
   return itemWrap;
 }
 function markStaleElement(t) {
@@ -1566,6 +1576,7 @@ async function switchLocaleInner(locale, myGeneration) {
           if (!t.editor || t.focused) continue;
           try {
             t.editor.setContent(content);
+            relabelStaleRow(t, content);
           } catch (err) {
             warn(`[${t.roseyKey}] failed to sync duplicate sibling:`, err);
           }
@@ -1667,7 +1678,9 @@ async function switchLocaleInner(locale, myGeneration) {
       try {
         const data = await freshFile.data.get({ slug: t.roseyKey });
         t.hasLocaleEntry = data != null;
-        t.editor.setContent(resolveDisplayValue(data, t));
+        const display = resolveDisplayValue(data, t);
+        t.editor.setContent(display);
+        relabelStaleRow(t, display);
         if (opts.force) {
           t.baseOriginal = data?._base_original ?? null;
           t.localeOriginal = data?.original ?? null;

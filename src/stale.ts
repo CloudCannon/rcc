@@ -186,10 +186,11 @@ function currentSourceHtml(t: TrackedElement): string {
 // Holds the panel's brief "all caught up" state after the last item clears.
 let caughtUpTimer: ReturnType<typeof setTimeout> | null = null;
 
-// Resolving drops one row rather than rebuilding the list, so the panel keeps its
-// scroll position and any other expanded diffs — and marking everything reviewed
-// stays linear instead of rebuilding every remaining row per item.
-const staleRows = new WeakMap<TrackedElement, HTMLElement>();
+// Handles for a built row so a resolve can drop or relabel just that one: the
+// panel keeps its scroll position and open diffs, and marking everything reviewed
+// stays linear. relabel closes over both the label and the button's aria-label.
+type StaleRow = { wrap: HTMLElement; relabel: (text: string) => void };
+const staleRows = new WeakMap<TrackedElement, StaleRow>();
 
 // Rows are only worth building while the panel is on screen. A recount behind a
 // closed panel marks them dirty and flushStaleList catches up on open.
@@ -199,7 +200,18 @@ function removeStaleRow(t: TrackedElement): void {
 	const row = staleRows.get(t);
 	staleRows.delete(t);
 	// When dirty, whatever is on screen gets rebuilt wholesale anyway.
-	if (!listDirty) row?.remove();
+	if (!listDirty) row?.wrap.remove();
+}
+
+/**
+ * Re-label the row for `t` when its on-page text is replaced — a duplicate-key
+ * sibling picking up an edit, or an external change. Takes the HTML being set
+ * instead of reading the DOM, so it doesn't matter whether the editor has
+ * rendered yet. Text only, so scroll position and open diffs survive.
+ */
+export function relabelStaleRow(t: TrackedElement, html: string): void {
+	if (listDirty || !t.stale) return;
+	staleRows.get(t)?.relabel(truncateText(stripToText(html) || t.roseyKey, 48));
 }
 
 function showCaughtUp(panel: HTMLElement): void {
@@ -486,7 +498,13 @@ function buildStaleRow(t: TrackedElement): HTMLElement {
 	row.appendChild(resolveBtn);
 	itemWrap.appendChild(row);
 	itemWrap.appendChild(diff);
-	staleRows.set(t, itemWrap);
+	staleRows.set(t, {
+		wrap: itemWrap,
+		relabel: (text) => {
+			preview.textContent = text;
+			scrollBtn.setAttribute("aria-label", `Go to “${text}”`);
+		},
+	});
 	return itemWrap;
 }
 

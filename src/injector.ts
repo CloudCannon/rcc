@@ -22,6 +22,7 @@ import {
 	normalizeSource,
 	recountStale,
 	refreshStale,
+	relabelStaleRow,
 	resolveStale,
 	updateStaleBadge,
 	updateStaleList,
@@ -422,6 +423,9 @@ async function switchLocaleInner(
 					if (!t.editor || t.focused) continue;
 					try {
 						t.editor.setContent(content);
+						// A sibling can still be listed as stale (resolving the edited
+						// element clears only that one), so keep its row label in step.
+						relabelStaleRow(t, content);
 					} catch (err) {
 						warn(`[${t.roseyKey}] failed to sync duplicate sibling:`, err);
 					}
@@ -567,7 +571,9 @@ async function switchLocaleInner(
 			try {
 				const data = await freshFile.data.get({ slug: t.roseyKey });
 				t.hasLocaleEntry = data != null;
-				t.editor.setContent(resolveDisplayValue(data, t));
+				const display = resolveDisplayValue(data, t);
+				t.editor.setContent(display);
+				relabelStaleRow(t, display);
 				if (opts.force) {
 					t.baseOriginal = data?._base_original ?? null;
 					t.localeOriginal = data?.original ?? null;
