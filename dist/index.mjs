@@ -289,10 +289,15 @@ function updateStaleBadge() {
     badge.style.display = "none";
   }
 }
-function recountStale() {
+function recountStale(resolved) {
   state.staleCount = tracked.filter((t) => t.stale).length;
   updateStaleBadge();
-  updateStaleList();
+  if (resolved) {
+    syncStaleList();
+    removeStaleRow(resolved);
+  } else {
+    updateStaleList();
+  }
   announceStaleStatus();
 }
 function announceStaleStatus() {
@@ -390,6 +395,13 @@ function currentSourceHtml(t) {
   return t.baseOriginal ?? t.originalContent;
 }
 var caughtUpTimer = null;
+var staleRows = /* @__PURE__ */ new WeakMap();
+var listDirty = true;
+function removeStaleRow(t) {
+  const row = staleRows.get(t);
+  staleRows.delete(t);
+  if (!listDirty) row?.remove();
+}
 function showCaughtUp(panel) {
   const count = panel.querySelector("[data-rcc-panel-count]");
   if (count) count.textContent = "All caught up";
@@ -413,27 +425,11 @@ function showCaughtUp(panel) {
     caughtUpTimer = null;
   }, 1600);
 }
-function updateStaleList() {
-  const panel = document.getElementById("rcc-stale-panel");
-  const allSubmenus = document.querySelectorAll(
-    "[data-rcc-stale-submenu]"
-  );
-  for (const sub of allSubmenus) {
-    if (sub.dataset.rccStaleSubmenu !== state.currentLocale) {
-      sub.style.display = "none";
-      const ch = sub.querySelector("[data-rcc-stale-chevron]");
-      if (ch) ch.style.transform = "rotate(0deg)";
-    }
-  }
-  if (!state.currentLocale) {
-    if (panel) panel.style.display = "none";
-    return;
-  }
+function syncStaleChrome(count, panel) {
   const submenu = document.querySelector(
     `[data-rcc-stale-submenu="${state.currentLocale}"]`
   );
-  const staleItems = tracked.filter((t) => t.stale);
-  if (staleItems.length === 0) {
+  if (count === 0) {
     if (submenu) {
       submenu.style.display = "none";
       const ch = submenu.querySelector("[data-rcc-stale-chevron]");
@@ -454,165 +450,201 @@ function updateStaleList() {
     const countEl = submenu.querySelector(
       "[data-rcc-stale-count]"
     );
-    if (countEl) countEl.textContent = outOfDateLabel(staleItems.length);
+    if (countEl) countEl.textContent = outOfDateLabel(count);
   }
   if (!panel) return;
   const panelCount = panel.querySelector("[data-rcc-panel-count]");
-  if (panelCount) panelCount.textContent = outOfDateLabel(staleItems.length);
-  const list = panel.querySelector("[data-rcc-stale-items]");
+  if (panelCount) panelCount.textContent = outOfDateLabel(count);
+  const resolveAll = panel.querySelector("[data-rcc-resolve-all]");
+  if (resolveAll) resolveAll.style.display = "block";
+}
+function syncStaleList() {
+  const panel = document.getElementById("rcc-stale-panel");
+  const allSubmenus = document.querySelectorAll(
+    "[data-rcc-stale-submenu]"
+  );
+  for (const sub of allSubmenus) {
+    if (sub.dataset.rccStaleSubmenu !== state.currentLocale) {
+      sub.style.display = "none";
+      const ch = sub.querySelector("[data-rcc-stale-chevron]");
+      if (ch) ch.style.transform = "rotate(0deg)";
+    }
+  }
+  if (!state.currentLocale) {
+    if (panel) panel.style.display = "none";
+    return null;
+  }
+  const staleItems = tracked.filter((t) => t.stale);
+  syncStaleChrome(staleItems.length, panel);
+  if (staleItems.length === 0 || !panel) return null;
+  if (panel.style.display === "none") {
+    listDirty = true;
+    return null;
+  }
+  return staleItems;
+}
+function rebuildStaleRows(items) {
+  const list = document.querySelector("[data-rcc-stale-items]");
   if (!list) return;
   list.innerHTML = "";
-  for (const t of staleItems) {
-    const textPreview = truncateText(
-      t.element.textContent?.trim() || t.roseyKey,
-      48
-    );
-    const itemWrap = document.createElement("div");
-    Object.assign(itemWrap.style, {
-      display: "flex",
-      flexDirection: "column",
-      borderRadius: "4px"
-    });
-    const row = document.createElement("div");
-    Object.assign(row.style, {
-      display: "flex",
-      alignItems: "stretch",
-      borderRadius: "4px",
-      transition: "background 0.15s"
-    });
-    row.addEventListener("mouseenter", () => {
-      row.style.background = SLATE_HOVER;
-    });
-    row.addEventListener("mouseleave", () => {
-      row.style.background = "transparent";
-    });
-    const scrollBtn = document.createElement("button");
-    scrollBtn.type = "button";
-    scrollBtn.setAttribute("aria-label", `Go to \u201C${textPreview}\u201D`);
-    Object.assign(scrollBtn.style, {
-      display: "flex",
-      alignItems: "center",
-      flex: "1",
-      minWidth: "0",
-      padding: "7px 8px",
-      border: "none",
-      cursor: "pointer",
-      fontSize: "12px",
-      textAlign: "left",
-      background: "transparent",
-      color: "#1e293b",
-      fontFamily: "system-ui, sans-serif"
-    });
-    const preview = document.createElement("span");
-    Object.assign(preview.style, {
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap"
-    });
-    preview.textContent = textPreview;
-    scrollBtn.appendChild(preview);
-    scrollBtn.addEventListener("click", () => {
-      t.element.scrollIntoView({ block: "center" });
-      t.element.focus({ preventScroll: true });
-    });
-    const resolveBtn = document.createElement("button");
-    resolveBtn.type = "button";
-    resolveBtn.title = "Mark as reviewed";
-    resolveBtn.setAttribute("aria-label", "Mark as reviewed");
-    Object.assign(resolveBtn.style, {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "0 8px",
-      border: "none",
-      borderRadius: "4px",
-      cursor: "pointer",
-      background: "transparent",
-      // Dark enough to read as a control, not decoration.
-      color: "#94a3b8",
-      transition: "color 0.15s, background 0.15s",
-      flexShrink: "0"
-    });
-    resolveBtn.innerHTML = '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5 L4.5 9 L10 3"/></svg>';
-    const resolveHi = () => {
-      resolveBtn.style.color = CC_BLUE;
-      resolveBtn.style.background = CC_BLUE_TINT;
-    };
-    const resolveLo = () => {
-      resolveBtn.style.color = "#94a3b8";
-      resolveBtn.style.background = "transparent";
-    };
-    resolveBtn.addEventListener("mouseenter", resolveHi);
-    resolveBtn.addEventListener("mouseleave", resolveLo);
-    resolveBtn.addEventListener("focus", resolveHi);
-    resolveBtn.addEventListener("blur", resolveLo);
-    resolveBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (state.activeFile) resolveStale(t, state.activeFile);
-    });
-    const diff = document.createElement("div");
-    Object.assign(diff.style, {
-      display: "none",
-      padding: "0 8px 8px",
-      fontSize: "11px",
-      lineHeight: "1.5",
-      wordBreak: "break-word"
-    });
-    const expandBtn = document.createElement("button");
-    expandBtn.type = "button";
-    expandBtn.setAttribute("aria-label", "Show what changed");
-    expandBtn.setAttribute("aria-expanded", "false");
-    Object.assign(expandBtn.style, {
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      padding: "0 4px",
-      border: "none",
-      background: "transparent",
-      color: "#94a3b8",
-      cursor: "pointer",
-      flexShrink: "0",
-      transition: "transform 0.15s"
-    });
-    expandBtn.innerHTML = '<svg aria-hidden="true" width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2 L8 6 L4 10"/></svg>';
-    let diffBuilt = false;
-    expandBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      const open = diff.style.display === "none";
-      diff.style.display = open ? "block" : "none";
-      expandBtn.style.transform = open ? "rotate(90deg)" : "rotate(0deg)";
-      expandBtn.setAttribute("aria-expanded", String(open));
-      if (open && !diffBuilt) {
-        diffBuilt = true;
-        const label = document.createElement("div");
-        label.textContent = "Source change";
-        Object.assign(label.style, {
-          fontSize: "9px",
-          textTransform: "uppercase",
-          letterSpacing: "0.05em",
-          color: "#9ca3af",
-          marginBottom: "3px"
-        });
-        diff.appendChild(label);
-        renderInlineDiff(
-          diff,
-          stripToText(t.localeOriginal ?? ""),
-          stripToText(currentSourceHtml(t))
-        );
-      }
-    });
-    row.appendChild(scrollBtn);
-    row.appendChild(expandBtn);
-    row.appendChild(resolveBtn);
-    itemWrap.appendChild(row);
-    itemWrap.appendChild(diff);
-    list.appendChild(itemWrap);
-  }
-  const resolveAllBtn = panel.querySelector(
-    "[data-rcc-resolve-all]"
+  for (const t of items) list.appendChild(buildStaleRow(t));
+  listDirty = false;
+}
+function updateStaleList() {
+  const items = syncStaleList();
+  if (items) rebuildStaleRows(items);
+}
+function flushStaleList() {
+  if (!listDirty) return;
+  const items = tracked.filter((t) => t.stale);
+  if (items.length > 0) rebuildStaleRows(items);
+}
+function buildStaleRow(t) {
+  const textPreview = truncateText(
+    t.element.textContent?.trim() || t.roseyKey,
+    48
   );
-  if (resolveAllBtn)
-    resolveAllBtn.style.display = staleItems.length > 0 ? "block" : "none";
+  const itemWrap = document.createElement("div");
+  Object.assign(itemWrap.style, {
+    display: "flex",
+    flexDirection: "column",
+    borderRadius: "4px"
+  });
+  const row = document.createElement("div");
+  Object.assign(row.style, {
+    display: "flex",
+    alignItems: "stretch",
+    borderRadius: "4px",
+    transition: "background 0.15s"
+  });
+  row.addEventListener("mouseenter", () => {
+    row.style.background = SLATE_HOVER;
+  });
+  row.addEventListener("mouseleave", () => {
+    row.style.background = "transparent";
+  });
+  const scrollBtn = document.createElement("button");
+  scrollBtn.type = "button";
+  scrollBtn.setAttribute("aria-label", `Go to \u201C${textPreview}\u201D`);
+  Object.assign(scrollBtn.style, {
+    display: "flex",
+    alignItems: "center",
+    flex: "1",
+    minWidth: "0",
+    padding: "7px 8px",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "12px",
+    textAlign: "left",
+    background: "transparent",
+    color: "#1e293b",
+    fontFamily: "system-ui, sans-serif"
+  });
+  const preview = document.createElement("span");
+  Object.assign(preview.style, {
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    whiteSpace: "nowrap"
+  });
+  preview.textContent = textPreview;
+  scrollBtn.appendChild(preview);
+  scrollBtn.addEventListener("click", () => {
+    t.element.scrollIntoView({ block: "center" });
+    t.element.focus({ preventScroll: true });
+  });
+  const resolveBtn = document.createElement("button");
+  resolveBtn.type = "button";
+  resolveBtn.title = "Mark as reviewed";
+  resolveBtn.setAttribute("aria-label", "Mark as reviewed");
+  Object.assign(resolveBtn.style, {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 8px",
+    border: "none",
+    borderRadius: "4px",
+    cursor: "pointer",
+    background: "transparent",
+    // Dark enough to read as a control, not decoration.
+    color: "#94a3b8",
+    transition: "color 0.15s, background 0.15s",
+    flexShrink: "0"
+  });
+  resolveBtn.innerHTML = '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5 L4.5 9 L10 3"/></svg>';
+  const resolveHi = () => {
+    resolveBtn.style.color = CC_BLUE;
+    resolveBtn.style.background = CC_BLUE_TINT;
+  };
+  const resolveLo = () => {
+    resolveBtn.style.color = "#94a3b8";
+    resolveBtn.style.background = "transparent";
+  };
+  resolveBtn.addEventListener("mouseenter", resolveHi);
+  resolveBtn.addEventListener("mouseleave", resolveLo);
+  resolveBtn.addEventListener("focus", resolveHi);
+  resolveBtn.addEventListener("blur", resolveLo);
+  resolveBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    if (state.activeFile) resolveStale(t, state.activeFile);
+  });
+  const diff = document.createElement("div");
+  Object.assign(diff.style, {
+    display: "none",
+    padding: "0 8px 8px",
+    fontSize: "11px",
+    lineHeight: "1.5",
+    wordBreak: "break-word"
+  });
+  const expandBtn = document.createElement("button");
+  expandBtn.type = "button";
+  expandBtn.setAttribute("aria-label", "Show what changed");
+  expandBtn.setAttribute("aria-expanded", "false");
+  Object.assign(expandBtn.style, {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 4px",
+    border: "none",
+    background: "transparent",
+    color: "#94a3b8",
+    cursor: "pointer",
+    flexShrink: "0",
+    transition: "transform 0.15s"
+  });
+  expandBtn.innerHTML = '<svg aria-hidden="true" width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2 L8 6 L4 10"/></svg>';
+  let diffBuilt = false;
+  expandBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const open = diff.style.display === "none";
+    diff.style.display = open ? "block" : "none";
+    expandBtn.style.transform = open ? "rotate(90deg)" : "rotate(0deg)";
+    expandBtn.setAttribute("aria-expanded", String(open));
+    if (open && !diffBuilt) {
+      diffBuilt = true;
+      const label = document.createElement("div");
+      label.textContent = "Source change";
+      Object.assign(label.style, {
+        fontSize: "9px",
+        textTransform: "uppercase",
+        letterSpacing: "0.05em",
+        color: "#9ca3af",
+        marginBottom: "3px"
+      });
+      diff.appendChild(label);
+      renderInlineDiff(
+        diff,
+        stripToText(t.localeOriginal ?? ""),
+        stripToText(currentSourceHtml(t))
+      );
+    }
+  });
+  row.appendChild(scrollBtn);
+  row.appendChild(expandBtn);
+  row.appendChild(resolveBtn);
+  itemWrap.appendChild(row);
+  itemWrap.appendChild(diff);
+  staleRows.set(t, itemWrap);
+  return itemWrap;
 }
 function markStaleElement(t) {
   t.element.dataset.rccStale = "";
@@ -639,7 +671,7 @@ function refreshStale(t, data) {
 }
 function unmarkStaleElement(t) {
   clearStaleMarking(t);
-  recountStale();
+  recountStale(t);
 }
 function resolveStale(t, file) {
   if (!t.stale) return;
@@ -1124,6 +1156,7 @@ function injectSwitcher(locales, onSelect) {
       chevron.style.transform = open ? "rotate(90deg)" : "rotate(0deg)";
   }
   function openStalePanel() {
+    flushStaleList();
     positionStalePanel();
     setStaleToggleState(true);
   }

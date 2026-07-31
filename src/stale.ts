@@ -18,10 +18,19 @@ export function updateStaleBadge(): void {
 	}
 }
 
-export function recountStale(): void {
+/**
+ * Recount and refresh the indicators. Pass the element that just resolved to drop
+ * its row in place instead of rebuilding the whole list.
+ */
+export function recountStale(resolved?: TrackedElement): void {
 	state.staleCount = tracked.filter((t) => t.stale).length;
 	updateStaleBadge();
-	updateStaleList();
+	if (resolved) {
+		syncStaleList();
+		removeStaleRow(resolved);
+	} else {
+		updateStaleList();
+	}
 	announceStaleStatus();
 }
 
@@ -177,6 +186,22 @@ function currentSourceHtml(t: TrackedElement): string {
 // Holds the panel's brief "all caught up" state after the last item clears.
 let caughtUpTimer: ReturnType<typeof setTimeout> | null = null;
 
+// Resolving drops one row rather than rebuilding the list, so the panel keeps its
+// scroll position and any other expanded diffs — and marking everything reviewed
+// stays linear instead of rebuilding every remaining row per item.
+const staleRows = new WeakMap<TrackedElement, HTMLElement>();
+
+// Rows are only worth building while the panel is on screen. A recount behind a
+// closed panel marks them dirty and flushStaleList catches up on open.
+let listDirty = true;
+
+function removeStaleRow(t: TrackedElement): void {
+	const row = staleRows.get(t);
+	staleRows.delete(t);
+	// When dirty, whatever is on screen gets rebuilt wholesale anyway.
+	if (!listDirty) row?.remove();
+}
+
 function showCaughtUp(panel: HTMLElement): void {
 	const count = panel.querySelector<HTMLElement>("[data-rcc-panel-count]");
 	if (count) count.textContent = "All caught up";
@@ -204,31 +229,14 @@ function showCaughtUp(panel: HTMLElement): void {
 	}, 1600);
 }
 
-export function updateStaleList(): void {
-	const panel = document.getElementById("rcc-stale-panel");
-
-	const allSubmenus = document.querySelectorAll<HTMLElement>(
-		"[data-rcc-stale-submenu]",
-	);
-	for (const sub of allSubmenus) {
-		if (sub.dataset.rccStaleSubmenu !== state.currentLocale) {
-			sub.style.display = "none";
-			const ch = sub.querySelector<HTMLElement>("[data-rcc-stale-chevron]");
-			if (ch) ch.style.transform = "rotate(0deg)";
-		}
-	}
-
-	if (!state.currentLocale) {
-		if (panel) panel.style.display = "none";
-		return;
-	}
-
+// Everything in the panel except the rows: the locale submenu toggle, the two
+// counts, the resolve-all button. Cheap, so it runs on every recount.
+function syncStaleChrome(count: number, panel: HTMLElement | null): void {
 	const submenu = document.querySelector<HTMLElement>(
 		`[data-rcc-stale-submenu="${state.currentLocale}"]`,
 	);
 
-	const staleItems = tracked.filter((t) => t.stale);
-	if (staleItems.length === 0) {
+	if (count === 0) {
 		if (submenu) {
 			submenu.style.display = "none";
 			const ch = submenu.querySelector<HTMLElement>("[data-rcc-stale-chevron]");
@@ -253,187 +261,233 @@ export function updateStaleList(): void {
 		const countEl = submenu.querySelector<HTMLElement>(
 			"[data-rcc-stale-count]",
 		);
-		if (countEl) countEl.textContent = outOfDateLabel(staleItems.length);
+		if (countEl) countEl.textContent = outOfDateLabel(count);
 	}
 
 	if (!panel) return;
 
 	const panelCount = panel.querySelector<HTMLElement>("[data-rcc-panel-count]");
-	if (panelCount) panelCount.textContent = outOfDateLabel(staleItems.length);
+	if (panelCount) panelCount.textContent = outOfDateLabel(count);
 
-	const list = panel.querySelector<HTMLElement>("[data-rcc-stale-items]");
-	if (!list) return;
-	list.innerHTML = "";
+	const resolveAll = panel.querySelector<HTMLElement>("[data-rcc-resolve-all]");
+	if (resolveAll) resolveAll.style.display = "block";
+}
 
-	for (const t of staleItems) {
-		// Key is only a fallback when the element has no visible text.
-		const textPreview = truncateText(
-			t.element.textContent?.trim() || t.roseyKey,
-			48,
-		);
+// Refresh everything cheap, and report the items whose rows need building — or
+// null when there is nothing to draw.
+function syncStaleList(): TrackedElement[] | null {
+	const panel = document.getElementById("rcc-stale-panel");
 
-		const itemWrap = document.createElement("div");
-		Object.assign(itemWrap.style, {
-			display: "flex",
-			flexDirection: "column",
-			borderRadius: "4px",
-		});
-
-		const row = document.createElement("div");
-		Object.assign(row.style, {
-			display: "flex",
-			alignItems: "stretch",
-			borderRadius: "4px",
-			transition: "background 0.15s",
-		});
-		row.addEventListener("mouseenter", () => {
-			row.style.background = SLATE_HOVER;
-		});
-		row.addEventListener("mouseleave", () => {
-			row.style.background = "transparent";
-		});
-
-		const scrollBtn = document.createElement("button");
-		scrollBtn.type = "button";
-		scrollBtn.setAttribute("aria-label", `Go to “${textPreview}”`);
-		Object.assign(scrollBtn.style, {
-			display: "flex",
-			alignItems: "center",
-			flex: "1",
-			minWidth: "0",
-			padding: "7px 8px",
-			border: "none",
-			cursor: "pointer",
-			fontSize: "12px",
-			textAlign: "left",
-			background: "transparent",
-			color: "#1e293b",
-			fontFamily: "system-ui, sans-serif",
-		});
-
-		const preview = document.createElement("span");
-		Object.assign(preview.style, {
-			overflow: "hidden",
-			textOverflow: "ellipsis",
-			whiteSpace: "nowrap",
-		});
-		preview.textContent = textPreview;
-
-		scrollBtn.appendChild(preview);
-		scrollBtn.addEventListener("click", () => {
-			// Center first, THEN focus: CC's editor scrolls the caret into view on
-			// focus, which would override the centering and leave the element only
-			// just in view. Centered first, that focus-scroll is a no-op.
-			t.element.scrollIntoView({ block: "center" });
-			t.element.focus({ preventScroll: true });
-		});
-
-		const resolveBtn = document.createElement("button");
-		resolveBtn.type = "button";
-		resolveBtn.title = "Mark as reviewed";
-		resolveBtn.setAttribute("aria-label", "Mark as reviewed");
-		Object.assign(resolveBtn.style, {
-			display: "flex",
-			alignItems: "center",
-			justifyContent: "center",
-			padding: "0 8px",
-			border: "none",
-			borderRadius: "4px",
-			cursor: "pointer",
-			background: "transparent",
-			// Dark enough to read as a control, not decoration.
-			color: "#94a3b8",
-			transition: "color 0.15s, background 0.15s",
-			flexShrink: "0",
-		});
-		resolveBtn.innerHTML =
-			'<svg aria-hidden="true" width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5 L4.5 9 L10 3"/></svg>';
-		const resolveHi = () => {
-			resolveBtn.style.color = CC_BLUE;
-			resolveBtn.style.background = CC_BLUE_TINT;
-		};
-		const resolveLo = () => {
-			resolveBtn.style.color = "#94a3b8";
-			resolveBtn.style.background = "transparent";
-		};
-		resolveBtn.addEventListener("mouseenter", resolveHi);
-		resolveBtn.addEventListener("mouseleave", resolveLo);
-		resolveBtn.addEventListener("focus", resolveHi);
-		resolveBtn.addEventListener("blur", resolveLo);
-		resolveBtn.addEventListener("click", (e) => {
-			e.stopPropagation();
-			if (state.activeFile) resolveStale(t, state.activeFile);
-		});
-
-		// Expandable "what changed" diff, built lazily on first open.
-		const diff = document.createElement("div");
-		Object.assign(diff.style, {
-			display: "none",
-			padding: "0 8px 8px",
-			fontSize: "11px",
-			lineHeight: "1.5",
-			wordBreak: "break-word",
-		});
-
-		const expandBtn = document.createElement("button");
-		expandBtn.type = "button";
-		expandBtn.setAttribute("aria-label", "Show what changed");
-		expandBtn.setAttribute("aria-expanded", "false");
-		Object.assign(expandBtn.style, {
-			display: "flex",
-			alignItems: "center",
-			justifyContent: "center",
-			padding: "0 4px",
-			border: "none",
-			background: "transparent",
-			color: "#94a3b8",
-			cursor: "pointer",
-			flexShrink: "0",
-			transition: "transform 0.15s",
-		});
-		expandBtn.innerHTML =
-			'<svg aria-hidden="true" width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2 L8 6 L4 10"/></svg>';
-
-		let diffBuilt = false;
-		expandBtn.addEventListener("click", (e) => {
-			e.stopPropagation();
-			const open = diff.style.display === "none";
-			diff.style.display = open ? "block" : "none";
-			expandBtn.style.transform = open ? "rotate(90deg)" : "rotate(0deg)";
-			expandBtn.setAttribute("aria-expanded", String(open));
-			if (open && !diffBuilt) {
-				diffBuilt = true;
-				const label = document.createElement("div");
-				label.textContent = "Source change";
-				Object.assign(label.style, {
-					fontSize: "9px",
-					textTransform: "uppercase",
-					letterSpacing: "0.05em",
-					color: "#9ca3af",
-					marginBottom: "3px",
-				});
-				diff.appendChild(label);
-				renderInlineDiff(
-					diff,
-					stripToText(t.localeOriginal ?? ""),
-					stripToText(currentSourceHtml(t)),
-				);
-			}
-		});
-
-		row.appendChild(scrollBtn);
-		row.appendChild(expandBtn);
-		row.appendChild(resolveBtn);
-		itemWrap.appendChild(row);
-		itemWrap.appendChild(diff);
-		list.appendChild(itemWrap);
+	const allSubmenus = document.querySelectorAll<HTMLElement>(
+		"[data-rcc-stale-submenu]",
+	);
+	for (const sub of allSubmenus) {
+		if (sub.dataset.rccStaleSubmenu !== state.currentLocale) {
+			sub.style.display = "none";
+			const ch = sub.querySelector<HTMLElement>("[data-rcc-stale-chevron]");
+			if (ch) ch.style.transform = "rotate(0deg)";
+		}
 	}
 
-	const resolveAllBtn = panel.querySelector<HTMLElement>(
-		"[data-rcc-resolve-all]",
+	if (!state.currentLocale) {
+		if (panel) panel.style.display = "none";
+		return null;
+	}
+
+	const staleItems = tracked.filter((t) => t.stale);
+	syncStaleChrome(staleItems.length, panel);
+	if (staleItems.length === 0 || !panel) return null;
+
+	if (panel.style.display === "none") {
+		listDirty = true;
+		return null;
+	}
+	return staleItems;
+}
+
+function rebuildStaleRows(items: TrackedElement[]): void {
+	const list = document.querySelector<HTMLElement>("[data-rcc-stale-items]");
+	if (!list) return;
+	list.innerHTML = "";
+	for (const t of items) list.appendChild(buildStaleRow(t));
+	listDirty = false;
+}
+
+export function updateStaleList(): void {
+	const items = syncStaleList();
+	if (items) rebuildStaleRows(items);
+}
+
+/** Build rows a closed-panel recount deferred. Call before showing the panel. */
+export function flushStaleList(): void {
+	if (!listDirty) return;
+	const items = tracked.filter((t) => t.stale);
+	if (items.length > 0) rebuildStaleRows(items);
+}
+
+function buildStaleRow(t: TrackedElement): HTMLElement {
+	// Key is only a fallback when the element has no visible text.
+	const textPreview = truncateText(
+		t.element.textContent?.trim() || t.roseyKey,
+		48,
 	);
-	if (resolveAllBtn)
-		resolveAllBtn.style.display = staleItems.length > 0 ? "block" : "none";
+
+	const itemWrap = document.createElement("div");
+	Object.assign(itemWrap.style, {
+		display: "flex",
+		flexDirection: "column",
+		borderRadius: "4px",
+	});
+
+	const row = document.createElement("div");
+	Object.assign(row.style, {
+		display: "flex",
+		alignItems: "stretch",
+		borderRadius: "4px",
+		transition: "background 0.15s",
+	});
+	row.addEventListener("mouseenter", () => {
+		row.style.background = SLATE_HOVER;
+	});
+	row.addEventListener("mouseleave", () => {
+		row.style.background = "transparent";
+	});
+
+	const scrollBtn = document.createElement("button");
+	scrollBtn.type = "button";
+	scrollBtn.setAttribute("aria-label", `Go to “${textPreview}”`);
+	Object.assign(scrollBtn.style, {
+		display: "flex",
+		alignItems: "center",
+		flex: "1",
+		minWidth: "0",
+		padding: "7px 8px",
+		border: "none",
+		cursor: "pointer",
+		fontSize: "12px",
+		textAlign: "left",
+		background: "transparent",
+		color: "#1e293b",
+		fontFamily: "system-ui, sans-serif",
+	});
+
+	const preview = document.createElement("span");
+	Object.assign(preview.style, {
+		overflow: "hidden",
+		textOverflow: "ellipsis",
+		whiteSpace: "nowrap",
+	});
+	preview.textContent = textPreview;
+
+	scrollBtn.appendChild(preview);
+	scrollBtn.addEventListener("click", () => {
+		// Center first, THEN focus: CC's editor scrolls the caret into view on
+		// focus, which would override the centering and leave the element only
+		// just in view. Centered first, that focus-scroll is a no-op.
+		t.element.scrollIntoView({ block: "center" });
+		t.element.focus({ preventScroll: true });
+	});
+
+	const resolveBtn = document.createElement("button");
+	resolveBtn.type = "button";
+	resolveBtn.title = "Mark as reviewed";
+	resolveBtn.setAttribute("aria-label", "Mark as reviewed");
+	Object.assign(resolveBtn.style, {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		padding: "0 8px",
+		border: "none",
+		borderRadius: "4px",
+		cursor: "pointer",
+		background: "transparent",
+		// Dark enough to read as a control, not decoration.
+		color: "#94a3b8",
+		transition: "color 0.15s, background 0.15s",
+		flexShrink: "0",
+	});
+	resolveBtn.innerHTML =
+		'<svg aria-hidden="true" width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5 L4.5 9 L10 3"/></svg>';
+	const resolveHi = () => {
+		resolveBtn.style.color = CC_BLUE;
+		resolveBtn.style.background = CC_BLUE_TINT;
+	};
+	const resolveLo = () => {
+		resolveBtn.style.color = "#94a3b8";
+		resolveBtn.style.background = "transparent";
+	};
+	resolveBtn.addEventListener("mouseenter", resolveHi);
+	resolveBtn.addEventListener("mouseleave", resolveLo);
+	resolveBtn.addEventListener("focus", resolveHi);
+	resolveBtn.addEventListener("blur", resolveLo);
+	resolveBtn.addEventListener("click", (e) => {
+		e.stopPropagation();
+		if (state.activeFile) resolveStale(t, state.activeFile);
+	});
+
+	// Expandable "what changed" diff, built lazily on first open.
+	const diff = document.createElement("div");
+	Object.assign(diff.style, {
+		display: "none",
+		padding: "0 8px 8px",
+		fontSize: "11px",
+		lineHeight: "1.5",
+		wordBreak: "break-word",
+	});
+
+	const expandBtn = document.createElement("button");
+	expandBtn.type = "button";
+	expandBtn.setAttribute("aria-label", "Show what changed");
+	expandBtn.setAttribute("aria-expanded", "false");
+	Object.assign(expandBtn.style, {
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		padding: "0 4px",
+		border: "none",
+		background: "transparent",
+		color: "#94a3b8",
+		cursor: "pointer",
+		flexShrink: "0",
+		transition: "transform 0.15s",
+	});
+	expandBtn.innerHTML =
+		'<svg aria-hidden="true" width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 2 L8 6 L4 10"/></svg>';
+
+	let diffBuilt = false;
+	expandBtn.addEventListener("click", (e) => {
+		e.stopPropagation();
+		const open = diff.style.display === "none";
+		diff.style.display = open ? "block" : "none";
+		expandBtn.style.transform = open ? "rotate(90deg)" : "rotate(0deg)";
+		expandBtn.setAttribute("aria-expanded", String(open));
+		if (open && !diffBuilt) {
+			diffBuilt = true;
+			const label = document.createElement("div");
+			label.textContent = "Source change";
+			Object.assign(label.style, {
+				fontSize: "9px",
+				textTransform: "uppercase",
+				letterSpacing: "0.05em",
+				color: "#9ca3af",
+				marginBottom: "3px",
+			});
+			diff.appendChild(label);
+			renderInlineDiff(
+				diff,
+				stripToText(t.localeOriginal ?? ""),
+				stripToText(currentSourceHtml(t)),
+			);
+		}
+	});
+
+	row.appendChild(scrollBtn);
+	row.appendChild(expandBtn);
+	row.appendChild(resolveBtn);
+	itemWrap.appendChild(row);
+	itemWrap.appendChild(diff);
+	staleRows.set(t, itemWrap);
+	return itemWrap;
 }
 
 export function markStaleElement(t: TrackedElement): void {
@@ -501,7 +555,7 @@ export function refreshStale(
 
 function unmarkStaleElement(t: TrackedElement): void {
 	clearStaleMarking(t);
-	recountStale();
+	recountStale(t);
 }
 
 export function resolveStale(t: TrackedElement, file: CCFile): void {

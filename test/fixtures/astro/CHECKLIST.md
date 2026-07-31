@@ -21,6 +21,11 @@ headlessly).
       (its `value` equals `original`) — no empty box.
 - [ ] Resolve the stale item (✓ in the panel) → the outline clears and the panel
       count drops.
+- [ ] **Panel updates in place**: with two or more stale items, expand one item's
+      diff, scroll the list, then resolve a *different* item → only that row goes.
+      The expanded diff stays open and the list keeps its scroll position.
+- [ ] **Mark all as reviewed** clears every row in one go and shows "Nothing needs
+      review" before the panel closes itself.
 - [ ] **First translation** (`stale:untranslated`): type over the source text →
       `fr.json` takes it as `value`; `original`/`_base_original` stay English. The
       entry already existed, so this is the ordinary `set("<key>.value")` write.

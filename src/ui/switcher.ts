@@ -1,5 +1,5 @@
 import { log } from "../logger";
-import { resolveStale } from "../stale";
+import { flushStaleList, resolveStale } from "../stale";
 import { state, tracked } from "../state";
 import { CC_BLUE, CC_BLUE_DARK, STALE_ACCENT, STALE_TEXT } from "../theme";
 
@@ -482,6 +482,9 @@ export function injectSwitcher(
 	}
 
 	function openStalePanel() {
+		// Build any rows deferred while the panel was closed before measuring it —
+		// positionStalePanel sizes against the panel's own height.
+		flushStaleList();
 		positionStalePanel();
 		setStaleToggleState(true);
 	}
