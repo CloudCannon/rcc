@@ -130,7 +130,7 @@ See [AI-Powered Translation](https://rosey.cc/docs/ai-translation/) for the full
 
 ## Stale Translation Detection
 
-When the source text of an element changes after it was last translated, the connector flags the translation as stale. In the Visual Editor, stale elements get an amber dashed border, and the locale switcher FAB shows a count badge. Clicking a locale button reveals a panel where editors can resolve stale items individually or all at once. Editing a translation auto-resolves its stale flag. See [Stale Translation Detection](https://rosey.cc/docs/stale-translations/) for details.
+When the source text of an element changes after it was last translated, the connector flags the translation as stale. In the Visual Editor, stale elements get a grey-and-yellow dashed outline, and the locale switcher FAB shows a count badge. Clicking a locale button reveals a panel where editors can resolve stale items individually or all at once. Editing a translation auto-resolves its stale flag. See [Stale Translation Detection](https://rosey.cc/docs/stale-translations/) for details.
 
 Accurate stale detection and element activation depend on each element having a unique, stable Rosey key — see [Tagging Content: Key uniqueness and stability](https://rosey.cc/docs/tagging-content/#key-uniqueness-and-stability) for guidance on avoiding key collisions in repeating structures. Elements whose key has no entry in the locale file yet (e.g. newly added content before a build has run) are still editable — they show the source text as a fallback, and the first edit creates a new locale entry for that key. See [Tagging Content: Elements with no locale entry yet](https://rosey.cc/docs/tagging-content/#elements-with-no-locale-entry-yet).
 

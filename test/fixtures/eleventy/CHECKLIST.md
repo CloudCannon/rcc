@@ -34,7 +34,7 @@ Two pages, one per 11ty editing style: `index.md` (Bookshop) and `regions.md`
       leave Bookshop live-editing fighting the swap — component panels restore
       after the switch (no duplicated/orphaned overlays), and editing a field
       after switching still updates the component.
-- [ ] The crafted **stale** heading shows the amber outline; the body does not.
+- [ ] The crafted **stale** heading shows the stale outline; the body does not.
 
 ## Walk — `regions.md` (editable regions, no Bookshop)
 - [ ] Both regions are editable as CloudCannon regions *and* switch locale with

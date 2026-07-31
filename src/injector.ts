@@ -586,8 +586,7 @@ async function switchLocaleInner(
 	};
 
 	// CC fires change/delete on the dataset's FILE, never on the dataset handle
-	// itself, so the listeners must live on `file`. (An earlier version listened
-	// on `dataset` and never fired — which is why Clear/Discard didn't revert.)
+	// itself, so the listeners must live on `file`.
 	// "delete" = Clear/Discard: force a resync even over a focused editor so the
 	// discard wins. "change" = external edit / own-write echo, debounced because
 	// our own onChange writes fire it on every keystroke.
@@ -632,8 +631,8 @@ async function switchLocaleInner(
 				// it is NOT torn down/rebound below (createTextEditableRegion has no
 				// destroy()), so it stays bound to the old key.
 				log(
-					`reconcile: RE-KEY "${t.roseyKey}" → "${key}"` +
-						(t.editor ? ` — editor ALREADY EXISTS, will NOT re-wire` : ""),
+					`reconcile: re-key "${t.roseyKey}" → "${key}"` +
+						(t.editor ? " — editor exists, not re-wired" : ""),
 				);
 			}
 			t.roseyKey = key;
@@ -649,9 +648,7 @@ async function switchLocaleInner(
 			);
 			await setupEditor(t, resolveDisplayValue(data, t));
 		} else if (t.editor) {
-			log(
-				`reconcile: editor already present for "${key}" — skipped re-wire (onChange writes to current key; initial content not refreshed)`,
-			);
+			log(`reconcile: editor already present for "${key}" — skipped re-wire`);
 		}
 	};
 

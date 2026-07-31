@@ -8,7 +8,7 @@ title: Stale states
   drives each one:
     stale:uptodate     — locale `original` matches this source → NOT stale
     stale:changed      — locale `original` is an OLD string; this source drifted,
-                         so the build refreshes _base_original away from it → amber
+                         so the build refreshes _base_original away from it → stale
     stale:untranslated — locale `value` equals `original` (the source text, which
                          is what write-locales seeds) → untranslated, not stale
     stale:fresh        — no locale entry at all: the postbuild strips it back out

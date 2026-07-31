@@ -9,7 +9,15 @@
 // Only control gizmos get display:none — editable regions wrap visible
 // content, so they only lose their outline.
 
+import { STALE_ACCENT } from "../theme";
+
 const STYLE_ID = "rcc-hide-controls";
+
+// Grey dashes for "out of date", CC's editable yellow for "still editable". An
+// outline can only be one colour, so the ring is four edge gradients instead,
+// drawn inside the box like CC's own negative outline offset.
+const STALE_DASH = (angle: string) =>
+	`repeating-linear-gradient(${angle}, ${STALE_ACCENT} 0 6px, transparent 6px 10px, var(--ccve-color-sol, #f7c948) 10px 16px, transparent 16px 20px)`;
 
 const CSS = `
 /* Hide all CC control gizmos while a locale is active. The overlay family is
@@ -40,6 +48,17 @@ html[data-rcc-locale-active] :is(
 html[data-rcc-locale-active] [data-rcc-translation-root] [data-rosey]:not([data-rcc-ignore]):not([data-rcc-stale]) {
 	outline: var(--ccve-editable-outline-width, 2px) solid var(--ccve-color-sol, #f7c948) !important;
 	outline-offset: calc(var(--ccve-editable-outline-width, 2px) * -1) !important;
+}
+
+/* Out-of-date translations swap the solid yellow outline for the dashed ring.
+   No background fill — a tint has to sit behind the site's own text. One dash
+   period per tile, repeated: the raster is size-independent, so every stale
+   element on the page shares it however wide it is. */
+html[data-rcc-locale-active] [data-rcc-translation-root] [data-rosey][data-rcc-stale] {
+	background-image: ${STALE_DASH("90deg")}, ${STALE_DASH("90deg")}, ${STALE_DASH("180deg")}, ${STALE_DASH("180deg")} !important;
+	background-position: 0 0, 0 100%, 0 0, 100% 0 !important;
+	background-size: 20px 2px, 20px 2px, 2px 20px, 2px 20px !important;
+	background-repeat: repeat-x, repeat-x, repeat-y, repeat-y !important;
 }
 
 /* ProseMirror re-wraps tight list items (<li>text</li>) as <li><p>text</p></li>;

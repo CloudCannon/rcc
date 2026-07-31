@@ -64,9 +64,8 @@ Now `original !== _base_original`, so the connector flags this translation as st
 
 When viewing a locale in the Visual Editor, stale translations show:
 
-- **Amber dashed border** around the translatable element
-- **Warning badge** in the corner of the element with a tooltip showing the old and new source text
-- **Amber count badge** on the locale FAB showing the total number of stale translations for the current locale
+- **Grey and yellow dashed outline** around the translatable element — grey for "out of date", yellow to keep CloudCannon's editable cue. There is no background fill, so it stays legible over any page design.
+- **Grey count badge** on the bottom-left corner of the locale FAB, showing the total number of stale translations for the current locale
 - **Stale items panel** — each locale button in the popover has a toggle that opens a list of all stale translations. Each item lets you:
   - **Click the text** to scroll to that element on the page and drop the cursor into its editor.
   - **Expand the chevron** to see *what changed* in the source — an inline word-level diff of the old vs current English, with added words highlighted and removed words struck through.

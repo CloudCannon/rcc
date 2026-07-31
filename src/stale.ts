@@ -1,12 +1,6 @@
 import { log } from "./logger";
 import { state, tracked } from "./state";
-import {
-	CC_BLUE,
-	CC_BLUE_TINT,
-	SLATE_HOVER,
-	STALE_ACCENT,
-	STALE_TINT,
-} from "./theme";
+import { CC_BLUE, CC_BLUE_TINT, SLATE_HOVER } from "./theme";
 import type { CCFile, LocaleEntryData, TrackedElement } from "./types";
 
 // ---------------------------------------------------------------------------
@@ -195,7 +189,7 @@ function showCaughtUp(panel: HTMLElement): void {
 		Object.assign(done.style, {
 			padding: "8px",
 			fontSize: "12px",
-			color: "#16a34a",
+			color: "#64748b",
 			textAlign: "left",
 		});
 		list.appendChild(done);
@@ -327,10 +321,9 @@ export function updateStaleList(): void {
 
 		scrollBtn.appendChild(preview);
 		scrollBtn.addEventListener("click", () => {
-			// Center first, THEN focus. CC's editor scrolls the caret into view on
-			// focus (async), which otherwise overrides our centering and leaves the
-			// element only just in view until a second click. Centering first means
-			// the caret is already visible, so that focus-scroll is a no-op.
+			// Center first, THEN focus: CC's editor scrolls the caret into view on
+			// focus, which would override the centering and leave the element only
+			// just in view. Centered first, that focus-scroll is a no-op.
 			t.element.scrollIntoView({ block: "center" });
 			t.element.focus({ preventScroll: true });
 		});
@@ -348,7 +341,7 @@ export function updateStaleList(): void {
 			borderRadius: "4px",
 			cursor: "pointer",
 			background: "transparent",
-			// Darker than before so it reads as a control, not decoration.
+			// Dark enough to read as a control, not decoration.
 			color: "#94a3b8",
 			transition: "color 0.15s, background 0.15s",
 			flexShrink: "0",
@@ -444,12 +437,10 @@ export function updateStaleList(): void {
 }
 
 export function markStaleElement(t: TrackedElement): void {
-	// data-rcc-stale drops the normal yellow outline (see hide-controls) so
-	// this slate one shows instead.
+	// Marking is pure CSS (see hide-controls): the attribute swaps the solid yellow
+	// editable outline for the dashed ring. Nothing inline, so unmarking can't
+	// clobber the site's own styles.
 	t.element.dataset.rccStale = "";
-	t.element.style.outline = `2px dashed ${STALE_ACCENT}`;
-	t.element.style.outlineOffset = "2px";
-	t.element.style.backgroundColor = STALE_TINT;
 }
 
 /**
@@ -490,9 +481,6 @@ export function computeStale(
 export function clearStaleMarking(t: TrackedElement): void {
 	t.stale = false;
 	delete t.element.dataset.rccStale;
-	t.element.style.outline = "";
-	t.element.style.outlineOffset = "";
-	t.element.style.backgroundColor = "";
 }
 
 /**

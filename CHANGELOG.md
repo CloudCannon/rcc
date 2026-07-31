@@ -47,7 +47,7 @@ Ordered by what you touch to upgrade.
 - **Floating locale switcher** — draggable FAB with a popover menu for switching
   locales and returning to the original. Position persists across sessions.
 - **Stale translation detection** — source text that changed since a translation
-  was last acknowledged gets an amber dashed border, a count badge on the FAB,
+  was last acknowledged gets a grey-and-yellow dashed outline, a count badge on the FAB,
   and a panel for resolving items individually or in bulk. Combines a build-time
   signal (`_base_original` vs `original`) with a live in-editor signal, so an
   in-session source edit flags affected translations before any rebuild. See

@@ -51,7 +51,7 @@ Rosey automatically adds `<html lang>`, `<meta http-equiv="content-language">`, 
 
 - **Disabled elements** — Elements that exist in the DOM but have no corresponding entry in the locale file (e.g. content added after the last `write-locales` run) appear at 45% opacity with no inline editor, signaling that a build is needed before they become translatable.
 
-- **Stale detection** — When source text changes after a translation was made, the connector flags it with an amber border and a count badge on the locale switcher. This helps editors prioritize which translations need attention. See [Stale Translation Detection](/docs/stale-translations/).
+- **Stale detection** — When source text changes after a translation was made, the connector flags it with a grey-and-yellow dashed outline and a count badge on the locale switcher. This helps editors prioritize which translations need attention. See [Stale Translation Detection](/docs/stale-translations/).
 
 ### When to use this
 

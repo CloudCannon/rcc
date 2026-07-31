@@ -24,7 +24,7 @@ This guide covers upgrading from RCC v1 (form-based YAML editing in CloudCannon'
 | **Translation format**        | YAML files in `rosey/translations/`               | JSON files in `rosey/locales/`                     |
 | **Configuration**             | `rosey/rcc.yaml`                                  | `data_config` entries in `cloudcannon.config.yml`  |
 | **Locale discovery**          | `locales` array in `rcc.yaml`                     | `/_rcc/locales.json` manifest (auto-generated)     |
-| **Stale detection**           | None                                              | Built-in (amber indicators, resolve panel)         |
+| **Stale detection**           | None                                              | Built-in (dashed outlines, resolve panel)         |
 | **Client-side script**        | None                                              | Injector with floating locale switcher             |
 | **Auto-tagger**               | `data-rosey-tagger` attribute + `tag` CLI command | Removed                                            |
 | **`generateRoseyId` utility** | Exported from `rosey-cloudcannon-connector/utils` | Removed                                            |

@@ -164,7 +164,7 @@ When the page loads in CloudCannon's Visual Editor:
   - Edits are pushed directly to the locale JSON file via CloudCannon's data API
 10. Selecting "Original" swaps the original container back in — CloudCannon's editing automatically reconnects
 
-The FAB can be dragged anywhere on the page; its position persists across reloads via `sessionStorage`.
+The FAB can be dragged anywhere on the page; its position persists across reloads via `localStorage`.
 
 ## Full Example: Astro Site
 

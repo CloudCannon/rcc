@@ -53,7 +53,7 @@ The `init` wizard installs dependencies, writes the postbuild script, and config
 
 - **A client-side injector** that auto-runs in the Visual Editor and does nothing outside it
 - **Three CLI tools** — [`init`](/docs/init/), [`write-locales`](/docs/write-locales/), and `install-client`
-- **[Stale translation detection](/docs/stale-translations/)** — when source text changes after a translation was reviewed, the element gets an amber border and the switcher shows a count badge, with a panel to resolve items individually or all at once
+- **[Stale translation detection](/docs/stale-translations/)** — when source text changes after a translation was reviewed, the element gets a grey-and-yellow dashed outline and the switcher shows a count badge, with a panel to resolve items individually or all at once
 - **[RTL support](/docs/rtl-support/)** — switching to Arabic, Hebrew, Farsi and friends flips the editing surface automatically
 
 Agent skills for AI-assisted translation and setup are maintained separately in [CloudCannon/agent-skills](https://github.com/CloudCannon/agent-skills).

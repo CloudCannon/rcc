@@ -278,7 +278,6 @@ var CC_BLUE_DARK = "#0239a8";
 var CC_BLUE_TINT = "rgba(3, 74, 216, 0.08)";
 var STALE_ACCENT = "#334155";
 var STALE_TEXT = "#475569";
-var STALE_TINT = "rgba(51, 65, 85, 0.06)";
 var SLATE_HOVER = "#f1f5f9";
 
 // src/stale.ts
@@ -404,7 +403,7 @@ function showCaughtUp(panel) {
     Object.assign(done.style, {
       padding: "8px",
       fontSize: "12px",
-      color: "#16a34a",
+      color: "#64748b",
       textAlign: "left"
     });
     list.appendChild(done);
@@ -531,7 +530,7 @@ function updateStaleList() {
       borderRadius: "4px",
       cursor: "pointer",
       background: "transparent",
-      // Darker than before so it reads as a control, not decoration.
+      // Dark enough to read as a control, not decoration.
       color: "#94a3b8",
       transition: "color 0.15s, background 0.15s",
       flexShrink: "0"
@@ -619,9 +618,6 @@ function updateStaleList() {
 }
 function markStaleElement(t) {
   t.element.dataset.rccStale = "";
-  t.element.style.outline = `2px dashed ${STALE_ACCENT}`;
-  t.element.style.outlineOffset = "2px";
-  t.element.style.backgroundColor = STALE_TINT;
 }
 function computeStale(t, data) {
   const staleEnabled = t.hasLocaleEntry && data?._base_original != null && data?.original != null;
@@ -634,9 +630,6 @@ function computeStale(t, data) {
 function clearStaleMarking(t) {
   t.stale = false;
   delete t.element.dataset.rccStale;
-  t.element.style.outline = "";
-  t.element.style.outlineOffset = "";
-  t.element.style.backgroundColor = "";
 }
 function refreshStale(t, data) {
   if (computeStale(t, data)) {
@@ -665,6 +658,7 @@ function resolveStale(t, file) {
 
 // src/ui/hide-controls.ts
 var STYLE_ID = "rcc-hide-controls";
+var STALE_DASH = (angle) => `repeating-linear-gradient(${angle}, ${STALE_ACCENT} 0 6px, transparent 6px 10px, var(--ccve-color-sol, #f7c948) 10px 16px, transparent 16px 20px)`;
 var CSS = `
 /* Hide all CC control gizmos while a locale is active. The overlay family is
    the Bookshop/data-cms-bind layer; RCC strips data-cms-bind and pauses
@@ -694,6 +688,17 @@ html[data-rcc-locale-active] :is(
 html[data-rcc-locale-active] [data-rcc-translation-root] [data-rosey]:not([data-rcc-ignore]):not([data-rcc-stale]) {
 	outline: var(--ccve-editable-outline-width, 2px) solid var(--ccve-color-sol, #f7c948) !important;
 	outline-offset: calc(var(--ccve-editable-outline-width, 2px) * -1) !important;
+}
+
+/* Out-of-date translations swap the solid yellow outline for the dashed ring.
+   No background fill \u2014 a tint has to sit behind the site's own text. One dash
+   period per tile, repeated: the raster is size-independent, so every stale
+   element on the page shares it however wide it is. */
+html[data-rcc-locale-active] [data-rcc-translation-root] [data-rosey][data-rcc-stale] {
+	background-image: ${STALE_DASH("90deg")}, ${STALE_DASH("90deg")}, ${STALE_DASH("180deg")}, ${STALE_DASH("180deg")} !important;
+	background-position: 0 0, 0 100%, 0 0, 100% 0 !important;
+	background-size: 20px 2px, 20px 2px, 2px 20px, 2px 20px !important;
+	background-repeat: repeat-x, repeat-x, repeat-y, repeat-y !important;
 }
 
 /* ProseMirror re-wraps tight list items (<li>text</li>) as <li><p>text</p></li>;
@@ -856,7 +861,7 @@ function injectSwitcher(locales, onSelect) {
   staleBadge.setAttribute("aria-hidden", "true");
   Object.assign(staleBadge.style, {
     position: "absolute",
-    top: "-4px",
+    bottom: "-4px",
     left: "-4px",
     background: STALE_ACCENT,
     color: "#ffffff",
@@ -1671,7 +1676,7 @@ async function switchLocaleInner(locale, myGeneration) {
     } else {
       if (t.roseyKey !== key) {
         log(
-          `reconcile: RE-KEY "${t.roseyKey}" \u2192 "${key}"` + (t.editor ? ` \u2014 editor ALREADY EXISTS, will NOT re-wire` : "")
+          `reconcile: re-key "${t.roseyKey}" \u2192 "${key}"` + (t.editor ? " \u2014 editor exists, not re-wired" : "")
         );
       }
       t.roseyKey = key;
@@ -1685,9 +1690,7 @@ async function switchLocaleInner(locale, myGeneration) {
       );
       await setupEditor(t, resolveDisplayValue(data, t));
     } else if (t.editor) {
-      log(
-        `reconcile: editor already present for "${key}" \u2014 skipped re-wire (onChange writes to current key; initial content not refreshed)`
-      );
+      log(`reconcile: editor already present for "${key}" \u2014 skipped re-wire`);
     }
   };
   const scheduleReconcile = () => {

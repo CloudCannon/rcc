@@ -153,8 +153,8 @@ export function injectSwitcher(
 	});
 	fab.appendChild(badge);
 
-	// Dropdown caret — the FAB looks like an icon button, so say out loud that
-	// clicking it opens a menu. Flips over while the popover is open.
+	// Dropdown caret — nothing else on the FAB says it opens a menu. Flips over
+	// while the popover is open.
 	const caret = document.createElement("div");
 	caret.id = "rcc-fab-caret";
 	caret.setAttribute("aria-hidden", "true");
@@ -177,14 +177,14 @@ export function injectSwitcher(
 	caret.innerHTML = CHEVRON_DOWN;
 	fab.appendChild(caret);
 
-	// Stale badge — shows count of out-of-date translations. Top-left so the
-	// bottom-right corner stays the caret's.
+	// Stale badge — count of out-of-date translations. Bottom-left keeps it clear
+	// of the locale badge and the caret.
 	const staleBadge = document.createElement("div");
 	staleBadge.id = "rcc-stale-badge";
 	staleBadge.setAttribute("aria-hidden", "true");
 	Object.assign(staleBadge.style, {
 		position: "absolute",
-		top: "-4px",
+		bottom: "-4px",
 		left: "-4px",
 		background: STALE_ACCENT,
 		color: "#ffffff",
@@ -240,9 +240,8 @@ export function injectSwitcher(
 		minWidth: "120px",
 	});
 
-	// Pointer that ties the menu back to the FAB. A rotated square rather than a
-	// border triangle so it inherits the card's exact background; positioned
-	// (and flipped top/bottom) in positionPopover once the placement is known.
+	// Pointer tying the menu back to the FAB. A rotated square, so it picks up the
+	// card's exact background; positionPopover places it once the side is known.
 	const pointer = document.createElement("div");
 	pointer.setAttribute("aria-hidden", "true");
 	Object.assign(pointer.style, {
@@ -623,10 +622,9 @@ export function injectSwitcher(
 		popover.style.visibility = "visible";
 	}
 
-	// Aim the pointer at the FAB's centre, clamped away from the card's rounded
-	// corners, on whichever edge faces the FAB. Compares centres rather than
-	// trusting the intended placement, since viewport clamping can move the card
-	// to the other side of the FAB.
+	// Aim the pointer at the FAB's centre, clamped off the card's rounded corners.
+	// Which edge it sits on comes from comparing centres, not the placement we
+	// asked for — clamping can push the card to the FAB's other side.
 	function positionPointer(
 		fabRect: DOMRect,
 		popRect: DOMRect,

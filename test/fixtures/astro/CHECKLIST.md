@@ -15,11 +15,11 @@ headlessly).
 - [ ] The locale-switcher FAB appears (bottom corner).
 - [ ] **Switch to `ar`** → the content flips to RTL (`dir="rtl"` on the swapped
       container); switch to `fr` → back to LTR.
-- [ ] **Stale** (`/stale/`): only `stale:changed` shows the amber dashed outline
+- [ ] **Stale** (`/stale/`): only `stale:changed` shows the grey/yellow dashed outline
       and appears in the stale panel. `stale:uptodate` and `stale:untranslated`
       do **not**. `stale:untranslated` renders its source text in a normal editor
       (its `value` equals `original`) — no empty box.
-- [ ] Resolve the stale item (✓ in the panel) → the amber clears and the panel
+- [ ] Resolve the stale item (✓ in the panel) → the outline clears and the panel
       count drops.
 - [ ] **First translation** (`stale:untranslated`): type over the source text →
       `fr.json` takes it as `value`; `original`/`_base_original` stay English. The
