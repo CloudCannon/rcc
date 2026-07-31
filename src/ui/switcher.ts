@@ -1,6 +1,7 @@
 import { log } from "../logger";
-import { resolveStale, STALE_AMBER, STALE_AMBER_TEXT } from "../stale";
+import { resolveStale } from "../stale";
 import { state, tracked } from "../state";
+import { CC_BLUE, CC_BLUE_DARK, STALE_ACCENT, STALE_TEXT } from "../theme";
 
 // ---------------------------------------------------------------------------
 // UI — Collapsible / movable locale FAB + popover
@@ -8,7 +9,15 @@ import { state, tracked } from "../state";
 
 const FAB_SIZE = 48;
 const FAB_STORAGE_KEY = "rcc-fab-position";
-const CC_BLUE = "#034ad8";
+// Rotated square, so what protrudes is its ~14px diagonal.
+const POINTER_SIZE = 10;
+
+const CHEVRON_DOWN = [
+	'<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="8" height="8" viewBox="0 0 8 8"',
+	' fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">',
+	'<path d="M1.5 3 L4 5.5 L6.5 3"/>',
+	"</svg>",
+].join("");
 
 const TRANSLATE_ICON = [
 	'<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24"',
@@ -144,15 +153,40 @@ export function injectSwitcher(
 	});
 	fab.appendChild(badge);
 
-	// Stale badge — shows count of out-of-date translations
+	// Dropdown caret — the FAB looks like an icon button, so say out loud that
+	// clicking it opens a menu. Flips over while the popover is open.
+	const caret = document.createElement("div");
+	caret.id = "rcc-fab-caret";
+	caret.setAttribute("aria-hidden", "true");
+	Object.assign(caret.style, {
+		position: "absolute",
+		bottom: "-1px",
+		right: "-1px",
+		width: "16px",
+		height: "16px",
+		borderRadius: "50%",
+		background: "#ffffff",
+		border: "1px solid #e2e8f0",
+		boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "center",
+		color: "#64748b",
+		transition: "transform 0.2s",
+	});
+	caret.innerHTML = CHEVRON_DOWN;
+	fab.appendChild(caret);
+
+	// Stale badge — shows count of out-of-date translations. Top-left so the
+	// bottom-right corner stays the caret's.
 	const staleBadge = document.createElement("div");
 	staleBadge.id = "rcc-stale-badge";
 	staleBadge.setAttribute("aria-hidden", "true");
 	Object.assign(staleBadge.style, {
 		position: "absolute",
-		bottom: "-4px",
-		right: "-4px",
-		background: STALE_AMBER_TEXT,
+		top: "-4px",
+		left: "-4px",
+		background: STALE_ACCENT,
 		color: "#ffffff",
 		fontSize: "9px",
 		fontWeight: "700",
@@ -205,6 +239,21 @@ export function injectSwitcher(
 		fontSize: "13px",
 		minWidth: "120px",
 	});
+
+	// Pointer that ties the menu back to the FAB. A rotated square rather than a
+	// border triangle so it inherits the card's exact background; positioned
+	// (and flipped top/bottom) in positionPopover once the placement is known.
+	const pointer = document.createElement("div");
+	pointer.setAttribute("aria-hidden", "true");
+	Object.assign(pointer.style, {
+		position: "absolute",
+		width: `${POINTER_SIZE}px`,
+		height: `${POINTER_SIZE}px`,
+		background: "#ffffff",
+		borderRadius: "2px",
+		transform: "rotate(45deg)",
+	});
+	popover.appendChild(pointer);
 
 	const header = document.createElement("div");
 	Object.assign(header.style, {
@@ -295,7 +344,7 @@ export function injectSwitcher(
 			display: "inline-flex",
 			transition: "transform 0.2s",
 			transform: "rotate(0deg)",
-			color: STALE_AMBER_TEXT,
+			color: STALE_TEXT,
 			fontSize: "10px",
 			lineHeight: "1",
 		});
@@ -307,7 +356,7 @@ export function injectSwitcher(
 		Object.assign(countLabel.style, {
 			fontWeight: "600",
 			fontSize: "10px",
-			color: STALE_AMBER_TEXT,
+			color: STALE_TEXT,
 			letterSpacing: "0.03em",
 		});
 
@@ -339,14 +388,14 @@ export function injectSwitcher(
 		fontSize: "13px",
 		minWidth: "200px",
 		maxWidth: "260px",
-		borderTop: `3px solid ${STALE_AMBER}`,
+		borderTop: `3px solid ${STALE_ACCENT}`,
 	});
 
 	const panelHeader = document.createElement("div");
 	Object.assign(panelHeader.style, {
 		fontWeight: "600",
 		fontSize: "11px",
-		color: STALE_AMBER_TEXT,
+		color: STALE_TEXT,
 		textTransform: "uppercase",
 		letterSpacing: "0.05em",
 		padding: "4px 8px 2px",
@@ -376,7 +425,7 @@ export function injectSwitcher(
 		padding: "6px 10px",
 		border: "none",
 		borderRadius: "5px",
-		background: STALE_AMBER_TEXT,
+		background: CC_BLUE,
 		color: "#ffffff",
 		fontSize: "11px",
 		fontWeight: "600",
@@ -386,10 +435,10 @@ export function injectSwitcher(
 	});
 	resolveAllBtn.textContent = "Mark all as reviewed";
 	resolveAllBtn.addEventListener("mouseenter", () => {
-		resolveAllBtn.style.background = "#92400e";
+		resolveAllBtn.style.background = CC_BLUE_DARK;
 	});
 	resolveAllBtn.addEventListener("mouseleave", () => {
-		resolveAllBtn.style.background = STALE_AMBER_TEXT;
+		resolveAllBtn.style.background = CC_BLUE;
 	});
 	resolveAllBtn.addEventListener("click", () => {
 		const stale = tracked.filter((t) => t.stale);
@@ -557,10 +606,8 @@ export function injectSwitcher(
 		const vh = window.innerHeight;
 		const gap = 8;
 
-		let top =
-			fabRect.top - gap - popRect.height > 0
-				? fabRect.top - gap - popRect.height
-				: fabRect.bottom + gap;
+		const above = fabRect.top - gap - popRect.height > 0;
+		let top = above ? fabRect.top - gap - popRect.height : fabRect.bottom + gap;
 
 		let left =
 			fabRect.right - popRect.width > 0
@@ -572,13 +619,43 @@ export function injectSwitcher(
 
 		popover.style.top = `${top}px`;
 		popover.style.left = `${left}px`;
+		positionPointer(fabRect, popRect, top, left);
 		popover.style.visibility = "visible";
+	}
+
+	// Aim the pointer at the FAB's centre, clamped away from the card's rounded
+	// corners, on whichever edge faces the FAB. Compares centres rather than
+	// trusting the intended placement, since viewport clamping can move the card
+	// to the other side of the FAB.
+	function positionPointer(
+		fabRect: DOMRect,
+		popRect: DOMRect,
+		top: number,
+		left: number,
+	) {
+		const half = POINTER_SIZE / 2;
+		const inset = 14;
+		const fabCentreX = fabRect.left + fabRect.width / 2;
+		const maxX = Math.max(inset, popRect.width - inset);
+		const x = Math.max(inset, Math.min(fabCentreX - left, maxX));
+		pointer.style.left = `${x - half}px`;
+
+		const popoverAbove =
+			top + popRect.height / 2 < fabRect.top + fabRect.height / 2;
+		if (popoverAbove) {
+			pointer.style.top = "auto";
+			pointer.style.bottom = `${-half}px`;
+		} else {
+			pointer.style.bottom = "auto";
+			pointer.style.top = `${-half}px`;
+		}
 	}
 
 	function openPopover() {
 		positionPopover();
 		popoverOpen = true;
 		fab.setAttribute("aria-expanded", "true");
+		caret.style.transform = "rotate(180deg)";
 		// Move focus into the menu so keyboard users land on the first locale.
 		popover.querySelector<HTMLButtonElement>("button[data-locale]")?.focus();
 	}
@@ -587,6 +664,7 @@ export function injectSwitcher(
 		popover.style.display = "none";
 		popoverOpen = false;
 		fab.setAttribute("aria-expanded", "false");
+		caret.style.transform = "rotate(0deg)";
 		closeStalePanel();
 	}
 

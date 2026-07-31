@@ -1,17 +1,17 @@
 import { log } from "./logger";
 import { state, tracked } from "./state";
+import {
+	CC_BLUE,
+	CC_BLUE_TINT,
+	SLATE_HOVER,
+	STALE_ACCENT,
+	STALE_TINT,
+} from "./theme";
 import type { CCFile, LocaleEntryData, TrackedElement } from "./types";
 
 // ---------------------------------------------------------------------------
 // Stale translation indicators
 // ---------------------------------------------------------------------------
-
-// Bright amber for graphical accents (on-page outline, panel border, badge
-// fill). Too light for text — pairs with STALE_AMBER_TEXT for anything an
-// editor has to read, which meets WCAG AA contrast on white.
-export const STALE_AMBER = "#f59e0b";
-export const STALE_AMBER_TEXT = "#b45309";
-const STALE_AMBER_BG = "rgba(245, 158, 11, 0.08)";
 
 export function updateStaleBadge(): void {
 	const badge = document.getElementById("rcc-stale-badge");
@@ -293,7 +293,7 @@ export function updateStaleList(): void {
 			transition: "background 0.15s",
 		});
 		row.addEventListener("mouseenter", () => {
-			row.style.background = "#fef3c7";
+			row.style.background = SLATE_HOVER;
 		});
 		row.addEventListener("mouseleave", () => {
 			row.style.background = "transparent";
@@ -356,8 +356,8 @@ export function updateStaleList(): void {
 		resolveBtn.innerHTML =
 			'<svg aria-hidden="true" width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5 L4.5 9 L10 3"/></svg>';
 		const resolveHi = () => {
-			resolveBtn.style.color = STALE_AMBER_TEXT;
-			resolveBtn.style.background = "#fde68a";
+			resolveBtn.style.color = CC_BLUE;
+			resolveBtn.style.background = CC_BLUE_TINT;
 		};
 		const resolveLo = () => {
 			resolveBtn.style.color = "#94a3b8";
@@ -445,11 +445,11 @@ export function updateStaleList(): void {
 
 export function markStaleElement(t: TrackedElement): void {
 	// data-rcc-stale drops the normal yellow outline (see hide-controls) so
-	// this amber one shows instead.
+	// this slate one shows instead.
 	t.element.dataset.rccStale = "";
-	t.element.style.outline = `2px dashed ${STALE_AMBER}`;
+	t.element.style.outline = `2px dashed ${STALE_ACCENT}`;
 	t.element.style.outlineOffset = "2px";
-	t.element.style.backgroundColor = STALE_AMBER_BG;
+	t.element.style.backgroundColor = STALE_TINT;
 }
 
 /**

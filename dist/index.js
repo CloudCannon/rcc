@@ -272,10 +272,16 @@ var state = {
   staleCount: 0
 };
 
+// src/theme.ts
+var CC_BLUE = "#034ad8";
+var CC_BLUE_DARK = "#0239a8";
+var CC_BLUE_TINT = "rgba(3, 74, 216, 0.08)";
+var STALE_ACCENT = "#334155";
+var STALE_TEXT = "#475569";
+var STALE_TINT = "rgba(51, 65, 85, 0.06)";
+var SLATE_HOVER = "#f1f5f9";
+
 // src/stale.ts
-var STALE_AMBER = "#f59e0b";
-var STALE_AMBER_TEXT = "#b45309";
-var STALE_AMBER_BG = "rgba(245, 158, 11, 0.08)";
 function updateStaleBadge() {
   const badge = document.getElementById("rcc-stale-badge");
   if (!badge) return;
@@ -478,7 +484,7 @@ function updateStaleList() {
       transition: "background 0.15s"
     });
     row.addEventListener("mouseenter", () => {
-      row.style.background = "#fef3c7";
+      row.style.background = SLATE_HOVER;
     });
     row.addEventListener("mouseleave", () => {
       row.style.background = "transparent";
@@ -532,8 +538,8 @@ function updateStaleList() {
     });
     resolveBtn.innerHTML = '<svg aria-hidden="true" width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6.5 L4.5 9 L10 3"/></svg>';
     const resolveHi = () => {
-      resolveBtn.style.color = STALE_AMBER_TEXT;
-      resolveBtn.style.background = "#fde68a";
+      resolveBtn.style.color = CC_BLUE;
+      resolveBtn.style.background = CC_BLUE_TINT;
     };
     const resolveLo = () => {
       resolveBtn.style.color = "#94a3b8";
@@ -613,9 +619,9 @@ function updateStaleList() {
 }
 function markStaleElement(t) {
   t.element.dataset.rccStale = "";
-  t.element.style.outline = `2px dashed ${STALE_AMBER}`;
+  t.element.style.outline = `2px dashed ${STALE_ACCENT}`;
   t.element.style.outlineOffset = "2px";
-  t.element.style.backgroundColor = STALE_AMBER_BG;
+  t.element.style.backgroundColor = STALE_TINT;
 }
 function computeStale(t, data) {
   const staleEnabled = t.hasLocaleEntry && data?._base_original != null && data?.original != null;
@@ -712,7 +718,13 @@ function setLocaleControlsHidden(active) {
 // src/ui/switcher.ts
 var FAB_SIZE = 48;
 var FAB_STORAGE_KEY = "rcc-fab-position";
-var CC_BLUE = "#034ad8";
+var POINTER_SIZE = 10;
+var CHEVRON_DOWN = [
+  '<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="8" height="8" viewBox="0 0 8 8"',
+  ' fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">',
+  '<path d="M1.5 3 L4 5.5 L6.5 3"/>',
+  "</svg>"
+].join("");
 var TRANSLATE_ICON = [
   '<svg xmlns="http://www.w3.org/2000/svg" aria-hidden="true" width="22" height="22" viewBox="0 0 24 24"',
   ` fill="none" stroke="${CC_BLUE}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">`,
@@ -818,14 +830,35 @@ function injectSwitcher(locales, onSelect) {
     pointerEvents: "none"
   });
   fab.appendChild(badge);
+  const caret = document.createElement("div");
+  caret.id = "rcc-fab-caret";
+  caret.setAttribute("aria-hidden", "true");
+  Object.assign(caret.style, {
+    position: "absolute",
+    bottom: "-1px",
+    right: "-1px",
+    width: "16px",
+    height: "16px",
+    borderRadius: "50%",
+    background: "#ffffff",
+    border: "1px solid #e2e8f0",
+    boxShadow: "0 1px 3px rgba(0,0,0,0.12)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    color: "#64748b",
+    transition: "transform 0.2s"
+  });
+  caret.innerHTML = CHEVRON_DOWN;
+  fab.appendChild(caret);
   const staleBadge = document.createElement("div");
   staleBadge.id = "rcc-stale-badge";
   staleBadge.setAttribute("aria-hidden", "true");
   Object.assign(staleBadge.style, {
     position: "absolute",
-    bottom: "-4px",
-    right: "-4px",
-    background: STALE_AMBER_TEXT,
+    top: "-4px",
+    left: "-4px",
+    background: STALE_ACCENT,
     color: "#ffffff",
     fontSize: "9px",
     fontWeight: "700",
@@ -872,6 +905,17 @@ function injectSwitcher(locales, onSelect) {
     fontSize: "13px",
     minWidth: "120px"
   });
+  const pointer = document.createElement("div");
+  pointer.setAttribute("aria-hidden", "true");
+  Object.assign(pointer.style, {
+    position: "absolute",
+    width: `${POINTER_SIZE}px`,
+    height: `${POINTER_SIZE}px`,
+    background: "#ffffff",
+    borderRadius: "2px",
+    transform: "rotate(45deg)"
+  });
+  popover.appendChild(pointer);
   const header = document.createElement("div");
   Object.assign(header.style, {
     fontWeight: "600",
@@ -954,7 +998,7 @@ function injectSwitcher(locales, onSelect) {
       display: "inline-flex",
       transition: "transform 0.2s",
       transform: "rotate(0deg)",
-      color: STALE_AMBER_TEXT,
+      color: STALE_TEXT,
       fontSize: "10px",
       lineHeight: "1"
     });
@@ -964,7 +1008,7 @@ function injectSwitcher(locales, onSelect) {
     Object.assign(countLabel.style, {
       fontWeight: "600",
       fontSize: "10px",
-      color: STALE_AMBER_TEXT,
+      color: STALE_TEXT,
       letterSpacing: "0.03em"
     });
     submenu.appendChild(chevron);
@@ -991,13 +1035,13 @@ function injectSwitcher(locales, onSelect) {
     fontSize: "13px",
     minWidth: "200px",
     maxWidth: "260px",
-    borderTop: `3px solid ${STALE_AMBER}`
+    borderTop: `3px solid ${STALE_ACCENT}`
   });
   const panelHeader = document.createElement("div");
   Object.assign(panelHeader.style, {
     fontWeight: "600",
     fontSize: "11px",
-    color: STALE_AMBER_TEXT,
+    color: STALE_TEXT,
     textTransform: "uppercase",
     letterSpacing: "0.05em",
     padding: "4px 8px 2px"
@@ -1025,7 +1069,7 @@ function injectSwitcher(locales, onSelect) {
     padding: "6px 10px",
     border: "none",
     borderRadius: "5px",
-    background: STALE_AMBER_TEXT,
+    background: CC_BLUE,
     color: "#ffffff",
     fontSize: "11px",
     fontWeight: "600",
@@ -1035,10 +1079,10 @@ function injectSwitcher(locales, onSelect) {
   });
   resolveAllBtn.textContent = "Mark all as reviewed";
   resolveAllBtn.addEventListener("mouseenter", () => {
-    resolveAllBtn.style.background = "#92400e";
+    resolveAllBtn.style.background = CC_BLUE_DARK;
   });
   resolveAllBtn.addEventListener("mouseleave", () => {
-    resolveAllBtn.style.background = STALE_AMBER_TEXT;
+    resolveAllBtn.style.background = CC_BLUE;
   });
   resolveAllBtn.addEventListener("click", () => {
     const stale = tracked.filter((t) => t.stale);
@@ -1176,24 +1220,44 @@ function injectSwitcher(locales, onSelect) {
     const vw = window.innerWidth;
     const vh = window.innerHeight;
     const gap = 8;
-    let top = fabRect.top - gap - popRect.height > 0 ? fabRect.top - gap - popRect.height : fabRect.bottom + gap;
+    const above = fabRect.top - gap - popRect.height > 0;
+    let top = above ? fabRect.top - gap - popRect.height : fabRect.bottom + gap;
     let left = fabRect.right - popRect.width > 0 ? fabRect.right - popRect.width : fabRect.left;
     top = Math.max(4, Math.min(top, vh - popRect.height - 4));
     left = Math.max(4, Math.min(left, vw - popRect.width - 4));
     popover.style.top = `${top}px`;
     popover.style.left = `${left}px`;
+    positionPointer(fabRect, popRect, top, left);
     popover.style.visibility = "visible";
+  }
+  function positionPointer(fabRect, popRect, top, left) {
+    const half = POINTER_SIZE / 2;
+    const inset = 14;
+    const fabCentreX = fabRect.left + fabRect.width / 2;
+    const maxX = Math.max(inset, popRect.width - inset);
+    const x = Math.max(inset, Math.min(fabCentreX - left, maxX));
+    pointer.style.left = `${x - half}px`;
+    const popoverAbove = top + popRect.height / 2 < fabRect.top + fabRect.height / 2;
+    if (popoverAbove) {
+      pointer.style.top = "auto";
+      pointer.style.bottom = `${-half}px`;
+    } else {
+      pointer.style.bottom = "auto";
+      pointer.style.top = `${-half}px`;
+    }
   }
   function openPopover() {
     positionPopover();
     popoverOpen = true;
     fab.setAttribute("aria-expanded", "true");
+    caret.style.transform = "rotate(180deg)";
     popover.querySelector("button[data-locale]")?.focus();
   }
   function closePopover() {
     popover.style.display = "none";
     popoverOpen = false;
     fab.setAttribute("aria-expanded", "false");
+    caret.style.transform = "rotate(0deg)";
     closeStalePanel();
   }
   function togglePopover() {
