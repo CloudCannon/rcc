@@ -14,32 +14,58 @@ SEO_options:
 draft: false
 ---
 
-The Rosey CloudCannon Connector provides a way to enter and edit translations used by [Rosey](https://rosey.app/) inside of CloudCannon's CMS. It then turns these translations into the JSON files that Rosey uses in tandem with your site's tagged HTML to generate a multilingual site. 
+Client-side locale switching for [Rosey](https://rosey.app/) translations in [CloudCannon's](https://cloudcannon.com/) Visual Editor.
 
-
-Translations are displayed to editors in a form-like interface, with links to each original phrase in context on it's untranslated page. An optional [Smartling](https://www.smartling.com/) integration is provided for automatic [AI-powered machine translations](https://www.smartling.com/software/smartling-translate/), which editors can then QA and edit as needed.
-
-
-![Screenshot of editing interface in CloudCannon](/assets/images/screenshot-editing.png)
-
+The connector auto-detects every `data-rosey` tagged element on the page, injects a floating locale switcher, and creates inline editors wired to your locale data files through CloudCannon's live editing API. Editors translate in context, on the page, seeing exactly what a visitor will see. No server-side conditionals, no per-locale routing, no component refactoring.
 
 ## How it works
 
-1. A developer tags HTML elements on your site for translation using `data-rosey` tags.
+1. A developer tags translatable elements with `data-rosey` attributes.
 
-2. Rosey scans your built static site for `data-rosey` tags and generates a JSON file named `base.json`, containing information about your all of your tagged content.
+2. On each CloudCannon build, Rosey scans the built HTML and generates `base.json` — every tagged phrase on the site.
 
-3. The Rosey CloudCannon Connector generates YAML files which are displayed to editors in the CMS. Editors fill in translations.
+3. `write-locales` syncs that into one flat JSON file per locale in `rosey/locales/`, adding new keys, preserving existing translations, and dropping keys that no longer exist.
 
-4. These YAML files are turned into the `locales/*.json` files which Rosey needs to generate the multilingual site.
+4. In the Visual Editor, the connector reads those locale files through CloudCannon's data API. Editors switch locale from a floating button and edit translations inline; edits are written straight back to the JSON.
 
-3. Rosey ingests the `locales/*.json` files, which contain each original phrase paired with a user entered translation. Using this data, and your tagged HTML, Rosey generates a complete multilingual site.
+5. Rosey ingests the locale files at the end of the build and generates the complete multilingual site.
 
+Everything after step 1 runs in your site's postbuild, so it happens automatically on every build.
 
-All of this file generation happens in your site's postbuild - meaning it happens automatically each build.
+## What you need
 
+- A static site built with any SSG — Astro, Hugo, Eleventy, Jekyll, and anything else that outputs static HTML
+- The site hosted on [CloudCannon](https://cloudcannon.com/), with the Visual Editor enabled
+- [Rosey](https://rosey.app/) v2 generating `base.json` from your built site
+- Elements tagged with `data-rosey`
+
+**No existing editing setup is required.** The connector doesn't depend on editable regions or Bookshop — it creates its own inline editors on every `data-rosey` element, so a site with no editing infrastructure still gets full visual translation editing. Editable regions and Bookshop are compatible enhancements that the connector handles automatically, not prerequisites.
+
+## Install
+
+```bash
+npx rosey-cloudcannon-connector init
+```
+
+The `init` wizard installs dependencies, writes the postbuild script, and configures `cloudcannon.config.yml`. From there you tag your templates and import the client in your layout — see [Getting Started](/docs/).
+
+## What's in the box
+
+- **A client-side injector** that auto-runs in the Visual Editor and does nothing outside it
+- **Three CLI tools** — [`init`](/docs/init/), [`write-locales`](/docs/write-locales/), and `install-client`
+- **[Stale translation detection](/docs/stale-translations/)** — when source text changes after a translation was reviewed, the element gets an amber border and the switcher shows a count badge, with a panel to resolve items individually or all at once
+- **[RTL support](/docs/rtl-support/)** — switching to Arabic, Hebrew, Farsi and friends flips the editing surface automatically
+
+Agent skills for AI-assisted translation and setup are maintained separately in [CloudCannon/agent-skills](https://github.com/CloudCannon/agent-skills).
 
 ## Is this workflow right for you?
 
+Depending on your use case this workflow could be unnecessary, and you may be better served by dividing your language content into separate directories and maintaining each separately. Read [this blog post](https://cloudcannon.com/blog/managing-multilingual-content-in-cloudcannon/) before getting started with the RCC.
 
-Depending on your usecase this workflow could be unnecessary, and you would be better suited to simply dividing your different language content into separate directories and maintaining each separately. Read [this blog post](https://cloudcannon.com/blog/managing-multilingual-content-in-cloudcannon/) before getting starting with the RCC. 
+The two approaches also combine well: [split-by-directory translation](/docs/split-by-directory/) handles long-form body content through per-locale content collections, while Rosey handles the shared UI strings around it.
+
+## Upgrading from v1
+
+v1 was a form-based workflow — translations were edited as YAML in CloudCannon's Data Editor, and the package shipped an auto-tagger and a Smartling integration. v2 replaces all of that with inline editing in the Visual Editor. Same npm package name, different workflow. See [Migrating from v1](/docs/migration-from-v1/) for the step-by-step upgrade, including how to remap existing translations onto new keys.
+
+Already running a different i18n system? See [Migrating from an i18n System](/docs/migrating-from-i18n/).

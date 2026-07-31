@@ -1,34 +1,182 @@
 # Rosey CloudCannon Connector
 
-See more detailed documentation [here](https://rosey.cc/).
+Full documentation: **[rosey.cc](https://rosey.cc/)**
+
+Client-side locale switching for [Rosey](https://rosey.app/) translations in [CloudCannon's](https://cloudcannon.com/) Visual Editor.
+
+The connector auto-detects all `data-rosey` tagged elements on the page, injects a floating locale switcher, and creates inline editors connected to your locale data files through CloudCannon's live editing API — no server-side conditionals or component refactoring required.
+
+## Prerequisites
+
+- A static site built with any SSG (Astro, Hugo, Eleventy, Jekyll, etc.) hosted on [CloudCannon](https://cloudcannon.com/)
+- [Rosey](https://rosey.app/) v2 generating `base.json` from your built site
+- Translatable elements tagged with `data-rosey` attributes
+- CloudCannon Visual Editor enabled
+
+> **No existing editing setup required.** The connector does not depend on editable regions, or Bookshop. It creates its own inline editors on every `data-rosey` element — sites with no editing infrastructure still get full visual translation editing. Editable regions and Bookshop are compatible enhancements (the connector handles them automatically), not prerequisites.
+
+## Install
+
+```bash
+npm install rosey-cloudcannon-connector
+```
+
+The package ships a **client-side injector** (auto-runs in the Visual Editor) and three **CLI tools** (`init`, `write-locales`, `install-client`). **Agent skills** for AI-assisted translation and setup are maintained separately in [CloudCannon/agent-skills](https://github.com/CloudCannon/agent-skills).
+
+## Quick Start
+
+The fastest way to get set up is with the `init` wizard. It installs dependencies, creates the postbuild script, and configures `cloudcannon.config.yml` for you:
+
+```bash
+npx rosey-cloudcannon-connector init
+```
+
+Or skip all prompts in CI / agent workflows:
+
+```bash
+npx rosey-cloudcannon-connector init --yes --locales fr,de
+```
+
+After running `init`, you still need to:
+
+1. **Tag translatable elements** with `data-rosey`:
+
+```html
+<h1 data-rosey="hero:title">Welcome to my site</h1>
+```
+
+1. **Import the script** in your layout (Astro example):
+
+```astro
+<script>
+  if (window?.inEditorMode) {
+    import("rosey-cloudcannon-connector");
+  }
+</script>
+```
+
+See the [full setup guide](https://rosey.cc/docs/) for detailed explanations and all available `init` flags.
+
+### Manual Setup
+
+If you prefer to configure things yourself, the steps `init` automates are:
+
+**1. Add `data_config`** entries to `cloudcannon.config.yml`:
+
+```yaml
+data_config:
+  locales_fr:
+    path: rosey/locales/fr.json
+  locales_de:
+    path: rosey/locales/de.json
+```
+
+**2. Set up the postbuild** at `.cloudcannon/postbuild`:
+
+```bash
+#!/usr/bin/env bash
+npx rosey generate --source dist
+npx rosey-cloudcannon-connector write-locales --source rosey --dest dist
+npx rosey-cloudcannon-connector install-client --dest dist
+mv ./dist ./_untranslated_site
+npx rosey build --source _untranslated_site --dest dist --default-language en --default-language-at-root --exclusions "\.(html?)$"
+```
+
+The `--exclusions` flag overrides Rosey's default (`\.(html?|json)$`) so that JSON files like `_rcc/locales.json` and `_cloudcannon/info.json` flow through the build as assets. Without it, those files are excluded and must be manually copied back.
+
+> **Note: Rosey JSON translation users.** If your site uses [Rosey's JSON translation feature](https://rosey.app/docs/translating-json/) (`.rosey.json` schema files), be aware that this exclusion override lets all JSON files pass through as-is — including any JSON data files that Rosey would normally process via their `.rosey.json` schemas. If you use both the RCC and Rosey JSON translation, you may need a more targeted exclusion regex (e.g. keeping specific JSON files excluded) or handle the translated JSON output separately.
+
+**3. Import the client** in your layout. `install-client` puts it in your build output, so this works on any SSG:
+
+```html
+<script>
+  if (window?.inEditorMode) {
+    import("/_rcc/client.mjs").catch(console.error);
+  }
+</script>
+```
+
+On Astro and other bundled frameworks you can import the bare specifier `rosey-cloudcannon-connector` instead and skip `install-client`. On 11ty, Hugo, Jekyll and anything else that doesn't bundle browser JS, the URL form is required — see **[SSG Setup](https://rosey.cc/docs/ssg-setup/)**.
+
+## Data Attributes
 
 
-The Rosey CloudCannon Connector provides a way to enter and edit translations used by [Rosey](https://rosey.app/) inside of CloudCannon's CMS. It then turns these translations into the JSON files that Rosey uses in tandem with your site's tagged HTML to generate a multilingual site. 
+| Attribute                    | Where                 | Purpose                                                                                          |
+| ---------------------------- | --------------------- | ------------------------------------------------------------------------------------------------ |
+| `data-rosey="{key}"`         | Translatable elements | Rosey translation key                                                                            |
+| `data-rcc-ignore`            | Translatable elements | Opt out of locale switching                                                                      |
+| `data-rosey-root="{prefix}"` | Parent elements       | Root namespace prefix (stops upward traversal)                                                   |
+| `data-rosey-ns="{segment}"`  | Parent elements       | Namespace segment for child keys                                                                 |
+| `data-rcc`                   | Container element     | Set the snapshot boundary — use to include nav/footer in locale switching (defaults to `<main>`) |
+| `data-rcc-exclude="de,es"`   | Container element     | Hide locales from the switcher on this page                                                      |
+| `data-rcc-verbose`           | Any element           | Enable verbose console logging                                                                   |
 
 
-Translations are displayed to editors in a form-like interface, with links to each original phrase in context on it's untranslated page. An optional [Smartling](https://www.smartling.com/) integration is provided for automatic [AI-powered machine translations](https://www.smartling.com/software/smartling-translate/), which editors can then QA and edit as needed.
+## Bookshop Compatibility
 
+Sites using [Bookshop](https://github.com/CloudCannon/bookshop) for component-based live editing work out of the box. The connector automatically detects Bookshop's live-editing markers and pauses its re-rendering cycle during locale view, preventing conflicts between Bookshop's component rendering and the connector's inline translation editors. Switching back to "Original" fully restores Bookshop live editing.
 
-![Screenshot of editing interface in CloudCannon](docs/src/assets/images/screenshot-editing.png)
+## AI-Powered Translation
 
+Rosey locale files are flat JSON with a predictable three-field structure per entry (`original`, `value`, `_base_original`). This makes them ideal for AI translation — untranslated entries are instantly detectable (`value === original`), stale entries are flagged (`original !== _base_original`), and already-translated content is left untouched. No wasted tokens, reviewable diffs, idempotent runs.
 
-## How it works
+Agent skills that guide AI coding assistants through translation and setup workflows live in [CloudCannon/agent-skills](https://github.com/CloudCannon/agent-skills). Add them to your project:
 
-1. A developer tags HTML elements on your site for translation using `data-rosey` tags.
+```bash
+npx skills add CloudCannon/agent-skills --all
+```
 
-2. Rosey scans your built static site for `data-rosey` tags and generates a JSON file named `base.json`, containing information about your all of your tagged content.
+See [AI-Powered Translation](https://rosey.cc/docs/ai-translation/) for the full guide.
 
-3. The Rosey CloudCannon Connector generates YAML files which are displayed to editors in the CMS. Editors fill in translations.
+## Stale Translation Detection
 
-4. These YAML files are turned into the `locales/*.json` files which Rosey needs to generate the multilingual site.
+When the source text of an element changes after it was last translated, the connector flags the translation as stale. In the Visual Editor, stale elements get an amber dashed border, and the locale switcher FAB shows a count badge. Clicking a locale button reveals a panel where editors can resolve stale items individually or all at once. Editing a translation auto-resolves its stale flag. See [Stale Translation Detection](https://rosey.cc/docs/stale-translations/) for details.
 
-3. Rosey ingests the `locales/*.json` files, which contain each original phrase paired with a user entered translation. Using this data, and your tagged HTML, Rosey generates a complete multilingual site.
+Accurate stale detection and element activation depend on each element having a unique, stable Rosey key — see [Tagging Content: Key uniqueness and stability](https://rosey.cc/docs/tagging-content/#key-uniqueness-and-stability) for guidance on avoiding key collisions in repeating structures. Elements whose key has no entry in the locale file yet (e.g. newly added content before a build has run) are still editable — they show the source text as a fallback, and the first edit creates a new locale entry for that key. See [Tagging Content: Elements with no locale entry yet](https://rosey.cc/docs/tagging-content/#elements-with-no-locale-entry-yet).
 
+## Already Using an i18n System?
 
-All of this file generation happens in your site's postbuild - meaning it happens automatically each build.
+If your site already uses Astro's built-in i18n, `astro-i18next`, `next-intl`, or another translation system, see the [migration guide](https://rosey.cc/docs/migrating-from-i18n/) for what changes and how to move to Rosey. There's also an agent skill (`make-site-multilingual`, whose "Migrating from an existing i18n system" appendix covers this) with detailed step-by-step instructions — run `npx skills add CloudCannon/agent-skills --all` to add it to your project.
 
+## Documentation
 
-## Is this workflow right for you?
+Hosted at [rosey.cc](https://rosey.cc/). The site source is in [`docs/`](docs) — an Eleventy site whose pages live in `docs/src/docs/`.
 
+- **[Getting Started](https://rosey.cc/docs/)** — Full setup guide with complete examples
+- **[Tagging Content](https://rosey.cc/docs/tagging-content/)** — How to tag elements and use namespacing
+- **[SSG Setup](https://rosey.cc/docs/ssg-setup/)** — Loading the client in Eleventy, Hugo, Jekyll, Astro, and how `install-client` works
+- **[Configuration](https://rosey.cc/docs/configuration/)** — Snapshot boundary, locale exclusion, CloudCannon config
+- **[init CLI](https://rosey.cc/docs/init/)** — Setup wizard reference: every flag, what it detects, and what it writes
+- **[write-locales CLI](https://rosey.cc/docs/write-locales/)** — CLI reference, programmatic API, locale file format
+- **[AI-Powered Translation](https://rosey.cc/docs/ai-translation/)** — Using AI to translate locale files, and the agent skills for it
+- **[External Integrations](https://rosey.cc/docs/integrations/)** — Machine translation APIs, TMS platforms, CI-driven translation, and custom middleware
+- **[Stale Translation Detection](https://rosey.cc/docs/stale-translations/)** — Detecting and resolving out-of-date translations
+- **[Split-by-Directory Translation](https://rosey.cc/docs/split-by-directory/)** — Translating body content via per-locale content collections alongside Rosey
+- **[Incremental Translation](https://rosey.cc/docs/incremental-translation/)** — Strategies for translating your site progressively (fallback content, branching workflows)
+- **[RTL Support](https://rosey.cc/docs/rtl-support/)** — Right-to-left language support (Arabic, Hebrew, Farsi, etc.)
+- **[Known Issues & Troubleshooting](https://rosey.cc/docs/known-issues/)** — Common issues and workarounds
+- **[Migrating from an Existing i18n System](https://rosey.cc/docs/migrating-from-i18n/)** — Migration guide for sites using Astro i18n, astro-i18next, or other translation systems
+- **[Migrating from v1](https://rosey.cc/docs/migration-from-v1/)** — Step-by-step guide for upgrading from RCC v1
 
-Depending on your usecase this workflow could be unnecessary, and you would be better suited to simply dividing your different language content into separate directories and maintaining each separately. Read [this blog post](https://cloudcannon.com/blog/managing-multilingual-content-in-cloudcannon/) before getting starting with the RCC. 
+## Feedback
+
+Found a bug, hit a rough edge, or have a feature request? Please [open an issue](https://github.com/CloudCannon/rcc/issues). Where relevant, include your `rosey.{yml,yaml,json}` config, the CloudCannon build log, and steps to reproduce.
+
+## Development
+
+```bash
+npm run build    # Build CJS + ESM output via tsup
+npm run dev      # Watch mode
+npm run biome    # Lint and format
+npm test         # Unit tests + integration fixture builds
+```
+
+Unit tests (`npm run test:unit`) cover the pure locale/stale logic; the
+integration suite (`npm run test:integration`) builds the Astro and
+Eleventy+Bookshop fixtures against the local package. See
+[`test/README.md`](test/README.md) for the layout and the manual Visual-Editor
+checklist.
+
+## License
+
+MIT

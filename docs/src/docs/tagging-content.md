@@ -1,101 +1,267 @@
 ---
-_schema: page
+_schema: docs
 permalink: /docs/tagging-content/
-title: Tagging Content
+title: "Tagging Content"
 layout: layouts/page.html
 eleventyNavigation:
-  key: Tagging Content
-  order: 2
-tags: page
+  key: "Tagging Content"
+  order: 1
+tags: "guides"
 SEO_options:
   title:
   image:
   description:
 draft: false
 ---
+The connector works with [Rosey's](https://rosey.app/) `data-rosey` attribute system. Any HTML element tagged with `data-rosey` becomes translatable — both in Rosey's build-time translation pipeline and in the connector's Visual Editor integration.
+
 ## Manual tagging
 
-To add text content to translate, start tagging your layouts and components with `data-rosey` tags.
-
-Some SSGs - like Eleventy - come with a global `slugify` filter, which you can use to turn the tagged element's text content into an ID friendly slug, and use that as the translation key.
-
-An example tag in [Eleventy](https://www.11ty.dev/) may look like:
+Add `data-rosey` to any element that contains translatable text. The attribute value is the translation key:
 
 ```html
-<h1 class="heading" data-rosey="{% raw %}{{ heading.heading_text | slugify }}{% endraw %}">
-  {% raw %}{{ heading.heading_text }}{% endraw %}
-</h1>
+<h1 data-rosey="hero-title">Welcome to my site</h1>
+<p data-rosey="hero-subtitle">The best site on the internet</p>
 ```
 
-If you are using an SSG that doesn't have a `slugify` filter built in - like Astro - you can import a helper function to generate the Rosey IDs. One has been provided at `rosey-cloudcannon-connector/utils`.
+### Choosing good keys
 
-An example tag in [Astro](https://astro.build/) may look like:
+The key you put in `data-rosey` determines how translations are tracked across builds. There are three common strategies — pick the one that fits your workflow.
+
+#### Static descriptive keys (recommended)
+
+Use **static, descriptive keys** that don't change when the content changes. When the source text changes, the key stays stable and the connector flags the translation as [stale](/docs/stale-translations/) rather than creating a new entry. This gives translators a clear signal that a specific translation needs updating, along with a diff of what changed.
 
 ```html
----
-import { generateRoseyId } from "rosey-cloudcannon-connector/utils";
-
-const { heading } = Astro.props;
----
-
-<h1 class="heading" data-rosey={generateRoseyId(heading.heading_text)}>
-  {heading.heading_text}
-</h1>
+<h1 data-rosey="homepage:hero-title">Welcome to Sendit</h1>
+<p data-rosey="homepage:hero-subtitle">Email marketing made easy</p>
 ```
 
-## Automatic tagging
+This is the recommended default for most sites. Keys are readable in the locale file, stale detection works fully, and keys survive content edits.
 
-Most sites using an SSG will have at least some content that comes from markdown, which gets from markdown into HTML as part of the build step. Markdown from a frontmatter field will usually be run through something like a `markdownify` filter. Markdown body content will usually be run through the SSGs markdown parsing step.
+#### Content as the key
 
-Both are turned into the HTML needed by your actual live site as part of your build, meaning you won't see it as HTML until the site is actually built. This makes it hard to add `data-rosey` tags to manually.
+You can use the element's text content (or a slugified version) as the key. This was v1's default approach via `generateRoseyId()` and remains valid in v2.
 
-For this purpose, the `npx rosey-cloudcannon-connector tag` command has been provided. In the [Getting Started](#getting-started) steps, we added it to the CloudCannon `postbuild` file so that it runs after every build, but before the rest of the Rosey workflow.
+```astro
+<h1 data-rosey={heading.text.toLowerCase().replace(/\s+/g, "-")}>
+  {heading.text}
+</h1>
+<!-- If heading.text is "Welcome to Sendit", key is "welcome-to-sendit" -->
+```
 
-It walks your site's built HTML, and looks for any elements with the attribute `data-rosey-tagger`. It then tags any block elements nested inside of that parent element with `data-rosey` tags, using the slugified text content of that element as the value of the tag. The most nested block elements inside of the element with the `data-rosey-tagger` attribute will be the ones to receive the tag, so that there is never a `data-rosey` tag inside of a `data-rosey` tag.
+The trade-off is that **stale translation detection won't trigger**. When the source text changes, the key changes too — the old key is orphaned (and cleaned up by the next `write-locales` run) and a brand-new entry appears with no translation. Since the new entry's `original` and `_base_original` are always identical, the connector never sees a mismatch to flag as stale.
 
-This is primarily used to tag markdown that was turned into HTML during the build, wherever that lives - be it in your layouts or components - but could optionally also be used on any element. For example you could add it to the `<body>` tag of a page for the most nested block level elements on that page to be tagged automatically.
+However, this gives you a different kind of protection: changed content always shows up as untranslated, forcing a fresh translation. Nothing is silently outdated — it's just a clean-slate approach rather than a diff-based one.
 
-You shouldn't nest one `data-rosey-tagger` inside of another, however it should respect existing tags you've added manually, and not overwrite them.
+You can safely leave stale detection enabled while using content-derived keys. Nothing breaks — `_base_original` is still written, it just never diverges from `original` for any living key. No false positives, no errors, no wasted work.
 
-> When using the `rosey-tagger` with markdown, add a Rosey namespace of `data-rosey-ns="rcc-markdown"` on the element containing markdown, so that the generated inputs for that translation are `type: markdown` in CloudCannon, which will allow editors the same options in the translation input as are allowed for the original content.
+#### UUIDs as keys
 
-If you don't have one of these `data-rosey-tagger` tags on any of your pages it won't do anything, so can be ignored or removed. If no translation is provided for an element, the original will be used. This means even if you tag everything, but don't want to provide a translation for it, the original will be shown in your translated version, rather than a blank space.
+UUIDs provide maximum key stability — content changes, reordering, and insertions never affect the key. Stale detection works perfectly and there's zero collision risk, which neatly solves the [array/index problem](#key-uniqueness-and-stability).
 
-## Namespace pages
+The critical requirement is that **UUIDs must come from stored data, not build-time generation**. If you generate a UUID in your template (e.g. `crypto.randomUUID()`), every build produces new UUIDs and all translations are orphaned.
 
-Sometimes you don't want a piece of content that appears many times on different pages to be represented in each translation file. Duplicate translation keys (translations with the same ID) across pages *will* be kept in sync with each other, but it can clutter up your translation files. The most common example of this would be the text used in your header and footer navigation.
+CloudCannon's [`instance_value`](https://cloudcannon.com/documentation/developer-reference/configuration-file/types/_inputs/*/instance_value/) feature is designed for exactly this. Configure a hidden text input with `instance_value: UUID` on your structure, and CloudCannon auto-populates a UUIDv4 when an array item is created. The UUID persists in the content file across rebuilds:
 
-To help with this issue, you can add a [Rosey namespace](https://rosey.app/docs/namespacing/) to an element and any elements nested inside of that element with `data-rosey` tags will receive the namespace as part of their Rosey ID. Separate translation files will be generated for each value in the `namespace_pages` list in the `rcc.yaml` config file. If an ID is seen to start with one of these defined namespaces, the translation will reside in the namespace file instead of the actual page(s) translation files that it appears on.
+```yaml
+# cloudcannon.config.yml
+_inputs:
+  _uuid:
+    type: text
+    hidden: true
+    instance_value: UUID
+```
 
-By default the value `common` is used as the value for `namespace_pages`, defined in the `rcc.yaml` file under the key `namespace_pages`. You can change this to whatever name you like, or add more than one namespace page.
+The best pattern is to use the UUID as a **namespace segment** (via `data-rosey-ns`) while keeping the leaf key descriptive. This way the key is stable AND the leaf tells you what the field is:
 
-An example for a header component in Astro might look like:
+```astro
+<div data-rosey-ns="features">
+  {features.map((feature) => (
+    <div data-rosey-ns={feature._uuid}>
+      <h3 data-rosey="title">{feature.title}</h3>
+      <p data-rosey="description">{feature.description}</p>
+    </div>
+  ))}
+</div>
+<!-- key: features:6ec0bd7f-11c0-43da-...:title -->
+```
 
-```jsx
----
-import { generateRoseyId } from "rosey-cloudcannon-connector/utils";
+The trade-off is readability — locale files contain opaque UUIDs, so debugging requires cross-referencing with the source content. Using UUID-as-namespace with descriptive leaf keys mitigates this (you can see the field name, just not which array item).
 
-const { links } = Astro.props;
----
+If an item is deleted and re-added in CloudCannon, it gets a new UUID and the old translation is orphaned — a fresh translation is needed for the new item.
 
-<header
-  data-rosey-ns="common">
-  <ul>
-    {
-      links.map((link) => {
-        return (
-          <li>
-            <a
-              href={link.link}
-              data-rosey={generateRoseyId(link.text)}>
-              {link.text}
-            </a>
-          </li>
-        );
-      })
-    }
-  </ul>
+UUIDs shine for dynamic, CMS-managed arrays. For hand-authored templates without CMS-managed data, static descriptive keys are simpler and equally stable.
+
+For a working example of UUIDs on content blocks alongside content-as-key on nav/footer links, see the [Rosey Astro Starter](https://github.com/CloudCannon/rosey-astro-starter).
+
+#### Summary
+
+| Strategy | Stale detection | Readability | Best for |
+| --- | --- | --- | --- |
+| Static descriptive | Full | High | Most sites, hand-authored templates |
+| Content as key | None (forces re-translation instead) | High | Simple sites, short stable text |
+| UUID (via `instance_value`) | Full | Low (mitigated with descriptive leaves) | CMS-managed arrays and structures |
+
+All three are valid — the connector and Rosey use whatever keys the HTML provides. Choose based on your content management workflow.
+
+### Key uniqueness and stability
+
+Each Rosey key maps to exactly one entry in the locale file. The connector relies on this 1:1 mapping for two things:
+
+- **[Stale detection](/docs/stale-translations/)** — compares `original` vs `_base_original` per key. If two elements share a key, a source-text change on either one flags both as stale.
+- **Translation continuity** — when a key has no entry yet, editing the element creates a new entry at that key (see [Elements with no locale entry yet](#elements-with-no-locale-entry-yet)). If keys shift between builds, existing translations get stranded on the old keys and fresh, empty entries appear under the new ones.
+
+Both behaviours break when keys collide or shift unexpectedly.
+
+**The array/index problem.** A common pitfall is using positional indexes as namespace segments for repeating structures (e.g. a list of feature cards):
+
+```html
+<!-- Fragile: index-based keys shift when items are inserted or reordered -->
+<div data-rosey-ns="features">
+  <div data-rosey-ns="0"><h3 data-rosey="title">Fast</h3></div>
+  <div data-rosey-ns="1"><h3 data-rosey="title">Secure</h3></div>
+</div>
+<!-- keys: features:0:title, features:1:title -->
+```
+
+If a new card is inserted between the two, every key after the insertion point shifts by one. The locale file still has entries for the old indexes, so:
+
+- Elements after the insertion map to the wrong locale entry — showing the wrong translation and potentially false stale flags
+- The newly inserted element has no matching locale entry, so editing it creates a fresh entry under the shifted key instead of reusing an existing translation
+- The last element in the original list loses its match and is treated as a new, untranslated entry
+
+**Recommended: use stable identifiers.** Instead of indexes, derive namespace segments from something that won't change when items are reordered — a slug, a short descriptive name, or a UUID from your CMS data:
+
+```html
+<!-- Stable: content-derived keys survive insertions and reordering -->
+<div data-rosey-ns="features">
+  <div data-rosey-ns="fast"><h3 data-rosey="title">Fast</h3></div>
+  <div data-rosey-ns="secure"><h3 data-rosey="title">Secure</h3></div>
+</div>
+<!-- keys: features:fast:title, features:secure:title -->
+```
+
+Now inserting a card between them doesn't affect existing keys — the new card simply gets a new key, and existing translations stay matched to the correct elements.
+
+> **Note:** Key design is ultimately a decision for the site author. The connector and Rosey use whatever keys the HTML provides — they don't enforce a naming strategy. Choose an approach that keeps keys unique and stable across content changes.
+
+### Elements with no locale entry yet
+
+When switching to a locale in the Visual Editor, a `[data-rosey]` element whose resolved key has no matching entry in the locale file is still fully editable. It displays the source text as a fallback, and the **first edit creates a new entry** in the locale file for that key. The connector writes `{ original, value, _base_original }`, where `original` and `_base_original` are seeded from the source text on the page and `value` is what you type. No build is required first.
+
+This means you can translate newly added content directly in the Visual Editor before `write-locales` has run for it. [Stale detection](/docs/stale-translations/) also works immediately: because `_base_original` is seeded from the current source text, the entry flips to stale the moment the source text later changes (the next `write-locales` run updates `_base_original`, creating the mismatch with `original`).
+
+The entry the connector writes is the same shape `write-locales` produces, so a later build reconciles cleanly — existing keys keep their `original` and `value`, and only get `_base_original` refreshed.
+
+**A note on key stability.** Because a missing key is now created silently on edit rather than flagged, an unstable key (see [Key uniqueness and stability](#key-uniqueness-and-stability)) no longer surfaces as an obvious "this element is disabled" signal — a shifted key just produces a new entry. Keep keys stable so edits land on the intended entry rather than scattering translations across orphaned keys.
+
+### Array items inside a component: keep `data-rosey-ns` live
+
+When `data-rosey-ns` is derived from a per-item id (e.g. a `_uuid` from `instance_value`) and the array is rendered **inside a component** (a widget that holds its own list), the Visual Editor may add or reorder items by cloning a sibling's DOM without re-rendering — so a new item gets a *stale, duplicated* `data-rosey-ns` until you reload, which collides keys and breaks new-content translation. If you see this, give each array item its **own registered component** and put `data-component` on the `array-item` element, with `data-rosey-ns` on the item component's own root, so CloudCannon renders the item directly. See [Astro patterns: Array items inside a component](https://github.com/CloudCannon/agent-skills/blob/main/skills/make-site-multilingual/astro.md) for a worked example. (SSG-specific: the same principle applies wherever an editable array lives inside a re-rendering component.)
+
+### Works with CloudCannon editable regions
+
+If you're using CloudCannon's editable region custom elements, `data-rosey` can go right on them:
+
+```html
+<editable-text data-editable="text" data-prop="title" data-rosey="hero:title">
+  Welcome to my site
+</editable-text>
+```
+
+## Key namespacing
+
+Rosey keys can be namespaced using parent element attributes. The connector walks up the DOM from each `data-rosey` element, collecting namespace segments to build a fully qualified key.
+
+### `data-rosey-ns`
+
+Adds a namespace segment to all child keys:
+
+```html
+<section data-rosey-ns="hero">
+  <h1 data-rosey="title">Welcome</h1>
+  <!-- Resolved key: hero:title -->
+</section>
+```
+
+### `data-rosey-root`
+
+Sets the root prefix and stops further upward traversal:
+
+```html
+<main data-rosey-root="index">
+  <section data-rosey-ns="hero">
+    <h1 data-rosey="title">Welcome</h1>
+    <!-- Resolved key: index:hero:title -->
+  </section>
+</main>
+```
+
+### Combined example
+
+```html
+<body>
+  <main data-rosey-root="index">
+    <section data-rosey-ns="hero">
+      <h1 data-rosey="title">Welcome</h1>
+      <!-- key: index:hero:title -->
+      <p data-rosey="subtitle">The best site</p>
+      <!-- key: index:hero:subtitle -->
+    </section>
+    <section data-rosey-ns="features">
+      <h2 data-rosey="heading">Features</h2>
+      <!-- key: index:features:heading -->
+    </section>
+  </main>
+</body>
+```
+
+The resulting locale file entries:
+
+```json
+{
+  "index:hero:title": { "original": "Welcome", "value": "..." },
+  "index:hero:subtitle": { "original": "The best site", "value": "..." },
+  "index:features:heading": { "original": "Features", "value": "..." }
+}
+```
+
+### Resetting the namespace
+
+Setting `data-rosey-root=""` (empty string) resets the namespace. Child keys won't inherit anything from above:
+
+```html
+<main data-rosey-root="index">
+  <div data-rosey-root="">
+    <p data-rosey="standalone">This key is just "standalone"</p>
+  </div>
+</main>
+```
+
+## Shared content across pages
+
+If the same text appears on multiple pages (e.g. navigation, footer), use consistent namespacing so the translations are shared. For example, give your header a namespace that resolves to the same key regardless of which page it's on:
+
+```html
+<header data-rosey-root="common">
+  <nav data-rosey-ns="nav">
+    <a data-rosey="home" href="/">Home</a>
+    <!-- key: common:nav:home — same on every page -->
+  </nav>
 </header>
 ```
 
-You cannot use the namespace `rcc-markdown` for a namespace page, as that is reserved for use by the RCC to nominate which inputs should be `type: markdown`.
+Since the header lives outside the [snapshot boundary](/docs/configuration/#snapshot-boundary), it won't be affected by locale switching in the Visual Editor. Rosey still translates it at build time.
+
+## Automatic tagging
+
+v2 does not include an auto-tagger (the `data-rosey-tagger` attribute from v1 is not supported). If you previously relied on auto-tagging for markdown content rendered to HTML at build time, you'll need to add `data-rosey` attributes manually to your templates.
+
+For content coming from markdown that you can't tag at the source level, consider:
+
+- Adding `data-rosey` to the wrapper element in your layout that receives the rendered markdown
+- Writing a build-step script that walks the built HTML and tags elements (similar to what v1's tagger did)
+- Translating large sections of text (like the body content of a page) via a [split-by-directory](/docs/split-by-directory/) approach instead of using Rosey
+
+See [Migrating from v1](/docs/migration-from-v1/) if you're upgrading from RCC v1 and used the auto-tagger.

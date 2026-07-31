@@ -1,44 +1,89 @@
 ---
-_schema: page
+_schema: docs
 permalink: /docs/known-issues/
-title: Known Issues & Workarounds
+title: "Known Issues & Troubleshooting"
 layout: layouts/page.html
 eleventyNavigation:
-  key: Known Issues & Workarounds
-  order: 5
-tags: page
+  key: "Known Issues & Troubleshooting"
+  order: 3
+tags: "reference"
 SEO_options:
   title:
   image:
   description:
 draft: false
 ---
-## Unsupported HTML in markdown
+## Known issues
 
-**Issue**: If HTML exists that cannot be represented as markdown, it won’t make it through to the translations files.
+### Locale values must be HTML
 
-**Solution**: Separate the text to translate from the unsupported HTML. Consider the following example:
+Rosey originals are always HTML (the SSG converts Markdown to HTML at build time). Locale `.value` fields must also be HTML because Rosey substitutes them directly into the built HTML output. The connector forces all inline editors to `type: "html"`, even if your `_inputs` config specifies `type: markdown`. This ensures ProseMirror serializes content as HTML rather than raw Markdown.
 
-```html
-<li>
+If you need Markdown translations, you'd need to handle the Markdown-to-HTML conversion yourself before Rosey consumes the locale files.
 
-  <span data-rosey="{% raw %}{{ item.title | slugify }}{% endraw %}">
-    {% raw %}{{ item.title }}{% endraw %}<i class="some-unrepresentable-html"></i>
-  </span>
-</li>
-```
+### JavaScript hydration
 
-Could be refactored to something like:
+If your site uses JavaScript to hydrate or re-render text content after the initial page load, the translated text may be overwritten by the JS framework's original values. This happens because Rosey translates the static HTML, but the JS framework doesn't know about the translations and re-renders with its own data.
 
-```html
-<li>
-  <span data-rosey="{% raw %}{{ item.title | slugify }}{% endraw %}">{% raw %}{{ item.title }}{% endraw %}</span>
-  <span><i class="some-unrepresentable-html"></i></span>
-</li>
-```
+Workarounds:
 
-## Wrapping double quotes
+- **Import locale data into your JS components.** Read the locale JSON files and detect the current locale from the page URL to display the correct translation. See [this React + Astro example](https://github.com/tomrcc/rosey-and-react-demo) for a reference implementation.
+- **Keep translated text outside hydrated components.** Structure your templates so that translatable text lives in static HTML (outside React/Vue/Svelte islands) where Rosey can safely replace it.
 
-**Issue**: If an untranslated phrase has double quotes wrapping the whole phrase (quotes in the middle are fine), the quotes themselves won’t make it through the `rosey generate` step into the `base.json`. This means the phrase won’t have quotes in the translations file, and also won't have quotes present on the label for the translation.
+### Content outside the snapshot boundary
 
-**Solution**: If you want the translation to have wrapping quotes like the original, you can still manually enter them in the translation file and they will make it through to the translated site.
+Navigation, footers, and other content outside the [snapshot boundary](/docs/configuration/#snapshot-boundary) are not affected by locale switching in the Visual Editor. Rosey still translates them at build time, but editors won't see translated versions of that content when switching locales in the editor.
+
+If you need to translate content outside `<main>` (like navigation links), those translations will only be visible on the built site, not in the Visual Editor's locale preview.
+
+### JSON files excluded by default in Rosey build
+
+Rosey's default `--exclusions` regex (`\.(html?|json)$`) prevents JSON files from being copied through the build as assets. This blocks essential files like `_rcc/locales.json` (the RCC locale manifest) and `_cloudcannon/info.json` (Bookshop component data). The postbuild `rosey build` command should include `--exclusions "\.(html?)$"` to let JSON files pass through. See [Getting Started: Step 4](/docs/#step-4-set-up-the-postbuild-script) for the full postbuild example.
+
+If the locale manifest is missing from the final output, the connector won't find any locales and the switcher won't appear.
+
+### Key collisions in repeating structures
+
+When repeating components (e.g. card lists, feature grids) use positional indexes in their Rosey keys, inserting or reordering items shifts all subsequent keys. This causes mismatched translations, false stale flags, and edits creating fresh entries under shifted keys instead of reusing existing translations. Use stable, content-derived identifiers instead of array indexes for namespace segments. See [Tagging Content: Key uniqueness and stability](/docs/tagging-content/#key-uniqueness-and-stability) for a full explanation and examples.
+
+### Translating content added since the last build
+
+A `data-rosey` element added to the source but not yet present in the locale files (because no build has run for it) is fully editable in the Visual Editor: it shows the source text as a fallback, and your first edit creates a new entry for that key. You don't need to trigger a build first. Because the new key is created silently on edit, double-check that [keys are stable](/docs/tagging-content/#key-uniqueness-and-stability) so edits land on the intended entry. See [Tagging Content: Elements with no locale entry yet](/docs/tagging-content/#elements-with-no-locale-entry-yet) for details.
+
+## Troubleshooting
+
+### The locale switcher doesn't appear
+
+- Confirm you're in the CloudCannon Visual Editor (not the Content Editor or a local dev server)
+- Check that the script is being imported — look for `RCC:` messages in the browser console
+- Ensure `write-locales --dest` ran successfully in your postbuild and `/_rcc/locales.json` is being served
+- Ensure at least one `data-rosey` element exists inside the snapshot boundary
+- Check that a `<main>` element or `[data-rcc]` element exists on the page
+
+**Nothing in the console at all** means the client never loaded. On a non-bundled SSG that's usually one of two things: the layout is importing the bare specifier `rosey-cloudcannon-connector` (which no browser can resolve — you'd see `Failed to resolve module specifier`), or `install-client` didn't run so `/_rcc/client.mjs` 404s. See [SSG Setup](/docs/ssg-setup/).
+
+**`RCC: loaded` and then nothing** means the client loaded but returned early. Add `data-rcc-verbose` to your `[data-rcc]` element (or `<main>`) and reload — the verbose log names which of the three early exits it hit (no boundary, no locales in the manifest, no `data-rosey` elements). Without that attribute those exits are silent, which reads as a broken editor rather than a configuration problem.
+
+### Translations aren't loading
+
+- Check that `data_config` entries exist in `cloudcannon.config.yml` with the correct `locales_{code}` naming
+- Verify the locale JSON files exist at the paths specified in `data_config`
+- Look for `RCC:` warnings in the browser console
+- Enable verbose logging with `data-rcc-verbose` for detailed output
+
+### Edits aren't saving
+
+- CloudCannon's data API handles persistence — ensure you see the "Unsaved changes" indicator in the CloudCannon toolbar after editing
+- Check that the `data_config` path matches the actual file location in your repo
+
+### Stale badges show unexpected counts
+
+- Run `write-locales` to update `_base_original` fields — this happens automatically in the postbuild
+- If you've edited source content locally, push and trigger a CloudCannon build to regenerate `base.json` and update `_base_original` values
+
+### Inline editors don't match expected toolbar options
+
+- The connector pre-scans `_inputs` config from the original container at init time. If your `_inputs` rules don't apply to elements inside the snapshot boundary, the connector won't pick them up.
+- Remember that `type` is always forced to `"html"` — only toolbar options (bold, italic, link, styles, snippets, etc.) are inherited from your config. Because they ride on `options`, forcing the `type` doesn't drop any controls.
+- The connector passes the original element's raw `data-type` as the editor's `elementType`, mirroring CloudCannon's native editor. This matters for the toolbar: an inline `styles` dropdown (accented-text styles) only renders on a `text`/`block` editor, not a bare `span`. If a heading shows its styles menu in the Original view but an empty toolbar in a locale view, check the element carries `data-type` (Astro helpers like `Heading.astro` emit `data-type="text"`).
+- When an element has **no** `data-type`, the connector mirrors CloudCannon's default rule (see `cloudcannon-visual-editing` skill → `editable-regions.md`): a rich-text or source input defaults to `block`/`text`, everything else to `span`. It reads the input kind from the pre-scanned config (`type: html`/`markdown`) and the source flag — not from DOM shape alone — so a toolbar-backed field with no `data-type` doesn't silently become a plain-text `span`. The one residual gap: if config pre-scan misses an element (see above) *and* it has no `data-type`, it defaults to `span`.

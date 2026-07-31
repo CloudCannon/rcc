@@ -83,13 +83,13 @@ collections_config:
       - content
       - visual
     preview:
-      metadata: 
+      metadata:
         - icon: folder
-          text: 
-            - key: nav_section
+          text:
+            - key: tags
         - icon: format_list_numbered
-          text: 
-            - key: weight
+          text:
+            - key: eleventyNavigation.order
   meta_data:
     disable_url: true
     path: _data
@@ -179,21 +179,25 @@ _inputs:
   eleventyNavigation.order:
     comment: The order of the page in the sidebar group
   tags:
-    comment: The name of the section the page is nested under in the sidebar navigation (use 'page' for Root pages)
-  title: 
+    label: Sidebar Section
+    comment: >-
+      Which sidebar section this page sits in. Must match a `tag` in
+      Navigation → doc_sections (guides, workflows, reference, migrating), or
+      'page' to sit at the top level. A value listed nowhere hides the page
+      from the sidebar.
+  title:
     type: text
     label: Page Title
-  nav_title:
+  doc_sections:
+    type: array
+    label: Sidebar Sections
+    comment: Sidebar section headings, in display order
+  tag:
     type: text
-    label: Sidebar Nav Title
-    comment: The name of the page shown in the sidebar navigation
-  nav_section:
+    comment: The `tags` value doc pages use to join this section
+  heading:
     type: text
-    label: Parent Section
-    comment: The name of the section the page is nested under in the sidebar navigation
-  weight:
-    type: number
-    comment: The order of the page in the sidebar group
+    comment: Section heading shown in the sidebar
   project_name:
     type: text
   default_og_image:

@@ -1,7 +1,7 @@
-enable_banner: true
-html: <p>This banner is completely optional, and can be shown until a set date!</p>
-id: alto-banner
-show_until: 2024-01-31T00:00:00Z
+enable_banner: false
+html: <p>These docs cover RCC v2. For v1, see the <a href="https://github.com/CloudCannon/rcc/tree/main">main branch</a>.</p>
+id: rcc-v2-banner
+show_until: 2026-12-31T00:00:00Z
 _inputs:
   enable_banner:
     type: switch
