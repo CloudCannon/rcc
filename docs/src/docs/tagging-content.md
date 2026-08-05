@@ -170,6 +170,43 @@ If you're using CloudCannon's editable region custom elements, `data-rosey` can 
 </editable-text>
 ```
 
+#### Rich text regions: tag the region, not its contents
+
+For a rich text region — `data-editable="source"`, or a `text` region with `data-type="text"`/`"block"` — `data-rosey` belongs on the region element itself, never on a block inside it:
+
+```html
+<!-- Do this: the key is on the region element -->
+<div
+  data-editable="source"
+  data-path="src/pages/about.astro"
+  data-key="description"
+  data-rosey="about:description">
+  <p>We're a small team passionate about <strong>building great websites</strong>.</p>
+</div>
+
+<!-- Not this: the key is on markup CloudCannon owns -->
+<div
+  data-editable="source"
+  data-path="src/pages/about.astro"
+  data-key="description">
+  <p data-rosey="about:description">We're a small team…</p>
+</div>
+```
+
+CloudCannon parses a rich text region's contents into its editor schema and re-serializes them on save. The schema carries block structure and inline marks (`<strong>`, `<a>`) but not arbitrary attributes, so a `data-rosey` on a block inside the region can't be round-tripped — CloudCannon reports the element as uneditable rather than dropping the key. The region *element* is a different matter: it's the boundary rather than the content, so its own attributes are left alone. That's why a tag on the region element works even when the region is a semantic element carrying both attributes:
+
+```html
+<h1 data-editable="source" data-path="src/pages/about.astro" data-key="heading" data-rosey="about:heading">
+  About Us
+</h1>
+```
+
+Key stability points the same way. The DOM inside a region is editor-owned — someone splitting a paragraph, adding a list, or reordering blocks changes which elements exist — so a key attached to one of those blocks isn't stable (see [Key uniqueness and stability](#key-uniqueness-and-stability)). `data-key` *is* stable, which makes the region the natural unit of translation: **one editable region, one Rosey key.**
+
+Tagging the region means the translation value is the region's full inner HTML, block tags included. That's fine on both ends — Rosey replaces `innerHTML`, and the connector gives the locale editor an `html` input with the content toolbar, so a translator edits the block in a rich text editor that matches the original.
+
+> **A snippet is not the fix.** A `_snippets` entry can technically teach CloudCannon to round-trip `<p data-rosey="…">`, but it makes the Rosey key an editor-facing form field (duplicate the card and you silently collide keys) and replaces inline WYSIWYG prose with a snippet card. Keep Rosey keys in templates and component markup, out of editor-owned content.
+
 ## Key namespacing
 
 Rosey keys can be namespaced using parent element attributes. The connector walks up the DOM from each `data-rosey` element, collecting namespace segments to build a fully qualified key.
