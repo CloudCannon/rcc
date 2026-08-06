@@ -239,6 +239,11 @@ const DATASET_TIMEOUT_MS = 5000;
 // debounce collapses a typing burst into one resync instead of one per key.
 const CHANGE_RESYNC_MS = 200;
 
+// items() never settles when CloudCannon can't resolve the data_config file — no
+// rejection, no empty result — hence the race. Usual cause: a `source` key in
+// cloudcannon.config.yml makes data_config paths resolve relative to it, and CC
+// won't accept `../` to climb back out. Fix is to drop `source` and prepend its
+// value to the affected paths.
 async function resolveFile(dataset: CCDataset): Promise<CCFile | null> {
 	const timeout = new Promise<null>((resolve) =>
 		setTimeout(() => resolve(null), DATASET_TIMEOUT_MS),
