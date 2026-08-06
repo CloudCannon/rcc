@@ -2,7 +2,7 @@
 
 All notable changes to the Rosey CloudCannon Connector are documented here.
 
-## v2.0.0 (Unreleased)
+## v2.0.0 (August 6, 2026)
 
 Ground-up rewrite. The connector is now a client-side Visual Editor plugin that
 creates inline translation editors on the page, replacing v1's build-time YAML
@@ -134,7 +134,8 @@ Ordered by what you touch to upgrade.
 
 ## v1.x (legacy)
 
-v1's source and commit history live on this repo's `main` branch. Entries are
+v1's source and commit history are preserved at the
+[`v1.2.2`](https://github.com/CloudCannon/rcc/tree/v1.2.2) tag. Entries are
 preserved below for continuity — both versions share the npm package name
 `rosey-cloudcannon-connector`.
 
