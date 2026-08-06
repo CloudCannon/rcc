@@ -288,7 +288,9 @@ function unwrapLooseListItems(s) {
   return tpl.innerHTML;
 }
 function normalizeSource(s) {
-  return collapseSerializerNoise(unwrapLooseListItems(s.replace(/>\s+</g, "><")));
+  return collapseSerializerNoise(
+    unwrapLooseListItems(s.replace(/>\s+</g, "><"))
+  );
 }
 export {
   CLIENT_FILENAME,

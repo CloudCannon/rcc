@@ -54,33 +54,16 @@ interface RoseyConfig {
 declare function resolveRoseyConfig(cwd?: string, env?: NodeJS.ProcessEnv): RoseyConfig;
 
 /**
- * Flatten the differences that are purely how the HTML was written out:
- * whitespace between tags, `<br/>` vs `<br>`, and interior whitespace runs.
- * The result is a compare key, not renderable HTML.
- *
- * `<br>` folds to a SPACE (which the whitespace collapse then absorbs) so every
- * spelling of a line break compares equal: Rosey's rendered `<br>`/`<br/>`, a
- * plain-text editor emitting the break as a space, a rich editor's `<br />`, and
- * ProseMirror's `<br class="…trailingBreak">`. Left as a tag it is a permanent
- * false stale that flip-flops each build. Trade-off: a break-only source change
- * no longer flags — acceptable, since word changes still do.
- *
- * List tightness (`<li>x</li>` vs `<li><p>x</p></li>`) is the one difference
- * this can't reach without a DOM; stale.ts layers that on for the client.
+ * Compare key for two HTML strings: flattens whitespace between tags, `<br/>` vs
+ * `<br>`, and whitespace runs. Folding `<br>` to a space means a break-only
+ * change doesn't flag; word changes still do. List tightness needs a DOM, so
+ * stale.ts layers that on.
  */
 declare function collapseSerializerNoise(s: string): string;
 /**
- * Space out block-level tags so a block boundary survives as a word boundary
- * once the tags are gone. collapseSerializerNoise can DELETE the whitespace
- * between tags because the tags it keeps still carry the boundary; a text
- * compare keeps the whitespace and drops the tags, so the boundary has to be put
- * back first.
- *
- * Without it, the two serializations read differently: Rosey's `</p>\n<p>` gives
- * "files. Visual" and CloudCannon's `</p><p>` gives "files.Visual" — same
- * content, one word apart, stale forever. Inline tags are deliberately left
- * alone; they aren't word boundaries, and padding them would split
- * `un<em>real</em>`.
+ * Space out block tags so a block boundary survives as a word boundary once the
+ * tags are gone: `</p>\n<p>` and `</p><p>` must both read as "files. Visual".
+ * Inline tags are left alone — padding them would split `un<em>real</em>`.
  */
 declare function padBlockBoundaries(html: string): string;
 

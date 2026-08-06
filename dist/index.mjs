@@ -330,7 +330,9 @@ function unwrapLooseListItems(s) {
   return tpl.innerHTML;
 }
 function normalizeSource(s) {
-  return collapseSerializerNoise(unwrapLooseListItems(s.replace(/>\s+</g, "><")));
+  return collapseSerializerNoise(
+    unwrapLooseListItems(s.replace(/>\s+</g, "><"))
+  );
 }
 function truncateText(text, max) {
   return text.length > max ? `${text.slice(0, max)}\u2026` : text;
@@ -399,9 +401,9 @@ function renderInlineDiff(container, oldText, newText) {
   });
 }
 function currentSourceHtml(t) {
-  if (stripToText(t.originalContent) !== stripToText(t.localeOriginal ?? ""))
-    return t.originalContent;
-  return t.baseOriginal ?? t.originalContent;
+  const built = t.baseOriginal;
+  if (built == null) return t.originalContent;
+  return stripToText(t.originalContent) !== stripToText(built) ? t.originalContent : built;
 }
 var caughtUpTimer = null;
 var staleRows = /* @__PURE__ */ new WeakMap();
