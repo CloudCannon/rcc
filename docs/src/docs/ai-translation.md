@@ -43,7 +43,7 @@ Each entry carries three fields:
 | `value` | Editor or AI | The translation |
 | `_base_original` | `write-locales` (each build) | Current source text from `base.json` |
 
-When the source text changes, `_base_original` updates but `original` stays the same. The mismatch (`original !== _base_original`) flags the entry as stale. An AI agent can target only stale entries for re-translation, using the old `original` and `value` as context for what changed.
+When the source text changes, `_base_original` updates but `original` stays the same. The mismatch (`original !== _base_original`) flags the entry as stale. An AI agent can target only stale entries for re-translation, using the old `original` and `value` as context for what changed. The two fields are kept on one HTML serialization ([Serialization](/docs/stale-translations/#serialization)), so a mismatch means the words changed, not the markup style — no tokens spent re-translating a reformat.
 
 ### Context-rich keys
 

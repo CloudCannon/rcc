@@ -44,12 +44,25 @@ var CC_CONFIG_FILES = [
   { file: "cloudcannon.config.cjs", format: "cjs" }
 ];
 
+// src/serializer-noise.ts
+function collapseSerializerNoise(s) {
+  return s.replace(/>\s+</g, "><").replace(/<br\b[^>]*>/gi, " ").replace(/\s+/g, " ").trim();
+}
+
 // src/write-locales.ts
 function isEmptyText(s) {
   return s == null || s.trim() === "";
 }
 function normalizeStored(s) {
   return s.replace(/<br\b[^>]*>/gi, "<br>").trim();
+}
+function healOriginal(entry, source) {
+  const anchor = entry.original;
+  if (typeof anchor !== "string" || anchor === source) return false;
+  if (collapseSerializerNoise(anchor) !== collapseSerializerNoise(source))
+    return false;
+  entry.original = source;
+  return true;
 }
 function sortKeys(obj) {
   return Object.fromEntries(
@@ -101,6 +114,7 @@ async function writeLocales(options) {
     }
     let addedCount = 0;
     let prunedEmpty = 0;
+    let healedCount = 0;
     for (const [key, entry] of Object.entries(keys)) {
       if (isEmptyText(entry.original)) {
         if (existing[key] && isEmptyText(existing[key].value)) {
@@ -119,6 +133,7 @@ async function writeLocales(options) {
         addedCount++;
       } else {
         existing[key]._base_original = normalizedOriginal;
+        if (healOriginal(existing[key], normalizedOriginal)) healedCount++;
       }
     }
     await import_node_fs.default.promises.writeFile(
@@ -126,8 +141,9 @@ async function writeLocales(options) {
       JSON.stringify(sortKeys(existing), null, 2)
     );
     const removedMsg = options.keepUnused ? `${unusedKeys.length} unused kept` : `${unusedKeys.length} removed`;
+    const healedMsg = healedCount > 0 ? `, ${healedCount} healed` : "";
     console.log(
-      `RCC: Wrote ${localePath} \u2014 ${Object.keys(existing).length} keys (${addedCount} added, ${removedMsg}, ${prunedEmpty} empty pruned)`
+      `RCC: Wrote ${localePath} \u2014 ${Object.keys(existing).length} keys (${addedCount} added, ${removedMsg}, ${prunedEmpty} empty pruned${healedMsg})`
     );
   }
   const manifest = { locales };

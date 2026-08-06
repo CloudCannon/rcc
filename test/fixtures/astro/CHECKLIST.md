@@ -50,3 +50,11 @@ headlessly).
       formats, blockquote, lists, indent/outdent, link, image, table, hr,
       remove/copy format, undo/redo). Edit a nested list / table cell → rebuild
       → the entry is **not** falsely stale.
+- [ ] **Multi-block source** (`/markdown/`): resolve or edit `article`, then switch
+      away and back **without rebuilding** → it must not return as stale. The
+      resolve leaves the entry in CC's serialization while the page is in Rosey's,
+      which is the state where a live signal that welded blocks together
+      (`files.Visual`) would flag it on every load.
+- [ ] **Healing**: rebuild after that resolve → `git diff rosey/locales/fr.json`
+      shows `original` back in Rosey's form (newlines between blocks), with the
+      translation unchanged.

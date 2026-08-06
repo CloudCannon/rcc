@@ -53,6 +53,20 @@ interface RoseyConfig {
  */
 declare function resolveRoseyConfig(cwd?: string, env?: NodeJS.ProcessEnv): RoseyConfig;
 
+/**
+ * Compare key for two HTML strings: flattens whitespace between tags, `<br/>` vs
+ * `<br>`, and whitespace runs. Folding `<br>` to a space means a break-only
+ * change doesn't flag; word changes still do. List tightness needs a DOM, so
+ * stale.ts layers that on.
+ */
+declare function collapseSerializerNoise(s: string): string;
+/**
+ * Space out block tags so a block boundary survives as a word boundary once the
+ * tags are gone: `</p>\n<p>` and `</p><p>` must both read as "files. Visual".
+ * Inline tags are left alone — padding them would split `un<em>real</em>`.
+ */
+declare function padBlockBoundaries(html: string): string;
+
 /** A single entry in a Rosey locale file. */
 interface LocaleEntry {
     original: string;
@@ -119,4 +133,4 @@ declare global {
 
 declare function normalizeSource(s: string): string;
 
-export { CLIENT_FILENAME, detectProject, installClient, normalizeSource, resolveRoseyConfig };
+export { CLIENT_FILENAME, collapseSerializerNoise, detectProject, installClient, normalizeSource, padBlockBoundaries, resolveRoseyConfig };

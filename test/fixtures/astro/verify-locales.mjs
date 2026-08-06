@@ -63,6 +63,21 @@ check(
   `fr stale:untranslated should keep value === original === _base_original, got ${JSON.stringify(fr["stale:untranslated"])}`,
 );
 
+// --- Healing: an anchor in the editor's serialization converges on Rosey's --
+// markdown:article ships with `original` in the tag-adjacent form CloudCannon
+// writes (`</p><p>`) and `_base_original` in Rosey's (`</p>\n<p>`). Same content,
+// so the build must rewrite `original` onto the source and leave the French
+// translation alone. Checking the French is what proves healing only moves the
+// anchor.
+check(
+  fr["markdown:article"]?.original === fr["markdown:article"]?._base_original,
+  `fr markdown:article.original should heal onto _base_original, got ${JSON.stringify(fr["markdown:article"]?.original)}`,
+);
+check(
+  fr["markdown:article"]?.value?.includes("Contenu enrichi"),
+  "fr markdown:article.value should survive healing untouched",
+);
+
 // --- Unused key pruned ----------------------------------------------------
 check(!("stale:removed_me" in fr), "fr stale:removed_me (unused) should be pruned");
 check(!("stale:removed_me" in ar), "ar stale:removed_me (unused) should be pruned");

@@ -1,4 +1,8 @@
 import { log } from "./logger";
+import {
+	collapseSerializerNoise,
+	padBlockBoundaries,
+} from "./serializer-noise";
 import { state, tracked } from "./state";
 import { CC_BLUE, CC_BLUE_TINT, SLATE_HOVER } from "./theme";
 import type { CCFile, LocaleEntryData, TrackedElement } from "./types";
@@ -67,22 +71,13 @@ function unwrapLooseListItems(s: string): string {
 	return tpl.innerHTML;
 }
 
-// Canonicalize the two HTML serializers (Rosey's base.json vs CC's ProseMirror)
-// so insignificant differences don't read as stale. Order matters: collapse
-// inter-tag whitespace first, then unwrap loose lists. See docs/stale-translations.md.
-//
-// <br> is folded to a SPACE (then whitespace collapses) so every way a line break
-// serializes compares equal: Rosey's rendered `<br>`/`<br/>` in base.json, a
-// plain-text editor emitting the break as a space, and a rich editor's `<br />`.
-// Left as a tag it's a permanent false stale that flip-flops each build (base
-// has `<br>`, the live editor a space). Trade-off: a break-only source change no
-// longer flags — acceptable, since word changes still do (and matter more). The
-// [^>]* also folds ProseMirror's `<br class="…trailingBreak">`.
+// The markup compare key: serializer noise plus list tightness, which needs a
+// DOM. The unwrap wants inter-tag whitespace gone first; collapseSerializerNoise
+// repeats that step harmlessly. See docs/stale-translations.md.
 export function normalizeSource(s: string): string {
-	return unwrapLooseListItems(s.replace(/>\s+</g, "><"))
-		.replace(/<br\b[^>]*>/gi, " ")
-		.replace(/\s+/g, " ")
-		.trim();
+	return collapseSerializerNoise(
+		unwrapLooseListItems(s.replace(/>\s+</g, "><")),
+	);
 }
 
 function truncateText(text: string, max: number): string {
@@ -99,7 +94,7 @@ function stripToText(html: string): string {
 	const tmp = document.createElement("div");
 	// Fold <br> to a space first: textContent would otherwise drop it entirely,
 	// so a rendered line break wouldn't match the space a plain editor emits.
-	tmp.innerHTML = html.replace(/<br\b[^>]*>/gi, " ");
+	tmp.innerHTML = padBlockBoundaries(html.replace(/<br\b[^>]*>/gi, " "));
 	return (tmp.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
@@ -173,14 +168,15 @@ function renderInlineDiff(
 	});
 }
 
-// The current source an out-of-date translation is measured against: the live
-// page source if that's what drifted, otherwise the last build's source. The
-// drift check is text-based to match computeStale's live signal — a pure
-// serializer difference (ProseMirror vs Rosey) is not a real drift.
+// The current source: the last build's, unless the page drifted from it in
+// session — only then is the DOM the better record. Text-based drift check, so a
+// serializer difference isn't drift. Feeds the diff and what resolveStale writes.
 function currentSourceHtml(t: TrackedElement): string {
-	if (stripToText(t.originalContent) !== stripToText(t.localeOriginal ?? ""))
-		return t.originalContent;
-	return t.baseOriginal ?? t.originalContent;
+	const built = t.baseOriginal;
+	if (built == null) return t.originalContent;
+	return stripToText(t.originalContent) !== stripToText(built)
+		? t.originalContent
+		: built;
 }
 
 // Holds the panel's brief "all caught up" state after the last item clears.
@@ -338,9 +334,10 @@ export function flushStaleList(): void {
 }
 
 function buildStaleRow(t: TrackedElement): HTMLElement {
-	// Key is only a fallback when the element has no visible text.
+	// Key is only a fallback when the element has no visible text. stripToText
+	// keeps adjacent blocks apart and matches what relabelStaleRow writes.
 	const textPreview = truncateText(
-		t.element.textContent?.trim() || t.roseyKey,
+		stripToText(t.element.innerHTML) || t.roseyKey,
 		48,
 	);
 
@@ -519,21 +516,13 @@ export function markStaleElement(t: TrackedElement): void {
  * The two stale signals, gated on _base_original presence (its absence opts the
  * entry out). Requires t.hasLocaleEntry to be current.
  *
- * base: last build's source (_base_original) ≠ original. Both come from
- * base.json, so ONE serializer (Rosey) produced both — a normalized-HTML compare
- * is exact and catches formatting-only source edits (e.g. a word bolded).
+ * base: _base_original ≠ original, compared as markup, so a formatting-only
+ * source edit (a word bolded) still flags. Both sides should be Rosey's.
  *
- * live: the page's source right now ≠ original — fires on an in-session source
- * edit before a rebuild refreshes _base_original. Here the two sides come from
- * DIFFERENT serializers: t.originalContent is CloudCannon's ProseMirror
- * serialization of the live DOM; `original` is Rosey's rendered-HTML capture in
- * base.json. They never agree byte-for-byte (inter-tag whitespace, <br/> vs <br>,
- * attribute order, entity encoding, list tightness, and raw markdown for
- * plain-typed inputs), so an HTML compare here manufactures false stales. We
- * compare VISIBLE TEXT instead — the words an editor actually changed — which is
- * robust to every serializer divergence by construction. The narrow cost: a
- * source edit that only toggles inline formatting (same words) won't show as live
- * stale, but baseStale still catches it on the next build.
+ * live: the page ≠ original, compared as visible text. It catches an in-session
+ * source edit before a rebuild, but its two sides come from different serializers
+ * and never agree byte-for-byte — words are the only reliable signal there. The
+ * cost is that a formatting-only edit doesn't fire live; base gets it next build.
  */
 export function computeStale(
 	t: TrackedElement,
@@ -578,14 +567,11 @@ function unmarkStaleElement(t: TrackedElement): void {
 
 export function resolveStale(t: TrackedElement, file: CCFile): void {
 	if (!t.stale) return;
-	// Acknowledge the on-page source as reviewed. Write both original and
-	// _base_original so the entry is self-consistent even when resolving a live
-	// edit before a build; using the on-page source is what clears a live-only
-	// stale (post-build the two are equal anyway).
-	const current = t.originalContent;
-	log(
-		`[${t.roseyKey}] Resolving stale — original/_base_original ← page source`,
-	);
+	// Acknowledge the reviewed source, preferring the build's string over the
+	// page's markup. Both fields, so the entry stays self-consistent when
+	// resolving before a build.
+	const current = currentSourceHtml(t);
+	log(`[${t.roseyKey}] Resolving stale — original/_base_original ← source`);
 	file.data.set({ slug: `${t.roseyKey}.original`, value: current });
 	file.data.set({ slug: `${t.roseyKey}._base_original`, value: current });
 	t.localeOriginal = current;

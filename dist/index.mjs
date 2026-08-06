@@ -242,6 +242,15 @@ function resolveRoseyKey(el) {
   return [...nsParts, localKey].join(":");
 }
 
+// src/serializer-noise.ts
+function collapseSerializerNoise(s) {
+  return s.replace(/>\s+</g, "><").replace(/<br\b[^>]*>/gi, " ").replace(/\s+/g, " ").trim();
+}
+var BLOCK_TAG = /<\/?(?:address|article|aside|blockquote|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form|h[1-6]|header|hgroup|hr|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul)\b[^>]*>/gi;
+function padBlockBoundaries(html) {
+  return html.replace(BLOCK_TAG, " $& ");
+}
+
 // src/state.ts
 var tracked = [];
 var state = {
@@ -321,7 +330,9 @@ function unwrapLooseListItems(s) {
   return tpl.innerHTML;
 }
 function normalizeSource(s) {
-  return unwrapLooseListItems(s.replace(/>\s+</g, "><")).replace(/<br\b[^>]*>/gi, " ").replace(/\s+/g, " ").trim();
+  return collapseSerializerNoise(
+    unwrapLooseListItems(s.replace(/>\s+</g, "><"))
+  );
 }
 function truncateText(text, max) {
   return text.length > max ? `${text.slice(0, max)}\u2026` : text;
@@ -331,7 +342,7 @@ function outOfDateLabel(n) {
 }
 function stripToText(html) {
   const tmp = document.createElement("div");
-  tmp.innerHTML = html.replace(/<br\b[^>]*>/gi, " ");
+  tmp.innerHTML = padBlockBoundaries(html.replace(/<br\b[^>]*>/gi, " "));
   return (tmp.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 function diffWords(oldText, newText) {
@@ -390,9 +401,9 @@ function renderInlineDiff(container, oldText, newText) {
   });
 }
 function currentSourceHtml(t) {
-  if (stripToText(t.originalContent) !== stripToText(t.localeOriginal ?? ""))
-    return t.originalContent;
-  return t.baseOriginal ?? t.originalContent;
+  const built = t.baseOriginal;
+  if (built == null) return t.originalContent;
+  return stripToText(t.originalContent) !== stripToText(built) ? t.originalContent : built;
 }
 var caughtUpTimer = null;
 var staleRows = /* @__PURE__ */ new WeakMap();
@@ -505,7 +516,7 @@ function flushStaleList() {
 }
 function buildStaleRow(t) {
   const textPreview = truncateText(
-    t.element.textContent?.trim() || t.roseyKey,
+    stripToText(t.element.innerHTML) || t.roseyKey,
     48
   );
   const itemWrap = document.createElement("div");
@@ -685,10 +696,8 @@ function unmarkStaleElement(t) {
 }
 function resolveStale(t, file) {
   if (!t.stale) return;
-  const current = t.originalContent;
-  log(
-    `[${t.roseyKey}] Resolving stale \u2014 original/_base_original \u2190 page source`
-  );
+  const current = currentSourceHtml(t);
+  log(`[${t.roseyKey}] Resolving stale \u2014 original/_base_original \u2190 source`);
   file.data.set({ slug: `${t.roseyKey}.original`, value: current });
   file.data.set({ slug: `${t.roseyKey}._base_original`, value: current });
   t.localeOriginal = current;

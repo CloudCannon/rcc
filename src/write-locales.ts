@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { CC_CONFIG_FILES } from "./cc-config-files";
+import { collapseSerializerNoise } from "./serializer-noise";
 import type { LocaleEntry } from "./types";
 
 export interface WriteLocalesOptions {
@@ -29,18 +30,27 @@ function isEmptyText(s: string | null | undefined): boolean {
 	return s == null || s.trim() === "";
 }
 
-// Conservative normalization for the strings RCC bakes into locale files. Rosey
-// copies source verbatim into base.json — leading/trailing whitespace (" X ",
-// "…\n  ") and XHTML-style `<br/>` — which then renders with a stray gap in the
-// Visual Editor and (for <br>) reads as perpetually stale against the DOM. We
-// trim the ends and canonicalize <br> to match what the browser produces.
-//
-// Deliberately narrower than stale.ts's normalizeSource: that one is a throwaway
-// compare key and collapses ALL internal whitespace; this mutates strings that
-// get rendered verbatim, so collapsing interior whitespace would corrupt
-// <pre>/<code>. Keep this to outer trim + <br> only.
+// Rosey copies source verbatim into base.json, so leading/trailing whitespace and
+// XHTML `<br/>` come through and render with a stray gap in the Visual Editor.
+// Narrower than the compare keys in ./serializer-noise on purpose — these strings
+// render verbatim, so collapsing interior whitespace would corrupt <pre>/<code>.
 function normalizeStored(s: string): string {
 	return s.replace(/<br\b[^>]*>/gi, "<br>").trim();
+}
+
+/**
+ * Pull a review anchor written in CloudCannon's serialization onto Rosey's, so
+ * `original` and `_base_original` stay comparable as plain strings — equivalent
+ * content by definition. Conservative: a difference the DOM-free key can't see
+ * (list tightness) is left to the compare-time normalizers.
+ */
+function healOriginal(entry: LocaleEntry, source: string): boolean {
+	const anchor = entry.original;
+	if (typeof anchor !== "string" || anchor === source) return false;
+	if (collapseSerializerNoise(anchor) !== collapseSerializerNoise(source))
+		return false;
+	entry.original = source;
+	return true;
 }
 
 function sortKeys(
@@ -113,6 +123,7 @@ export async function writeLocales(
 
 		let addedCount = 0;
 		let prunedEmpty = 0;
+		let healedCount = 0;
 		for (const [key, entry] of Object.entries(keys)) {
 			// Empty source ⇒ nothing to translate: don't write an entry. Prune an
 			// existing entry only when its value is also empty (a placeholder), so a
@@ -133,11 +144,10 @@ export async function writeLocales(
 				};
 				addedCount++;
 			} else {
-				// Refresh the RCC-managed source-of-last-build. `original` (the review
-				// anchor) and `value` (the translation) are left untouched — stale
-				// detection re-normalizes both sides at compare time, so an untrimmed
-				// legacy `original` here never produces a false stale.
+				// Refresh the RCC-managed source-of-last-build. The translation is
+				// never touched.
 				existing[key]._base_original = normalizedOriginal;
+				if (healOriginal(existing[key], normalizedOriginal)) healedCount++;
 			}
 		}
 
@@ -148,8 +158,9 @@ export async function writeLocales(
 		const removedMsg = options.keepUnused
 			? `${unusedKeys.length} unused kept`
 			: `${unusedKeys.length} removed`;
+		const healedMsg = healedCount > 0 ? `, ${healedCount} healed` : "";
 		console.log(
-			`RCC: Wrote ${localePath} — ${Object.keys(existing).length} keys (${addedCount} added, ${removedMsg}, ${prunedEmpty} empty pruned)`,
+			`RCC: Wrote ${localePath} — ${Object.keys(existing).length} keys (${addedCount} added, ${removedMsg}, ${prunedEmpty} empty pruned${healedMsg})`,
 		);
 	}
 
