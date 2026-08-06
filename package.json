@@ -1,48 +1,78 @@
 {
-  "name": "rosey-cloudcannon-connector",
-  "version": "1.2.2",
-  "description": "Middleware that connects Rosey to CloudCannon to enable editing of Rosey translations via CloudCannon's CMS.",
-  "bin": {
-    "rosey-cloudcannon-connector": "./main.mjs"
-  },
-  "exports": {
-    ".": "./main.mjs",
-    "./utils": "./utils/main.mjs"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/CloudCannon/rcc"
-  },
-  "author": "Tom Richardson",
-  "license": "MIT",
-  "keywords": [
-    "CloudCannon",
-    "Cloud",
-    "Cannon",
-    "i18n",
-    "rosey",
-    "connector",
-    "translation",
-    "localisation",
-    "rcc"
-  ],
-  "bugs": {
-    "url": "https://github.com/CloudCannon/rcc/issues"
-  },
-  "homepage": "https://github.com/CloudCannon/rcc#readme",
-  "dependencies": {
-    "dotenv": "^16.4.5",
-    "slugify": "^1.6.6",
-    "yaml": "^2.4.2",
-    "markdown-it": "^13.0.1",
-    "@inquirer/prompts": "^7.6.0",
-    "smartling-api-sdk-nodejs": "^2.11.0",
-    "unified": "^11.0.5",
-    "rehype-remark": "^10.0.1",
-    "rehype-parse": "^9.0.1",
-    "rehype-stringify": "^10.0.1",
-    "remark-stringify": "^11.0.0",
-    "rehype-format": "^5.0.1",
-    "unist-util-visit": "^5.0.0"
-  }
+	"name": "rosey-cloudcannon-connector",
+	"version": "2.0.0",
+	"description": "Client-side locale switching for Rosey translations in CloudCannon's Visual Editor",
+	"main": "./dist/index.js",
+	"module": "./dist/index.mjs",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"import": {
+				"types": "./dist/index.d.mts",
+				"default": "./dist/index.mjs"
+			},
+			"require": {
+				"types": "./dist/index.d.ts",
+				"default": "./dist/index.js"
+			}
+		},
+		"./write-locales": {
+			"import": {
+				"types": "./dist/write-locales.d.mts",
+				"default": "./dist/write-locales.mjs"
+			},
+			"require": {
+				"types": "./dist/write-locales.d.ts",
+				"default": "./dist/write-locales.js"
+			}
+		},
+		"./internals": {
+			"import": {
+				"types": "./dist/internals.d.mts",
+				"default": "./dist/internals.mjs"
+			}
+		}
+	},
+	"bin": {
+		"rosey-cloudcannon-connector": "./dist/cli/index.js"
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "rm -rf dist && tsup",
+		"dev": "tsup --watch",
+		"biome": "biome check --write",
+		"lint": "biome check",
+		"typecheck": "tsc --noEmit",
+		"pretest:unit": "npm run build",
+		"test:unit": "node --test 'test/unit/*.test.mjs'",
+		"test:integration": "bash test/run-integration.sh",
+		"test": "npm run test:unit && npm run test:integration"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.4.4",
+		"@types/node": "^25.3.0",
+		"tsup": "^8.0.0",
+		"typescript": "^5.0.0"
+	},
+	"license": "MIT",
+	"sideEffects": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/CloudCannon/rcc.git"
+	},
+	"bugs": {
+		"url": "https://github.com/CloudCannon/rcc/issues"
+	},
+	"homepage": "https://rosey.cc/",
+	"keywords": [
+		"rosey",
+		"cloudcannon",
+		"i18n",
+		"localization",
+		"visual-editor",
+		"translations",
+		"rcc"
+	]
 }

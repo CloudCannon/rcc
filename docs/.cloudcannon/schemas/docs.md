@@ -4,6 +4,10 @@ layout: layouts/page.html
 eleventyNavigation:
   key:
   order:
-tags:  
+tags: guides
+SEO_options:
+  title:
+  image:
+  description:
 draft: false
 ---

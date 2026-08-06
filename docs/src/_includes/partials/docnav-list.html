@@ -1,26 +1,25 @@
 <ol class="docnav-list">
-    {% for collection in collections %}
-        {% if collection[0] != 'all' %}
-            {% if collection[0] == 'page' %}
-                {% assign navPages = collections[collection[0]] | eleventyNavigation %}
-                {%- for entry in navPages %}
-                    <li {% if entry.url == page.url %} class="active" {% endif %}>
-                        <a href="{{ entry.url }}">{{ entry.title }}</a>
-                    </li>
-                {%- endfor %}
-            {% else %}
-                <li>
-                    <p class="docnav-title">{{ collection[0] }}</p>
-                    <ol class="docnav-list">
-                        {% assign navPages = collections[collection[0]] | eleventyNavigation %}
-                        {%- for entry in navPages %}
-                            <li {% if entry.url == page.url %} class="active" {% endif %}>
-                                <a href="{{ entry.url }}">{{ entry.title }}</a>
-                            </li>
-                        {% endfor %}
-                    </ol>
-                </li>
-            {% endif %}
-        {% endif %}
-    {% endfor %}
+    {%- assign rootPages = collections.page | eleventyNavigation %}
+    {%- for entry in rootPages %}
+        <li {% if entry.url == page.url %} class="active" {% endif %}>
+            <a href="{{ entry.url }}">{{ entry.title }}</a>
+        </li>
+    {%- endfor %}
+    {%- comment %} Sections come from _data/nav.yml so their order is explicit,
+    rather than whatever order Eleventy happened to discover the tags in. {% endcomment %}
+    {%- for section in nav.doc_sections %}
+        {%- assign sectionPages = collections[section.tag] | eleventyNavigation %}
+        {%- if sectionPages.size > 0 %}
+            <li>
+                <p class="docnav-title">{{ section.heading }}</p>
+                <ol class="docnav-list">
+                    {%- for entry in sectionPages %}
+                        <li {% if entry.url == page.url %} class="active" {% endif %}>
+                            <a href="{{ entry.url }}">{{ entry.title }}</a>
+                        </li>
+                    {%- endfor %}
+                </ol>
+            </li>
+        {%- endif %}
+    {%- endfor %}
 </ol>

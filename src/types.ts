@@ -1,0 +1,97 @@
+// ---------------------------------------------------------------------------
+// Shared types for the CloudCannon live-editing API and tracked elements.
+// ---------------------------------------------------------------------------
+
+export interface TrackedElement {
+	element: HTMLElement;
+	roseyKey: string;
+	originalContent: string;
+	focused: boolean;
+	editor?: { setContent: (content?: string | null) => void };
+	stale: boolean;
+	baseOriginal: string | null;
+	localeOriginal: string | null;
+	/**
+	 * Whether the key already has an entry in the current locale file. Selects
+	 * the write path on edit: missing → create a full {original, value,
+	 * _base_original} entry; present → patch just `.value`.
+	 */
+	hasLocaleEntry: boolean;
+}
+
+/** A single entry in a Rosey locale file. */
+export interface LocaleEntry {
+	original: string;
+	value: string;
+	/** Source text as of the last build; powers stale detection. RCC-only field. */
+	_base_original?: string;
+}
+
+/**
+ * A locale entry as read back from the CC data API: any field may be absent
+ * (partial writes, newly-created entries) and the whole entry may be null.
+ */
+export type LocaleEntryData = Partial<LocaleEntry>;
+
+export interface CCFile {
+	data: {
+		get(opts?: { slug?: string }): Promise<LocaleEntryData | null>;
+		// slug can address the whole entry (value is a LocaleEntry) or a single
+		// field like `key.value` (value is a string).
+		set(opts: {
+			slug: string;
+			value: string | LocaleEntry | LocaleEntryData;
+		}): Promise<unknown>;
+	};
+	// CC fires change/delete on the File (not the Dataset). change = external
+	// edit or own-write echo; delete = Clear/Discard of pending changes.
+	addEventListener(event: string, listener: () => void): void;
+	removeEventListener(event: string, listener: () => void): void;
+}
+
+export interface CCDataset {
+	items(): Promise<CCFile | CCFile[]>;
+	addEventListener(event: string, listener: () => void): void;
+	removeEventListener(event: string, listener: () => void): void;
+}
+
+export interface CCApi {
+	dataset(key: string): CCDataset;
+	createTextEditableRegion(
+		element: HTMLElement,
+		onChange: (content?: string | null) => void,
+		options?: {
+			elementType?: string;
+			editableType?: string;
+			inputConfig?: Record<string, unknown>;
+		},
+	): Promise<{ setContent: (content?: string | null) => void }>;
+}
+
+/** Bookshop's live-render runtime. Only present on Bookshop sites. */
+export interface BookshopLive {
+	update(data: unknown, options?: unknown): Promise<boolean>;
+}
+
+/** The parts of the v0 `window.CloudCannon` global that RCC calls. */
+export interface CloudCannonGlobal {
+	value(opts?: {
+		keepMarkdownAsHTML?: boolean;
+		preferBlobs?: boolean;
+	}): Promise<unknown>;
+	refreshInterface(): void;
+}
+
+declare global {
+	interface Window {
+		// All optional: each is injected by the editor or by Bookshop, so on a
+		// plain browser load none of them exist. The methods are declared
+		// non-optional, but the runtime typeof guards still stand — an older
+		// editor can hand back a partial API.
+		CloudCannon?: CloudCannonGlobal;
+		CloudCannonAPI?: { useVersion(version: string, strict?: boolean): CCApi };
+		bookshopLive?: BookshopLive;
+		bookshopLiveOptions?: unknown;
+		inEditorMode?: boolean;
+	}
+}
