@@ -6,4 +6,8 @@
 export { detectProject } from "./cli/init/detect";
 export { CLIENT_FILENAME, installClient } from "./install-client";
 export { resolveRoseyConfig } from "./rosey-config";
-export { normalizeSource, padBlockBoundaries } from "./stale";
+export {
+	collapseSerializerNoise,
+	padBlockBoundaries,
+} from "./serializer-noise";
+export { normalizeSource } from "./stale";

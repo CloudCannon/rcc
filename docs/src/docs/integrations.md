@@ -37,6 +37,8 @@ The three fields give any tool enough context to act:
 
 This is the entire interface. Any script that can read JSON, make decisions based on these three fields, and write JSON back is a valid integration.
 
+A plain `!==` is enough for the stale check: `write-locales` converges `original` and `_base_original` on one serialization, so the comparison doesn't trip on whitespace or markup style. See [Serialization](/docs/stale-translations/#serialization).
+
 ### Pipeline overview
 
 The standard CloudCannon postbuild runs three steps:
@@ -69,7 +71,7 @@ npx rosey build --source _untranslated_site --dest dist --default-language en --
 
 ### Before `write-locales`
 
-Pull translations from an external source into the locale files first, then let `write-locales` run. `write-locales` preserves existing `original` and `value` fields on entries it finds — it only adds new keys and updates `_base_original`. So externally-provided translations survive the sync.
+Pull translations from an external source into the locale files first, then let `write-locales` run. On entries it finds, `write-locales` adds no keys, never touches `value`, and updates `_base_original` — so externally-provided translations survive the sync. It may rewrite `original` when the source says the same thing in a different serialization (see [Serialization](/docs/stale-translations/#serialization)), which changes the spelling of the anchor, never its content.
 
 ```bash
 #!/usr/bin/env bash

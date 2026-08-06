@@ -2,13 +2,10 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { padBlockBoundaries } from "../../dist/internals.mjs";
 
-// padBlockBoundaries is the DOM-free half of stripToText (src/stale.ts), the key
-// behind the live stale signal. stripToText itself needs a real DOM to decode
-// entities and drop tags, so what runs here is the invariant that matters: the
-// same content serialized by Rosey (newlines between block tags) and by CC's
-// editor (nothing between them) must produce the SAME key. `textKey` below
-// stands in for the browser's textContent — accurate for the tag-only fragments
-// used here, which carry no entities.
+// padBlockBoundaries (src/serializer-noise.ts) is the DOM-free half of
+// stripToText. The invariant: Rosey's serialization (newlines between block tags)
+// and CC's (nothing between them) must produce the same key. `textKey` stands in
+// for textContent, which is accurate for the tag-only fragments used below.
 const textKey = (html) =>
 	padBlockBoundaries(html)
 		.replace(/<[^>]+>/g, "")

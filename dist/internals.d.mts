@@ -53,6 +53,37 @@ interface RoseyConfig {
  */
 declare function resolveRoseyConfig(cwd?: string, env?: NodeJS.ProcessEnv): RoseyConfig;
 
+/**
+ * Flatten the differences that are purely how the HTML was written out:
+ * whitespace between tags, `<br/>` vs `<br>`, and interior whitespace runs.
+ * The result is a compare key, not renderable HTML.
+ *
+ * `<br>` folds to a SPACE (which the whitespace collapse then absorbs) so every
+ * spelling of a line break compares equal: Rosey's rendered `<br>`/`<br/>`, a
+ * plain-text editor emitting the break as a space, a rich editor's `<br />`, and
+ * ProseMirror's `<br class="…trailingBreak">`. Left as a tag it is a permanent
+ * false stale that flip-flops each build. Trade-off: a break-only source change
+ * no longer flags — acceptable, since word changes still do.
+ *
+ * List tightness (`<li>x</li>` vs `<li><p>x</p></li>`) is the one difference
+ * this can't reach without a DOM; stale.ts layers that on for the client.
+ */
+declare function collapseSerializerNoise(s: string): string;
+/**
+ * Space out block-level tags so a block boundary survives as a word boundary
+ * once the tags are gone. collapseSerializerNoise can DELETE the whitespace
+ * between tags because the tags it keeps still carry the boundary; a text
+ * compare keeps the whitespace and drops the tags, so the boundary has to be put
+ * back first.
+ *
+ * Without it, the two serializations read differently: Rosey's `</p>\n<p>` gives
+ * "files. Visual" and CloudCannon's `</p><p>` gives "files.Visual" — same
+ * content, one word apart, stale forever. Inline tags are deliberately left
+ * alone; they aren't word boundaries, and padding them would split
+ * `un<em>real</em>`.
+ */
+declare function padBlockBoundaries(html: string): string;
+
 /** A single entry in a Rosey locale file. */
 interface LocaleEntry {
     original: string;
@@ -118,20 +149,5 @@ declare global {
 }
 
 declare function normalizeSource(s: string): string;
-/**
- * Space out block-level tags so a block boundary survives as a word boundary
- * once the tags are gone. normalizeSource can DELETE inter-tag whitespace
- * because the tags it keeps still carry the boundary; stripToText keeps the
- * whitespace and drops the tags, so the boundary has to be put back first.
- *
- * Without it, textContent welds the blocks either side: Rosey keeps the source's
- * newline (`</p>\n<p>` → "files. Visual") while CC's editor serializes blocks
- * with nothing between them (`</p><p>` → "files.Visual"). Same content, one word
- * apart, stale forever. Inline tags are deliberately left alone — they aren't
- * word boundaries, and padding them would split `un<em>real</em>`.
- *
- * Not exported for the client; `internals` re-exports it for tests.
- */
-declare function padBlockBoundaries(html: string): string;
 
-export { CLIENT_FILENAME, detectProject, installClient, normalizeSource, padBlockBoundaries, resolveRoseyConfig };
+export { CLIENT_FILENAME, collapseSerializerNoise, detectProject, installClient, normalizeSource, padBlockBoundaries, resolveRoseyConfig };

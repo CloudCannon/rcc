@@ -98,11 +98,23 @@ After any of these actions, the stale indicator is removed and won't appear agai
 
 ## Lifecycle
 
-1. **Build time:** `write-locales` runs and sets `_base_original` to the current `base.json` original for every entry. It never modifies `original` or `value` on existing entries.
+1. **Build time:** `write-locales` runs and sets `_base_original` to the current `base.json` original for every entry. It never modifies `value`, and only ever rewrites `original` to a string that says exactly the same thing — see [Serialization](#serialization) below.
 2. **Source changes (in session):** An editor changes the source text in the Visual Editor. The next time they view a locale, the **live signal** flags the affected translations as stale right away — no save or rebuild needed.
 3. **Source changes (across builds):** When a source change is built, `write-locales` updates `_base_original`, creating a mismatch with `original`. The **build signal** then surfaces the staleness whenever the page is opened.
-4. **Editor time:** Editing a translation, or marking it reviewed, sets both `original` and `_base_original` to the source text currently on the page, clearing staleness. (Writing both keeps the entry self-consistent even when resolving before a build; the next build's `_base_original` refresh reconciles harmlessly.)
+4. **Editor time:** Editing a translation, or marking it reviewed, sets both `original` and `_base_original` to the reviewed source, clearing staleness. That is the last build's source text, unless the source was changed in the same session — then it's what's on the page, because nothing else has that content yet. (Writing both keeps the entry self-consistent even when resolving before a build; the next build's `_base_original` refresh reconciles harmlessly.)
 5. **Review:** The editor sees the stale indicator and either edits the translation, marks it as reviewed, or resolves all.
+
+## Serialization
+
+Two different tools write the HTML these fields hold. Rosey copies the built page into `base.json` verbatim, newlines and all. CloudCannon's editor re-serializes from its own model, which drops the whitespace between blocks. Neither is wrong, and the difference never means an editor changed anything.
+
+The connector keeps them apart rather than trying to reconcile them everywhere:
+
+- `_base_original` is always Rosey's, straight from the build.
+- `original` is Rosey's too, wherever a Rosey string for that content exists. Resolving or editing writes the last build's source, not the page's markup — the page is only used when the source itself changed in session, which is the one case nothing else has recorded yet.
+- When an `original` does end up in the editor's serialization — from an older version, or from that in-session case — the next `write-locales` run rewrites it to the build's string once it can see the two say the same thing. Only the anchor moves; `value` is never touched. The build log reports these as `N healed`.
+
+The practical effect is that locale files converge on one serialization, and the field-to-field comparison behind the build signal stays a straightforward one.
 
 ## Opting out
 

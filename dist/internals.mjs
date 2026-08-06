@@ -266,6 +266,15 @@ function resolveRoseyConfig(cwd = process.cwd(), env = process.env) {
   return { ...readConfigFile(cwd), ...readEnv(env) };
 }
 
+// src/serializer-noise.ts
+function collapseSerializerNoise(s) {
+  return s.replace(/>\s+</g, "><").replace(/<br\b[^>]*>/gi, " ").replace(/\s+/g, " ").trim();
+}
+var BLOCK_TAG = /<\/?(?:address|article|aside|blockquote|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form|h[1-6]|header|hgroup|hr|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul)\b[^>]*>/gi;
+function padBlockBoundaries(html) {
+  return html.replace(BLOCK_TAG, " $& ");
+}
+
 // src/stale.ts
 function unwrapLooseListItems(s) {
   if (!s.includes("<li")) return s;
@@ -279,14 +288,11 @@ function unwrapLooseListItems(s) {
   return tpl.innerHTML;
 }
 function normalizeSource(s) {
-  return unwrapLooseListItems(s.replace(/>\s+</g, "><")).replace(/<br\b[^>]*>/gi, " ").replace(/\s+/g, " ").trim();
-}
-var BLOCK_TAG = /<\/?(?:address|article|aside|blockquote|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form|h[1-6]|header|hgroup|hr|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul)\b[^>]*>/gi;
-function padBlockBoundaries(html) {
-  return html.replace(BLOCK_TAG, " $& ");
+  return collapseSerializerNoise(unwrapLooseListItems(s.replace(/>\s+</g, "><")));
 }
 export {
   CLIENT_FILENAME,
+  collapseSerializerNoise,
   detectProject,
   installClient,
   normalizeSource,

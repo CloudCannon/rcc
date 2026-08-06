@@ -242,6 +242,15 @@ function resolveRoseyKey(el) {
   return [...nsParts, localKey].join(":");
 }
 
+// src/serializer-noise.ts
+function collapseSerializerNoise(s) {
+  return s.replace(/>\s+</g, "><").replace(/<br\b[^>]*>/gi, " ").replace(/\s+/g, " ").trim();
+}
+var BLOCK_TAG = /<\/?(?:address|article|aside|blockquote|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form|h[1-6]|header|hgroup|hr|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul)\b[^>]*>/gi;
+function padBlockBoundaries(html) {
+  return html.replace(BLOCK_TAG, " $& ");
+}
+
 // src/state.ts
 var tracked = [];
 var state = {
@@ -321,17 +330,13 @@ function unwrapLooseListItems(s) {
   return tpl.innerHTML;
 }
 function normalizeSource(s) {
-  return unwrapLooseListItems(s.replace(/>\s+</g, "><")).replace(/<br\b[^>]*>/gi, " ").replace(/\s+/g, " ").trim();
+  return collapseSerializerNoise(unwrapLooseListItems(s.replace(/>\s+</g, "><")));
 }
 function truncateText(text, max) {
   return text.length > max ? `${text.slice(0, max)}\u2026` : text;
 }
 function outOfDateLabel(n) {
   return `${n} translation${n === 1 ? "" : "s"} out of date`;
-}
-var BLOCK_TAG = /<\/?(?:address|article|aside|blockquote|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form|h[1-6]|header|hgroup|hr|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul)\b[^>]*>/gi;
-function padBlockBoundaries(html) {
-  return html.replace(BLOCK_TAG, " $& ");
 }
 function stripToText(html) {
   const tmp = document.createElement("div");
@@ -689,10 +694,8 @@ function unmarkStaleElement(t) {
 }
 function resolveStale(t, file) {
   if (!t.stale) return;
-  const current = t.originalContent;
-  log(
-    `[${t.roseyKey}] Resolving stale \u2014 original/_base_original \u2190 page source`
-  );
+  const current = currentSourceHtml(t);
+  log(`[${t.roseyKey}] Resolving stale \u2014 original/_base_original \u2190 source`);
   file.data.set({ slug: `${t.roseyKey}.original`, value: current });
   file.data.set({ slug: `${t.roseyKey}._base_original`, value: current });
   t.localeOriginal = current;

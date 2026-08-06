@@ -37,9 +37,10 @@ Values fall back through `ROSEY_*` environment variables and then your `rosey.{y
 2. For each locale, reads or creates `{source}/locales/{code}.json`
 3. Adds new keys with `{ original, value, _base_original }` — `value` defaults to the original text
 4. Updates `_base_original` on all existing entries to the current source text (for [stale detection](/docs/stale-translations/))
-5. Removes keys that no longer exist in `base.json`
-6. Writes `{dest}/_rcc/locales.json` — a JSON manifest the connector fetches at runtime (see [Manifest format](#manifest-format))
-7. Validates that `cloudcannon.config.yml` has matching `data_config` entries and warns about missing ones
+5. Rewrites an `original` that says the same thing as the current source in a different serialization, so locale files converge on one form (reported as `N healed`; see [Serialization](/docs/stale-translations/#serialization))
+6. Removes keys that no longer exist in `base.json`
+7. Writes `{dest}/_rcc/locales.json` — a JSON manifest the connector fetches at runtime (see [Manifest format](#manifest-format))
+8. Validates that `cloudcannon.config.yml` has matching `data_config` entries and warns about missing ones
 
 ## Auto-detection of locales
 
@@ -97,7 +98,7 @@ Each locale JSON file is a flat object keyed by Rosey translation keys:
 
 | Field | Description |
 | --- | --- |
-| `original` | The source text when the translation was last acknowledged or edited |
+| `original` | The source text when the translation was last acknowledged or edited. May be rewritten to an equivalent serialization on build — never to different content |
 | `value` | The translated text (HTML) |
 | `_base_original` | The current source text from `base.json`, updated at build time. Required for [stale translation detection](/docs/stale-translations/) |
 

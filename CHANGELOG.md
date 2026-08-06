@@ -16,6 +16,23 @@ All notable changes to the Rosey CloudCannon Connector are documented here.
   stripped, so both serializations produce the same text. The stale panel's row
   labels were welding the same way and are fixed with it.
 
+### Changed
+
+- **Locale files now converge on one serialization.** Rosey writes `base.json`
+  from the built page; CloudCannon's editor re-serializes from its own model. Both
+  used to end up in locale files — `_base_original` from Rosey, `original` from
+  whichever wrote last — leaving the build signal to bridge the difference with an
+  ever-growing set of rules. Two changes keep them apart: marking a translation
+  reviewed now records the last build's source rather than the page's markup
+  (falling back to the page only when the source changed in the same session, the
+  one case nothing else has recorded), and `write-locales` rewrites an `original`
+  that says the same thing as the current source into the build's own form. Only
+  the review anchor moves — `value` is never touched — and the build log reports
+  the count as `N healed`.
+- The rules describing how the two serializers differ now live in one module
+  (`src/serializer-noise.ts`) shared by the client and the CLI, instead of being
+  restated per comparison.
+
 ## v2.0.0 (August 6, 2026)
 
 Ground-up rewrite. The connector is now a client-side Visual Editor plugin that
