@@ -2,6 +2,20 @@
 
 All notable changes to the Rosey CloudCannon Connector are documented here.
 
+## Unreleased
+
+### Fixed
+
+- **False stale flags on multi-block source.** The live stale signal compares the
+  page's visible text against the reviewed source, but took that text without
+  materializing block boundaries — so Rosey's `</p>\n<p>` read as "One. Two."
+  while CloudCannon's `</p><p>` read as "One.Two.". Any translation whose source
+  spans more than one block (paragraphs, list items, table cells) was flagged out
+  of date on every load, and the "Source change" diff showed the two sentences
+  welded into one word. Block tags are now spaced out before the markup is
+  stripped, so both serializations produce the same text. The stale panel's row
+  labels were welding the same way and are fixed with it.
+
 ## v2.0.0 (August 6, 2026)
 
 Ground-up rewrite. The connector is now a client-side Visual Editor plugin that

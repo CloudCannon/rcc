@@ -118,5 +118,20 @@ declare global {
 }
 
 declare function normalizeSource(s: string): string;
+/**
+ * Space out block-level tags so a block boundary survives as a word boundary
+ * once the tags are gone. normalizeSource can DELETE inter-tag whitespace
+ * because the tags it keeps still carry the boundary; stripToText keeps the
+ * whitespace and drops the tags, so the boundary has to be put back first.
+ *
+ * Without it, textContent welds the blocks either side: Rosey keeps the source's
+ * newline (`</p>\n<p>` → "files. Visual") while CC's editor serializes blocks
+ * with nothing between them (`</p><p>` → "files.Visual"). Same content, one word
+ * apart, stale forever. Inline tags are deliberately left alone — they aren't
+ * word boundaries, and padding them would split `un<em>real</em>`.
+ *
+ * Not exported for the client; `internals` re-exports it for tests.
+ */
+declare function padBlockBoundaries(html: string): string;
 
-export { CLIENT_FILENAME, detectProject, installClient, normalizeSource, resolveRoseyConfig };
+export { CLIENT_FILENAME, detectProject, installClient, normalizeSource, padBlockBoundaries, resolveRoseyConfig };

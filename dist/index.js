@@ -331,9 +331,13 @@ function truncateText(text, max) {
 function outOfDateLabel(n) {
   return `${n} translation${n === 1 ? "" : "s"} out of date`;
 }
+var BLOCK_TAG = /<\/?(?:address|article|aside|blockquote|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form|h[1-6]|header|hgroup|hr|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul)\b[^>]*>/gi;
+function padBlockBoundaries(html) {
+  return html.replace(BLOCK_TAG, " $& ");
+}
 function stripToText(html) {
   const tmp = document.createElement("div");
-  tmp.innerHTML = html.replace(/<br\b[^>]*>/gi, " ");
+  tmp.innerHTML = padBlockBoundaries(html.replace(/<br\b[^>]*>/gi, " "));
   return (tmp.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 function diffWords(oldText, newText) {
@@ -507,7 +511,7 @@ function flushStaleList() {
 }
 function buildStaleRow(t) {
   const textPreview = truncateText(
-    t.element.textContent?.trim() || t.roseyKey,
+    stripToText(t.element.innerHTML) || t.roseyKey,
     48
   );
   const itemWrap = document.createElement("div");

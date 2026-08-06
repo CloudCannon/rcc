@@ -50,3 +50,7 @@ headlessly).
       formats, blockquote, lists, indent/outdent, link, image, table, hr,
       remove/copy format, undo/redo). Edit a nested list / table cell → rebuild
       → the entry is **not** falsely stale.
+- [ ] **Multi-block source** (`/markdown/`): on first switch to `fr`, `article` is
+      **not** stale. Its committed `original` is the tag-adjacent form CC writes
+      (`</p><p>`) while `_base_original` keeps Rosey's newlines, so a live signal
+      that welded blocks together would flag it on every load.

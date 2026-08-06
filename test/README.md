@@ -91,7 +91,7 @@ updating:
 > | Pre-build state | Build behaviour it exposes |
 > | --- | --- |
 > | `stale:changed._base_original === original` | refreshed away from `original` → base-stale |
-> | `markdown:article._base_original === original` (space-collapsed form) | same, over HTML |
+> | `markdown:article._base_original === original` (tag-adjacent form) | same, over HTML |
 > | `stale:removed_me` present | pruned (not in `base.json`) |
 > | `nested:section:card:body` absent | created with `value` = source |
 >

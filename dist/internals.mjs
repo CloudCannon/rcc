@@ -281,10 +281,15 @@ function unwrapLooseListItems(s) {
 function normalizeSource(s) {
   return unwrapLooseListItems(s.replace(/>\s+</g, "><")).replace(/<br\b[^>]*>/gi, " ").replace(/\s+/g, " ").trim();
 }
+var BLOCK_TAG = /<\/?(?:address|article|aside|blockquote|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form|h[1-6]|header|hgroup|hr|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul)\b[^>]*>/gi;
+function padBlockBoundaries(html) {
+  return html.replace(BLOCK_TAG, " $& ");
+}
 export {
   CLIENT_FILENAME,
   detectProject,
   installClient,
   normalizeSource,
+  padBlockBoundaries,
   resolveRoseyConfig
 };

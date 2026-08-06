@@ -93,13 +93,34 @@ function outOfDateLabel(n: number): string {
 	return `${n} translation${n === 1 ? "" : "s"} out of date`;
 }
 
+const BLOCK_TAG =
+	/<\/?(?:address|article|aside|blockquote|dd|details|div|dl|dt|fieldset|figcaption|figure|footer|form|h[1-6]|header|hgroup|hr|li|main|nav|ol|p|pre|section|table|tbody|td|tfoot|th|thead|tr|ul)\b[^>]*>/gi;
+
+/**
+ * Space out block-level tags so a block boundary survives as a word boundary
+ * once the tags are gone. normalizeSource can DELETE inter-tag whitespace
+ * because the tags it keeps still carry the boundary; stripToText keeps the
+ * whitespace and drops the tags, so the boundary has to be put back first.
+ *
+ * Without it, textContent welds the blocks either side: Rosey keeps the source's
+ * newline (`</p>\n<p>` → "files. Visual") while CC's editor serializes blocks
+ * with nothing between them (`</p><p>` → "files.Visual"). Same content, one word
+ * apart, stale forever. Inline tags are deliberately left alone — they aren't
+ * word boundaries, and padding them would split `un<em>real</em>`.
+ *
+ * Exported only so `internals` can re-export it to the node-side tests.
+ */
+export function padBlockBoundaries(html: string): string {
+	return html.replace(BLOCK_TAG, " $& ");
+}
+
 // Visible text of an HTML fragment, whitespace-collapsed — the diff compares
 // words an editor sees, not markup.
 function stripToText(html: string): string {
 	const tmp = document.createElement("div");
 	// Fold <br> to a space first: textContent would otherwise drop it entirely,
 	// so a rendered line break wouldn't match the space a plain editor emits.
-	tmp.innerHTML = html.replace(/<br\b[^>]*>/gi, " ");
+	tmp.innerHTML = padBlockBoundaries(html.replace(/<br\b[^>]*>/gi, " "));
 	return (tmp.textContent ?? "").replace(/\s+/g, " ").trim();
 }
 
@@ -338,9 +359,11 @@ export function flushStaleList(): void {
 }
 
 function buildStaleRow(t: TrackedElement): HTMLElement {
-	// Key is only a fallback when the element has no visible text.
+	// Key is only a fallback when the element has no visible text. Read through
+	// stripToText, not textContent, so the label matches what relabelStaleRow
+	// later replaces it with — and so adjacent blocks don't weld into one word.
 	const textPreview = truncateText(
-		t.element.textContent?.trim() || t.roseyKey,
+		stripToText(t.element.innerHTML) || t.roseyKey,
 		48,
 	);
 
@@ -519,9 +542,11 @@ export function markStaleElement(t: TrackedElement): void {
  * The two stale signals, gated on _base_original presence (its absence opts the
  * entry out). Requires t.hasLocaleEntry to be current.
  *
- * base: last build's source (_base_original) ≠ original. Both come from
- * base.json, so ONE serializer (Rosey) produced both — a normalized-HTML compare
- * is exact and catches formatting-only source edits (e.g. a word bolded).
+ * base: last build's source (_base_original) ≠ original. A normalized-HTML
+ * compare, which catches formatting-only source edits (e.g. a word bolded).
+ * _base_original is always Rosey's; `original` is too until the first edit or
+ * resolve overwrites it with the live DOM (see resolveStale), after which this
+ * compare is cross-serializer too and leans on normalizeSource to bridge them.
  *
  * live: the page's source right now ≠ original — fires on an in-session source
  * edit before a rebuild refreshes _base_original. Here the two sides come from
@@ -531,7 +556,8 @@ export function markStaleElement(t: TrackedElement): void {
  * attribute order, entity encoding, list tightness, and raw markdown for
  * plain-typed inputs), so an HTML compare here manufactures false stales. We
  * compare VISIBLE TEXT instead — the words an editor actually changed — which is
- * robust to every serializer divergence by construction. The narrow cost: a
+ * robust to every serializer divergence by construction, given block boundaries
+ * are materialized first (see padBlockBoundaries). The narrow cost: a
  * source edit that only toggles inline formatting (same words) won't show as live
  * stale, but baseStale still catches it on the next build.
  */
