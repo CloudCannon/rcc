@@ -1,6 +1,6 @@
 {
 	"name": "rosey-cloudcannon-connector",
-	"version": "2.0.0",
+	"version": "2.0.1",
 	"description": "Client-side locale switching for Rosey translations in CloudCannon's Visual Editor",
 	"main": "./dist/index.js",
 	"module": "./dist/index.mjs",

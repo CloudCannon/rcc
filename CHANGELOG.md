@@ -2,7 +2,7 @@
 
 All notable changes to the Rosey CloudCannon Connector are documented here.
 
-## Unreleased
+## v2.0.1 (August 6, 2026)
 
 ### Fixed
 

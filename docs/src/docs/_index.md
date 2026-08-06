@@ -175,7 +175,7 @@ The FAB can be dragged anywhere on the page; its position persists across reload
   "dependencies": {
     "astro": "^5.0.0",
     "rosey": "^2.3.10",
-    "rosey-cloudcannon-connector": "2.0.0"
+    "rosey-cloudcannon-connector": "2.0.1"
   }
 }
 ```
