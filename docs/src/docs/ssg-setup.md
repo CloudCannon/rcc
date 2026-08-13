@@ -34,7 +34,7 @@ Your visual-editing style is independent of all this — see [Editing styles](#e
 
 Eleventy doesn't bundle browser JS, so the bare specifier can't work. Nothing goes in `eleventy.config.js`.
 
-**Liquid** (`src/_includes/base.liquid`):
+`src/_includes/base.liquid`:
 
 {% raw %}
 ```liquid
@@ -50,21 +50,6 @@ Eleventy doesn't bundle browser JS, so the bare specifier can't work. Nothing go
     }
   </script>
 </body>
-```
-{% endraw %}
-
-**Nunjucks** (`src/_includes/base.njk`) — same thing, different filter syntax:
-
-{% raw %}
-```njk
-<main data-rosey-root="{{ page.fileSlug or 'index' }}">
-  {{ content | safe }}
-</main>
-<script>
-  if (window?.inEditorMode) {
-    import("/_rcc/client.mjs").catch(console.error);
-  }
-</script>
 ```
 {% endraw %}
 
@@ -126,7 +111,7 @@ Jekyll needs `rosey` and `rosey-cloudcannon-connector` available to `npx` at bui
 
 ## Astro (and other bundled frameworks)
 
-Astro bundles browser JS through Vite, so it resolves the bare specifier and you can skip `install-client` entirely — the bundler handles hashing and versioning. `init` detects Astro, Next, Nuxt, SvelteKit, Gatsby and Remix from your `package.json` and omits the postbuild step for them.
+Astro bundles browser JS through Vite, so it resolves the bare specifier and you can skip `install-client` entirely — the bundler handles hashing and versioning. `init` detects Astro, Next, Nuxt, SvelteKit and Gatsby from your `package.json` and omits the postbuild step for them.
 
 ```astro
 ---

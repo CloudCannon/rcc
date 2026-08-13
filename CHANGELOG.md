@@ -102,7 +102,7 @@ Ordered by what you touch to upgrade.
   `write-locales` (`--dest`, else `ROSEY_SOURCE`, else the Rosey config's
   `source:`); independent of it, so sites running their own locale middleware still
   get the client. `init` omits the step on frameworks that bundle layout scripts
-  (Astro, Next, Nuxt, SvelteKit, Gatsby, Remix), where the bare specifier resolves.
+  (Astro, Next, Nuxt, SvelteKit, Gatsby), where the bare specifier resolves.
   See [SSG Setup](https://rosey.cc/docs/ssg-setup/).
 - **`/_rcc/locales.json` manifest** — runtime locale discovery from a build-time
   manifest, so no HTML attributes are needed to detect locales.
