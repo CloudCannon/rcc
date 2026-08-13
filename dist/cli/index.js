@@ -653,14 +653,7 @@ var CC_CONFIG_FILES = [
 
 // src/cli/init/detect.ts
 var BUILD_DIR_CANDIDATES = ["dist", "_site", "build", "out"];
-var BUNDLED_FRAMEWORKS = [
-  "astro",
-  "next",
-  "nuxt",
-  "@sveltejs/kit",
-  "gatsby",
-  "@remix-run/dev"
-];
+var BUNDLED_FRAMEWORKS = ["astro", "next", "nuxt", "@sveltejs/kit", "gatsby"];
 var LOCK_FILES = [
   { file: "pnpm-lock.yaml", pm: "pnpm" },
   { file: "yarn.lock", pm: "yarn" },

@@ -24,14 +24,7 @@ const BUILD_DIR_CANDIDATES = ["dist", "_site", "build", "out"];
 // asset entry while its templates stay unbundled (11ty + esbuild). Reading those
 // as bundled would drop install-client from a site that needs it, which fails
 // silently, so only these positive matches count.
-const BUNDLED_FRAMEWORKS = [
-	"astro",
-	"next",
-	"nuxt",
-	"@sveltejs/kit",
-	"gatsby",
-	"@remix-run/dev",
-];
+const BUNDLED_FRAMEWORKS = ["astro", "next", "nuxt", "@sveltejs/kit", "gatsby"];
 
 const LOCK_FILES: { file: string; pm: ProjectContext["packageManager"] }[] = [
 	{ file: "pnpm-lock.yaml", pm: "pnpm" },

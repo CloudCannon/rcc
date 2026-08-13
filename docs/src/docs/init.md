@@ -93,7 +93,7 @@ Before asking anything, `init` reports what it found:
 - **Package manager** — from the lockfile: `pnpm-lock.yaml`, `yarn.lock`, `bun.lock`/`bun.lockb`, or `package-lock.json`, defaulting to npm
 - **Installed dependencies** — whether `rosey` and `rosey-cloudcannon-connector` are already in `dependencies` or `devDependencies`
 - **Bookshop** — a `bookshop.config.cjs`, `_bookshop/`, or `component-library/bookshop/`
-- **Bundled framework** — `astro`, `next`, `nuxt`, `@sveltejs/kit`, `gatsby` or `@remix-run/dev` in your dependencies
+- **Bundled framework** — `astro`, `next`, `nuxt`, `@sveltejs/kit` or `gatsby` in your dependencies
 
 That last one changes the output: on a bundled framework the client resolves as a bare specifier, so `init` leaves `install-client` out of the postbuild and tells you to import the package name. Everywhere else it includes the step and tells you to import `/_rcc/client.mjs`. Detection deliberately matches only these frameworks, not bundlers like Vite or esbuild on their own — an Eleventy site can bundle a separate asset entry while its templates stay unbundled, and reading that as "bundled" would silently drop the `install-client` step from a site that needs it. See [SSG Setup](/docs/ssg-setup/).
 
